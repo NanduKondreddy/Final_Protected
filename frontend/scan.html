@@ -55,6 +55,11 @@
 .lang-select{background:var(--card);border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;outline:none;letter-spacing:0.04em}
 .lang-select:focus{border-color:var(--teal)}
 .free-bar{display:flex;align-items:center;justify-content:center;padding:10px 24px;background:var(--teal);color:var(--black);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.06em;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.translate-bar{display:none;align-items:center;gap:8px;padding:8px 0;margin-bottom:8px}
+.btn-translate{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(0,212,160,0.1);border:1px solid rgba(0,212,160,0.3);color:var(--teal);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s}
+.btn-translate:hover{background:rgba(0,212,160,0.2);border-color:var(--teal)}
+.btn-translate:disabled{opacity:0.5;cursor:not-allowed}
+.translate-hint{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.03em}
 </style>
 </head>
 <body>
@@ -105,6 +110,10 @@
       <div id="zoneText">
         <div class="textarea-wrap">
           <textarea class="scan-textarea" id="scanInput" placeholder="Paste a suspicious message from WhatsApp, SMS, email, or any app..."></textarea>
+        </div>
+        <div class="translate-bar" id="translateBar">
+          <button class="btn-translate" id="translateBtn" onclick="translateInput()">🌐 Translate to <span id="translateLangName">English</span></button>
+          <span class="translate-hint" id="translateHint">Type in English → we'll translate it for you</span>
         </div>
       </div>
       <div id="zoneImage" style="display:none">
@@ -434,9 +443,70 @@ function applyGeo(geo){
   document.getElementById('locCurrency').textContent=currency;
 }
 
+// ── Translation Feature ──────────────────────────────────────────────────
+const LANG_NAMES = {en:'English',es:'Español',fr:'Français',hi:'हिन्दी',pt:'Português',ar:'العربية',zh:'中文'};
+const LANG_CODES_MYMEMORY = {es:'es',fr:'fr',hi:'hi',pt:'pt',ar:'ar',zh:'zh-CN'};
+
+function updateTranslateBar(lang) {
+  const bar = document.getElementById('translateBar');
+  if (lang === 'en') {
+    bar.style.display = 'none';
+  } else {
+    bar.style.display = 'flex';
+    document.getElementById('translateLangName').textContent = LANG_NAMES[lang] || lang;
+  }
+}
+
+async function translateInput() {
+  const lang = localStorage.getItem('dovtek_lang') || 'en';
+  if (lang === 'en') return;
+
+  const textarea = document.getElementById('scanInput');
+  const text = textarea.value.trim();
+  if (!text) { showToast('Please type a message first', 'error'); return; }
+
+  const btn = document.getElementById('translateBtn');
+  const hint = document.getElementById('translateHint');
+  const origBtnText = btn.innerHTML;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Translating...';
+  hint.textContent = '';
+
+  const targetLang = LANG_CODES_MYMEMORY[lang] || lang;
+
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await resp.json();
+
+    if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
+      textarea.value = data.responseData.translatedText;
+      hint.textContent = '✓ Translated from English';
+      hint.style.color = 'var(--teal)';
+      showToast('Message translated to ' + LANG_NAMES[lang], 'success');
+    } else {
+      throw new Error('Translation failed');
+    }
+  } catch(e) {
+    hint.textContent = '✗ Translation failed — please try again';
+    hint.style.color = '#ef4444';
+    showToast('Translation failed. Please try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origBtnText;
+    // Reset hint color after a few seconds
+    setTimeout(() => {
+      hint.style.color = '';
+      hint.textContent = 'Type in English → we\'ll translate it for you';
+    }, 4000);
+  }
+}
+
 function changeLang(lang){
   localStorage.setItem('dovtek_lang',lang);
   applyLanguage(lang);
+  updateTranslateBar(lang);
 }
 
 function applyLanguage(lang){
@@ -460,6 +530,9 @@ function applyLanguage(lang){
   const saved=localStorage.getItem('dovtek_lang')||'en';
   document.getElementById('langSelect').value=saved;
   if(saved!=='en') applyLanguage(saved);
+
+  // Show/hide translate bar
+  updateTranslateBar(saved);
 
   // Update scan count label
   if (token) {
