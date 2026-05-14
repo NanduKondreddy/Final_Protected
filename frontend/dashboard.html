@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Dov-tek</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.container{max-width:900px;margin:100px auto 60px;padding:0 24px}
+.dash-hello{font-size:28px;font-weight:800;margin-bottom:4px}
+.dash-hello .accent{color:var(--teal)}
+.dash-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;margin-bottom:16px}
+.dash-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:600px){.dash-cards{grid-template-columns:1fr 1fr}}
+.dash-card{background:var(--card);border:1px solid var(--border);padding:20px;border-radius:var(--radius-md)}
+.dash-card-num{font-size:32px;font-weight:800;line-height:1;margin-bottom:6px}
+.dash-card-label{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+/* Scan quota bar */
+.quota-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.quota-label{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;flex-shrink:0}
+.quota-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;min-width:120px}
+.quota-fill{height:100%;border-radius:4px;transition:width 0.6s ease;background:var(--teal)}
+.quota-fill.warn{background:#f59e0b}
+.quota-fill.empty{background:#ef4444}
+.quota-text{font-family:var(--font-mono);font-size:11px;font-weight:700;flex-shrink:0}
+.quota-text.ok{color:var(--teal)}.quota-text.warn{color:#f59e0b}.quota-text.empty{color:#ef4444}
+.quota-upgrade{font-family:var(--font-mono);font-size:10px;color:var(--black);background:var(--teal);padding:5px 12px;border-radius:4px;text-decoration:none;font-weight:700;letter-spacing:0.05em;flex-shrink:0}
+.history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.history-label{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+.scan-list{display:flex;flex-direction:column;gap:2px}
+.scan-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);transition:background 0.2s}
+.scan-row:hover{background:var(--card-hover)}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdot.h{background:#ff4757}.sdot.m{background:#f59e0b}.sdot.l{background:var(--teal)}
+.scan-info{flex:1;min-width:0}
+.scan-band{font-size:13px;font-weight:600;margin-bottom:2px}
+.scan-band.h{color:#ff4757}.scan-band.m{color:#f59e0b}.scan-band.l{color:var(--teal)}
+.scan-msg{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px}
+.scan-meta{font-family:var(--font-mono);font-size:10px;color:var(--dim);margin-top:2px}
+.scan-score{font-weight:800;font-size:16px;flex-shrink:0}
+.scan-score.h{color:#ff4757}.scan-score.m{color:#f59e0b}.scan-score.l{color:var(--teal)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state-icon{font-size:48px;margin-bottom:16px}
+.empty-state-text{font-size:15px;margin-bottom:24px;color:var(--warm)}
+.loading{text-align:center;padding:40px;color:var(--muted);font-family:var(--font-mono);font-size:12px}
+/* Upgrade popup overlay */
+.upgrade-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px}
+.upgrade-overlay.on{display:flex}
+.upgrade-modal{background:#0d1117;border:1px solid rgba(0,212,160,0.25);border-radius:20px;padding:40px;max-width:460px;width:100%;text-align:center}
+.upgrade-icon{font-size:56px;margin-bottom:16px}
+.upgrade-title{font-size:24px;font-weight:800;margin-bottom:8px}
+.upgrade-sub{color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px}
+.upgrade-plans{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.upgrade-plan{padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s}
+.upgrade-plan:hover{border-color:rgba(0,212,160,0.4)}
+.upgrade-plan.pro{border-color:rgba(0,212,160,0.2)}
+.upgrade-plan.plus{background:rgba(0,212,160,0.08);border-color:var(--teal)}
+.upgrade-plan-name{font-weight:700;font-size:15px;color:#fff}
+.upgrade-plan-price{font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700}
+.upgrade-dismiss{font-family:var(--font-mono);font-size:11px;color:#475569;cursor:pointer;text-decoration:underline;background:none;border:none}
+.lang-select{background:var(--card);border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;outline:none;letter-spacing:0.04em;margin-right:12px}
+.lang-select:focus{border-color:var(--teal)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>Dov<span class="accent">-tek</span></a>
+  <ul class="nav-links">
+    <li><a href="/" id="navHome">Home</a></li>
+    <li><a href="/scan" id="navScan">Scan</a></li>
+    <li><a href="/dashboard" class="active" id="navDashboard">Dashboard</a></li>
+  </ul>
+  <div class="nav-actions">
+    <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <option value="hi">हिन्दी</option>
+      <option value="pt">Português</option>
+      <option value="ar">العربية</option>
+      <option value="zh">中文</option>
+    </select>
+    <a class="btn-ghost" href="#" onclick="logout()" id="navLogout">Logout</a>
+  </div>
+  <button class="nav-hamburger" onclick="document.getElementById('mobileNav').classList.toggle('open');this.classList.toggle('open')"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="mobileNav">
+  <a href="/" id="mNavHome">Home</a><a href="/scan" id="mNavScan">Scan</a><a href="/dashboard" id="mNavDashboard">Dashboard</a><a href="#" onclick="logout()" id="mNavLogout">Logout</a>
+</div>
+
+<div class="container">
+  <div class="dash-hello" id="dashHello">Welcome back, <span class="accent" id="userName">User</span> 👋</div>
+  <div class="dash-sub" id="dashSub">Loading your scan history...</div>
+
+  <!-- Scan quota bar -->
+  <div class="quota-bar-wrap" id="quotaBarWrap">
+    <span class="quota-label" id="quotaLabel">Today's Scans</span>
+    <div class="quota-track"><div class="quota-fill" id="quotaFill" style="width:100%"></div></div>
+    <span class="quota-text ok" id="quotaText">3 / 3 left</span>
+    <a href="#" class="quota-upgrade" id="quotaUpgradeBtn" onclick="document.getElementById('upgradeOverlay').classList.add('on'); return false;" style="display:none">⚡ Upgrade</a>
+  </div>
+
+  <div class="dash-cards">
+    <div class="dash-card"><div class="dash-card-num" id="totalScans" style="color:var(--white)">—</div><div class="dash-card-label" id="labelTotal">Total Scans</div></div>
+    <div class="dash-card"><div class="dash-card-num" id="highRisk" style="color:#ff4757">—</div><div class="dash-card-label" id="labelHigh">High Risk Caught</div></div>
+    <div class="dash-card"><div class="dash-card-num" id="safeCount" style="color:var(--teal)">—</div><div class="dash-card-label" id="labelSafe">Safe Messages</div></div>
+  </div>
+
+  <div class="history-header">
+    <div class="history-label" id="histLabel">Scan History</div>
+    <a class="btn btn-primary btn-sm" href="/scan" id="newScanBtn">+ New Scan</a>
+  </div>
+
+  <div class="scan-list" id="scanList">
+    <div class="loading" id="loadingState">Loading scans...</div>
+  </div>
+
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="empty-state-icon">🛡️</div>
+    <div class="empty-state-text" id="emptyText">No scans yet. Try scanning your first message!</div>
+    <a class="btn btn-primary btn-md" href="/scan" id="emptyScanBtn">Scan a Message</a>
+  </div>
+</div>
+
+<!-- Upgrade Popup -->
+<div class="upgrade-overlay" id="upgradeOverlay">
+  <div class="upgrade-modal">
+    <div class="upgrade-icon">🔒</div>
+    <div class="upgrade-title" id="upgTitle">Daily limit reached</div>
+    <p class="upgrade-sub" id="upgSub">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
+    <div class="upgrade-plans">
+      <a href="mailto:dovtekofficial@gmail.com?subject=Dov-tek Pro Inquiry" class="upgrade-plan pro">
+        <span class="upgrade-plan-name">Dov-tek Pro</span>
+        <span class="upgrade-plan-price" id="upgPricePro">₹165 / mo</span>
+      </a>
+      <a href="mailto:dovtekofficial@gmail.com?subject=Dov-tek Shield Plus Inquiry" class="upgrade-plan plus">
+        <span class="upgrade-plan-name">🛡️ Shield Plus <span style="font-size:10px;color:#94a3b8;font-weight:400">Recommended</span></span>
+        <span class="upgrade-plan-price" id="upgPricePlus">₹414 / mo</span>
+      </a>
+    </div>
+    <button class="upgrade-dismiss" onclick="document.getElementById('upgradeOverlay').classList.remove('on')" id="upgDismiss">Maybe later — I'll wait until tomorrow</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div><div class="footer-brand">Dov<span class="accent">-tek</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
+    <div class="footer-bottom"><div class="footer-note">🔒 Privacy-first · No message content ever stored</div><div class="footer-note">© 2026 Dov-tek Technologies</div></div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const token = localStorage.getItem('dovtek_token');
+if (!token) { window.location.href = '/'; }
+
+// ── Translations ──────────────────────────────────────────────────────────
+const DASH_T = {
+  en: { welcome:"Welcome back,", sub:"{n} total scans · Your data is private", quotaLabel:"Today's Scans", quotaLeft:"{n} / 3 left", quotaEmpty:"Limit reached", upgradeBtn:"⚡ Upgrade", total:"Total Scans", high:"High Risk Caught", safe:"Safe Messages", hist:"Scan History", newScan:"+ New Scan", emptyText:"No scans yet. Try scanning your first message!", emptyScan:"Scan a Message", navHome:"Home", navScan:"Scan", navDash:"Dashboard", logout:"Logout", loading:"Loading scans...", loadFail:"Failed to load:", upgTitle:"Daily limit reached", upgSub:"You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.", upgDismiss:"Maybe later — I'll wait until tomorrow" },
+  es: { welcome:"Bienvenido de nuevo,", sub:"{n} escaneos totales · Tus datos son privados", quotaLabel:"Escaneos de hoy", quotaLeft:"{n} / 3 restantes", quotaEmpty:"Límite alcanzado", upgradeBtn:"⚡ Mejorar", total:"Escaneos Totales", high:"Alto Riesgo Detectado", safe:"Mensajes Seguros", hist:"Historial de Escaneos", newScan:"+ Nuevo Escaneo", emptyText:"Aún no hay escaneos. ¡Escanea tu primer mensaje!", emptyScan:"Escanear Mensaje", navHome:"Inicio", navScan:"Escanear", navDash:"Panel", logout:"Cerrar Sesión", loading:"Cargando escaneos...", loadFail:"Error al cargar:", upgTitle:"Límite diario alcanzado", upgSub:"Has usado los 3 escaneos gratuitos de hoy. Mejora tu plan para seguir escaneando.", upgDismiss:"Quizás más tarde — esperaré hasta mañana" },
+  fr: { welcome:"Bon retour,", sub:"{n} scans au total · Vos données sont privées", quotaLabel:"Scans d'aujourd'hui", quotaLeft:"{n} / 3 restants", quotaEmpty:"Limite atteinte", upgradeBtn:"⚡ Améliorer", total:"Scans Totaux", high:"Risques Élevés", safe:"Messages Sûrs", hist:"Historique", newScan:"+ Nouveau Scan", emptyText:"Pas encore de scans. Scannez votre premier message!", emptyScan:"Scanner un Message", navHome:"Accueil", navScan:"Scanner", navDash:"Tableau de Bord", logout:"Déconnexion", loading:"Chargement...", loadFail:"Échec du chargement:", upgTitle:"Limite quotidienne atteinte", upgSub:"Vous avez utilisé vos 3 scans gratuits d'aujourd'hui. Passez à un plan supérieur.", upgDismiss:"Peut-être plus tard" },
+  hi: { welcome:"वापसी पर स्वागत,", sub:"{n} कुल स्कैन · आपका डेटा निजी है", quotaLabel:"आज के स्कैन", quotaLeft:"{n} / 3 शेष", quotaEmpty:"सीमा समाप्त", upgradeBtn:"⚡ अपग्रेड करें", total:"कुल स्कैन", high:"उच्च जोखिम पकड़े", safe:"सुरक्षित संदेश", hist:"स्कैन इतिहास", newScan:"+ नया स्कैन", emptyText:"अभी तक कोई स्कैन नहीं। अपना पहला संदेश स्कैन करें!", emptyScan:"संदेश स्कैन करें", navHome:"होम", navScan:"स्कैन", navDash:"डैशबोर्ड", logout:"लॉगआउट", loading:"स्कैन लोड हो रहे हैं...", loadFail:"लोड विफल:", upgTitle:"दैनिक सीमा समाप्त", upgSub:"आपने आज के 3 मुफ़्त स्कैन उपयोग कर लिए हैं। अधिक स्कैन के लिए अपग्रेड करें।", upgDismiss:"शायद बाद में — कल तक इंतज़ार करूंगा" },
+  pt: { welcome:"Bem-vindo de volta,", sub:"{n} scans totais · Seus dados são privados", quotaLabel:"Scans de hoje", quotaLeft:"{n} / 3 restantes", quotaEmpty:"Limite atingido", upgradeBtn:"⚡ Atualizar", total:"Scans Totais", high:"Alto Risco Detectado", safe:"Mensagens Seguras", hist:"Histórico", newScan:"+ Novo Scan", emptyText:"Nenhum scan ainda. Experimente!", emptyScan:"Escanear Mensagem", navHome:"Início", navScan:"Escanear", navDash:"Painel", logout:"Sair", loading:"Carregando...", loadFail:"Falha ao carregar:", upgTitle:"Limite diário atingido", upgSub:"Você usou todos os 3 scans gratuitos de hoje. Faça upgrade para continuar.", upgDismiss:"Talvez mais tarde" },
+  ar: { welcome:"مرحباً بعودتك،", sub:"{n} فحص إجمالي · بياناتك خاصة", quotaLabel:"فحوصات اليوم", quotaLeft:"{n} / 3 متبقية", quotaEmpty:"تم الوصول للحد", upgradeBtn:"⚡ ترقية", total:"إجمالي الفحوصات", high:"مخاطر عالية", safe:"رسائل آمنة", hist:"سجل الفحوصات", newScan:"+ فحص جديد", emptyText:"لا توجد فحوصات بعد. ابدأ بفحص رسالتك!", emptyScan:"افحص رسالة", navHome:"الرئيسية", navScan:"فحص", navDash:"لوحة التحكم", logout:"تسجيل الخروج", loading:"جارٍ التحميل...", loadFail:"فشل التحميل:", upgTitle:"تم الوصول للحد اليومي", upgSub:"لقد استخدمت جميع الفحوصات المجانية الثلاث لهذا اليوم. قم بالترقية للاستمرار.", upgDismiss:"ربما لاحقاً" },
+  zh: { welcome:"欢迎回来，", sub:"{n} 次总扫描 · 您的数据是私密的", quotaLabel:"今日扫描", quotaLeft:"{n} / 3 剩余", quotaEmpty:"已达上限", upgradeBtn:"⚡ 升级", total:"总扫描次数", high:"高风险拦截", safe:"安全消息", hist:"扫描历史", newScan:"+ 新扫描", emptyText:"还没有扫描记录。扫描您的第一条消息！", emptyScan:"扫描消息", navHome:"首页", navScan:"扫描", navDash:"仪表板", logout:"退出登录", loading:"加载中...", loadFail:"加载失败:", upgTitle:"已达每日上限", upgSub:"您已用完今天的3次免费扫描。升级以继续扫描。", upgDismiss:"也许以后再说" }
+};
+
+const lang = localStorage.getItem('dovtek_lang') || 'en';
+const T = DASH_T[lang] || DASH_T.en;
+document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+// Initialize language dropdown
+const langSel = document.getElementById('langSelect');
+if(langSel) langSel.value = lang;
+
+function changeLang(l) {
+  localStorage.setItem('dovtek_lang', l);
+  window.location.reload();
+}
+
+// Apply translations
+document.getElementById('navHome').textContent = T.navHome;
+document.getElementById('navScan').textContent = T.navScan;
+document.getElementById('navDashboard').textContent = T.navDash;
+document.getElementById('navLogout').textContent = T.logout;
+document.getElementById('mNavHome').textContent = T.navHome;
+document.getElementById('mNavScan').textContent = T.navScan;
+document.getElementById('mNavDashboard').textContent = T.navDash;
+document.getElementById('mNavLogout').textContent = T.logout;
+document.getElementById('quotaLabel').textContent = T.quotaLabel;
+document.getElementById('quotaUpgradeBtn').textContent = T.upgradeBtn;
+document.getElementById('labelTotal').textContent = T.total;
+document.getElementById('labelHigh').textContent = T.high;
+document.getElementById('labelSafe').textContent = T.safe;
+document.getElementById('histLabel').textContent = T.hist;
+document.getElementById('newScanBtn').textContent = T.newScan;
+document.getElementById('emptyText').textContent = T.emptyText;
+document.getElementById('emptyScanBtn').textContent = T.emptyScan;
+document.getElementById('loadingState').textContent = T.loading;
+document.getElementById('upgTitle').textContent = T.upgTitle;
+document.getElementById('upgSub').textContent = T.upgSub;
+document.getElementById('upgDismiss').textContent = T.upgDismiss;
+
+// ── Scan Quota ────────────────────────────────────────────────────────────
+const TODAY = new Date().toISOString().slice(0, 10);
+const SCAN_KEY = 'dovtek_scan_user_' + TODAY;
+const USER_LIMIT = 3;
+
+function getScansUsed() { return parseInt(localStorage.getItem(SCAN_KEY) || '0', 10); }
+function getRemaining() { return Math.max(0, USER_LIMIT - getScansUsed()); }
+
+function renderQuota() {
+  const used = getScansUsed();
+  const rem = getRemaining();
+  const pct = Math.round((rem / USER_LIMIT) * 100);
+
+  const fill = document.getElementById('quotaFill');
+  const text = document.getElementById('quotaText');
+  const upgradeBtn = document.getElementById('quotaUpgradeBtn');
+
+  fill.style.width = pct + '%';
+  fill.className = 'quota-fill' + (rem === 0 ? ' empty' : rem === 1 ? ' warn' : '');
+  text.className = 'quota-text' + (rem === 0 ? ' empty' : rem === 1 ? ' warn' : ' ok');
+
+  if (rem === 0) {
+    text.textContent = T.quotaEmpty;
+    upgradeBtn.style.display = 'inline-block';
+  } else {
+    text.textContent = T.quotaLeft.replace('{n}', rem);
+    upgradeBtn.style.display = 'none';
+  }
+}
+
+// ── Toast & Auth ──────────────────────────────────────────────────────────
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function logout() { localStorage.removeItem('dovtek_token'); localStorage.removeItem('dovtek_user'); window.location.href='/'; }
+
+// ── Dashboard Load ────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const headers = { 'Authorization': 'Bearer ' + token };
+  try {
+    const userResp = await fetch(API + '/auth/me', { headers });
+    if (!userResp.ok) { logout(); return; }
+    const user = await userResp.json();
+    document.getElementById('userName').textContent = user.full_name || user.email.split('@')[0];
+
+    const histResp = await fetch(API + '/scans/history?page_size=50', { headers });
+    if (!histResp.ok) throw new Error('Failed to load history');
+    const hist = await histResp.json();
+
+    document.getElementById('loadingState').style.display = 'none';
+    const scans = hist.scans || [];
+    document.getElementById('totalScans').textContent = hist.total;
+    document.getElementById('highRisk').textContent = scans.filter(s => s.risk_level === 'HIGH').length;
+    document.getElementById('safeCount').textContent = scans.filter(s => s.risk_level === 'LOW').length;
+    document.getElementById('dashSub').textContent = T.sub.replace('{n}', hist.total);
+
+    if (scans.length === 0) {
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+
+    const list = document.getElementById('scanList');
+    list.innerHTML = '';
+    scans.forEach(s => {
+      const cls = s.risk_level === 'HIGH' ? 'h' : s.risk_level === 'MEDIUM' ? 'm' : 'l';
+      const date = new Date(s.scanned_at).toLocaleDateString(lang === 'ar' ? 'ar' : lang === 'zh' ? 'zh-CN' : 'en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      list.innerHTML += `
+        <div class="scan-row">
+          <div class="sdot ${cls}"></div>
+          <div class="scan-info">
+            <div class="scan-band ${cls}">${s.risk_level} Risk</div>
+            <div class="scan-msg">${s.summary || s.message.substring(0, 80)}</div>
+            <div class="scan-meta">${date}</div>
+          </div>
+          <div class="scan-score ${cls}">${s.risk_score}</div>
+        </div>`;
+    });
+  } catch(e) {
+    document.getElementById('loadingState').textContent = T.loadFail + ' ' + e.message;
+    showToast(e.message);
+  }
+}
+
+renderQuota();
+loadDashboard();
+window.addEventListener('scroll', () => { document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20); });
+</script>
+</body>
+</html>

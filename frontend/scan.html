@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dov-tek — AI Fraud Scanner</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.container{max-width:820px;margin:100px auto 60px;padding:0 24px}
+.hero-h{font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:12px;letter-spacing:-0.03em}
+.hero-p{color:var(--warm);font-size:17px;margin-bottom:40px;line-height:1.65}
+.scan-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg)}
+.scan-header{border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.scan-label{font-family:var(--font-mono);font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:0.1em}
+.scan-status{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+.scan-status-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 2s infinite}
+.scan-tabs{display:flex;background:rgba(0,0,0,0.3);padding:4px;margin:16px 24px 0;border-radius:8px;gap:4px}
+.sub-tab{flex:1;padding:10px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all 0.2s}
+.sub-tab.on{background:var(--border);color:var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.scan-body{padding:24px}
+.textarea-wrap{position:relative;margin-bottom:20px}
+.scan-textarea{width:100%;min-height:180px;background:var(--darker);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:20px;color:var(--white);font-family:var(--font-body);font-size:15px;line-height:1.65;outline:none;resize:vertical;transition:border-color 0.2s}
+.scan-textarea:focus{border-color:var(--teal)}
+.scan-textarea::placeholder{color:var(--dim)}
+.upload-zone{width:100%;min-height:180px;border:2px dashed var(--border);border-radius:var(--radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:all 0.25s;margin-bottom:20px;background:rgba(0,0,0,0.15)}
+.upload-zone:hover{border-color:var(--teal);background:var(--teal-dim)}
+.upload-zone.active{border-color:var(--teal);background:var(--teal-dim)}
+.upload-icon{font-size:36px}
+.upload-text{font-family:var(--font-mono);font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+.btn-scan{width:100%;padding:16px;background:var(--gradient-primary);color:var(--black);border:none;border-radius:var(--radius-md);font-family:var(--font-heading);font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(0,212,160,0.25)}
+.btn-scan:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(0,212,160,0.35)}
+.btn-scan:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.result-card{display:none;margin-top:32px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;animation:fade-up 0.5s var(--ease-out)}
+.result-header{padding:20px 24px;display:flex;justify-content:space-between;align-items:center}
+.res-level{font-family:var(--font-mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em}
+.res-score{font-family:var(--font-heading);font-size:48px;font-weight:800;line-height:1}
+.result-body{padding:0 24px 24px}
+.res-bar{height:6px;background:var(--border);border-radius:3px;margin-bottom:20px;overflow:hidden}
+.res-bar-fill{height:100%;border-radius:3px;transition:width 1s var(--ease-out)}
+.res-summary{font-size:16px;line-height:1.7;color:var(--off-white);margin-bottom:24px}
+.res-reasons{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.res-reason{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--warm);line-height:1.6}
+.res-reason-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:7px}
+.res-action{padding:16px 20px;border-radius:var(--radius-md);border-left:4px solid var(--teal);background:var(--teal-dim)}
+.res-action-label{font-family:var(--font-mono);font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;display:block}
+.res-action-text{font-weight:600;font-size:14px;color:var(--white);line-height:1.6}
+.user-bar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--darker);border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--muted);flex-wrap:wrap}
+.user-bar a{color:var(--teal);text-decoration:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:var(--black);border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px;vertical-align:middle}
+.loc-bar{display:flex;align-items:center;justify-content:center;padding:12px 24px;background:rgba(0,212,160,0.06);border-top:1px solid var(--border);font-family:var(--font-mono);font-size:12px;color:var(--warm);gap:8px}
+.loc-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--teal);color:var(--black);font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;letter-spacing:0.06em}
+.loc-currency{color:var(--teal);font-weight:700;font-size:16px}
+.lang-select{background:var(--card);border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;outline:none;letter-spacing:0.04em}
+.lang-select:focus{border-color:var(--teal)}
+.free-bar{display:flex;align-items:center;justify-content:center;padding:10px 24px;background:var(--teal);color:var(--black);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.06em;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>Dov<span class="accent">-tek</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/scan" class="active">Scan</a></li>
+    <li><a href="/dashboard">Dashboard</a></li>
+  </ul>
+  <div class="nav-actions">
+    <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <option value="hi">हिन्दी</option>
+      <option value="pt">Português</option>
+      <option value="ar">العربية</option>
+      <option value="zh">中文</option>
+    </select>
+    <span id="userInfo" style="display:none"></span>
+    <a class="btn-ghost" href="#" id="authBtn" onclick="handleAuth()">Log In</a>
+    <a class="btn btn-primary btn-sm" href="/scan">Try Free</a>
+  </div>
+  <button class="nav-hamburger" onclick="document.getElementById('mobileNav').classList.toggle('open');this.classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-mobile" id="mobileNav">
+  <a href="/">Home</a><a href="/scan">Scan</a><a href="/dashboard">Dashboard</a>
+</div>
+
+<div class="container">
+  <h1 class="hero-h">Scan Any Message</h1>
+  <p class="hero-p">Paste a suspicious message or upload a screenshot. Get an AI-powered fraud verdict in seconds.</p>
+
+  <div class="scan-card">
+    <div class="scan-header">
+      <span class="scan-label">🛡️ Message Scanner</span>
+      <div class="scan-status"><div class="scan-status-dot"></div>AI Ready</div>
+    </div>
+    <div class="scan-tabs">
+      <button class="sub-tab on" id="tabText" onclick="switchTab('text')">Text Message</button>
+      <button class="sub-tab" id="tabImage" onclick="switchTab('image')">Image / Screenshot</button>
+    </div>
+    <div class="scan-body">
+      <div id="zoneText">
+        <div class="textarea-wrap">
+          <textarea class="scan-textarea" id="scanInput" placeholder="Paste a suspicious message from WhatsApp, SMS, email, or any app..."></textarea>
+        </div>
+      </div>
+      <div id="zoneImage" style="display:none">
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <span class="upload-icon">🖼️</span>
+          <span class="upload-text" id="fileName">Click to upload or drag & drop<br>PNG, JPG, or PDF</span>
+          <input type="file" id="fileInput" hidden accept="image/*,.pdf" onchange="handleFile(this)">
+        </div>
+      </div>
+      <button class="btn-scan" id="scanBtn" onclick="performScan()">Analyse Message</button>
+    </div>
+    <div class="user-bar" id="userBar">
+      <span id="scanCount">3 free scans per day</span> · <span>No message stored</span> · <a href="/dashboard">View History</a>
+    </div>
+    <div class="loc-bar" id="locBar">
+      <span class="loc-badge" id="locBadge">...</span>
+      <span>Detected: <strong id="locCountry">detecting...</strong></span>
+      <span>·</span>
+      <span data-i18n="prices">Prices shown in</span> <span class="loc-currency" id="locCurrency">$</span>
+    </div>
+    <div class="free-bar" id="freeBar">✓ <span id="remainingCount">3</span> free scans remaining today</div>
+  </div>
+
+  <!-- Guest Gate Modal (For unauthenticated users who use their 1 scan) -->
+  <div class="overlay" id="guestGateOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+    <div style="background:#0d1117;border:1px solid rgba(0,212,160,0.3);border-radius:16px;padding:36px;max-width:420px;width:100%;text-align:center;position:relative">
+      <div style="font-size:48px;margin-bottom:16px">🛡️</div>
+      <div style="font-weight:800;font-size:22px;margin-bottom:8px">You've used your free scan</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:24px">Create a free account to get <strong style="color:#00d4a0">3 scans every day</strong> — no card needed.</p>
+      <a href="/" onclick="localStorage.setItem('dovtek_open_modal','signup')" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#00d4a0,#00b98a);color:#000;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;margin-bottom:12px">Create Free Account →</a>
+      <a href="/" onclick="localStorage.setItem('dovtek_open_modal','login')" style="display:block;width:100%;padding:13px;border:1px solid rgba(255,255,255,0.12);color:#fff;font-weight:600;font-size:14px;border-radius:8px;text-decoration:none">Already have an account? Log In</a>
+      <button onclick="document.getElementById('guestGateOverlay').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:22px;cursor:pointer">×</button>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal (For logged-in users who hit 3 scans) -->
+  <div class="overlay" id="upgradeOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
+    <div style="background:#0d1117;border:1px solid rgba(0,212,160,0.25);border-radius:20px;padding:40px;max-width:460px;width:100%;text-align:center;position:relative">
+      <div style="font-size:56px;margin-bottom:16px">🔒</div>
+      <div style="font-size:24px;font-weight:800;margin-bottom:8px">Daily limit reached</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <a href="mailto:dovtekofficial@gmail.com?subject=Dov-tek Pro Inquiry" style="padding:14px 16px;border-radius:10px;border:1px solid rgba(0,212,160,0.2);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
+          <span style="font-weight:700;font-size:15px;color:#fff">Dov-tek Pro</span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">₹165 / mo</span>
+        </a>
+        <a href="mailto:dovtekofficial@gmail.com?subject=Dov-tek Shield Plus Inquiry" style="padding:14px 16px;border-radius:10px;border:1px solid var(--teal);background:rgba(0,212,160,0.08);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
+          <span style="font-weight:700;font-size:15px;color:#fff">🛡️ Shield Plus <span style="font-size:10px;color:#94a3b8;font-weight:400">Recommended</span></span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">₹414 / mo</span>
+        </a>
+      </div>
+      <button onclick="document.getElementById('upgradeOverlay').style.display='none'" style="font-family:var(--font-mono);font-size:11px;color:#475569;cursor:pointer;text-decoration:underline;background:none;border:none">Maybe later — I'll wait until tomorrow</button>
+      <button onclick="document.getElementById('upgradeOverlay').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:22px;cursor:pointer">×</button>
+    </div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div>
+        <div class="res-level" id="resLevel">HIGH RISK</div>
+        <div class="res-summary" id="resSummary" style="margin-top:8px"></div>
+      </div>
+      <div class="res-score" id="resScore">0</div>
+    </div>
+    <div class="result-body">
+      <div class="res-bar"><div class="res-bar-fill" id="resBar"></div></div>
+      <ul class="res-reasons" id="resReasons"></ul>
+      <div class="res-action">
+        <span class="res-action-label">Recommendation</span>
+        <p class="res-action-text" id="resAction"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div><div class="footer-brand">Dov<span class="accent">-tek</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
+    <ul class="footer-links"><li><a href="/">Home</a></li><li><a href="/scan">Scan</a></li><li><a href="/privacy">Privacy</a></li></ul>
+    <div class="footer-bottom">
+      <div class="footer-note">🔒 Privacy-first · No message content ever stored</div>
+      <div class="footer-note">© 2026 Dov-tek Technologies</div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let mode = 'text';
+const token = localStorage.getItem('dovtek_token');
+
+// ── Scan Quota Helpers ──────────────────────────────────────────────────────
+const GUEST_LIMIT = 1;
+const USER_LIMIT = 3;
+const TODAY = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+// Use separate keys so guest and logged-in user quotas never clash
+const SCAN_STORAGE_KEY = token ? 'dovtek_scan_user_' + TODAY : 'dovtek_scan_guest_' + TODAY;
+
+function getScanCount() {
+  return parseInt(localStorage.getItem(SCAN_STORAGE_KEY) || '0', 10);
+}
+
+function getLimit() { return token ? USER_LIMIT : GUEST_LIMIT; }
+
+function getRemaining() {
+  return Math.max(0, getLimit() - getScanCount());
+}
+
+function updateRemainingDisplay() {
+  const rem = getRemaining();
+  const el = document.getElementById('remainingCount');
+  if (el) el.textContent = rem;
+  const freeBar = document.getElementById('freeBar');
+  if (freeBar) {
+    freeBar.style.background = rem === 0 ? '#ef4444' : '';
+    freeBar.innerHTML = rem === 0
+      ? '✗ No scans remaining — <a href="/" style="color:#000;font-weight:800;text-decoration:underline">Upgrade</a>'
+      : '✓ <span id="remainingCount">' + rem + '</span> free scan' + (rem === 1 ? '' : 's') + ' remaining today';
+  }
+}
+
+function incrementScanCount() {
+  const current = getScanCount();
+  localStorage.setItem(SCAN_STORAGE_KEY, current + 1);
+  updateRemainingDisplay();
+}
+
+// Auth state
+(function initAuth(){
+  if(token){
+    document.getElementById('authBtn').textContent = 'Logout';
+    // Hide the "Try Free" button in nav since user is already logged in
+    const tryFreeBtn = document.querySelector('.nav-actions .btn-primary');
+    if (tryFreeBtn) tryFreeBtn.style.display = 'none';
+    
+    fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(u=>{
+        document.getElementById('scanCount').textContent='Logged in as '+u.full_name;
+      })
+      .catch(()=>{});
+  }
+})();
+
+function handleAuth(){
+  if(token){
+    localStorage.removeItem('dovtek_token');
+    localStorage.removeItem('dovtek_user');
+    location.reload();
+  } else {
+    location.href='/';
+  }
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function switchTab(m){
+  mode=m;
+  document.getElementById('tabText').classList.toggle('on',m==='text');
+  document.getElementById('tabImage').classList.toggle('on',m==='image');
+  document.getElementById('zoneText').style.display=m==='text'?'block':'none';
+  document.getElementById('zoneImage').style.display=m==='image'?'block':'none';
+}
+
+function handleFile(input){
+  if(input.files&&input.files[0]){
+    const f=input.files[0];
+    document.getElementById('fileName').innerHTML='<b>'+f.name+'</b><br>Ready for analysis';
+    document.getElementById('dropZone').classList.add('active');
+    showToast('File selected. Click Analyse.','success');
+  }
+}
+
+async function performScan(){
+  // ── Quota check ──
+  if (getRemaining() <= 0) {
+    if (token) {
+      document.getElementById('upgradeOverlay').style.display = 'flex';
+    } else {
+      document.getElementById('guestGateOverlay').style.display = 'flex';
+    }
+    return;
+  }
+
+  const text=document.getElementById('scanInput').value.trim();
+  const file=document.getElementById('fileInput').files[0];
+  if(mode==='text'&&!text){showToast('Please paste a message','error');return}
+  if(mode==='image'&&!file){showToast('Please upload a file','error');return}
+
+  const btn=document.getElementById('scanBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analysing with AI...';
+  document.getElementById('resultCard').style.display='none';
+
+  const fd=new FormData();
+  if(mode==='text')fd.append('message',text);
+  else fd.append('file',file);
+
+  const headers={};
+  if(token)headers['Authorization']='Bearer '+token;
+
+  try{
+    const resp=await fetch(API+'/scan',{method:'POST',body:fd,headers});
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.detail||'Analysis failed');
+    incrementScanCount();
+    renderResult(data);
+    // If user just used their last scan, show the gate after result
+    if (getRemaining() === 0) {
+      setTimeout(() => {
+        if (token) {
+          document.getElementById('upgradeOverlay').style.display = 'flex';
+        } else {
+          document.getElementById('guestGateOverlay').style.display = 'flex';
+        }
+      }, 2500);
+    }
+  }catch(err){
+    showToast(err.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent='Analyse Message';
+  }
+}
+
+function renderResult(res){
+  const card=document.getElementById('resultCard');
+  card.style.display='block';
+
+  let color='#00d4a0';
+  if(res.risk_level==='HIGH')color='#ff4757';
+  else if(res.risk_level==='MEDIUM')color='#f59e0b';
+
+  document.getElementById('resLevel').textContent=res.risk_level+' RISK';
+  document.getElementById('resLevel').style.color=color;
+  document.getElementById('resScore').textContent=res.risk_score;
+  document.getElementById('resScore').style.color=color;
+  document.getElementById('resSummary').textContent=res.summary;
+  document.getElementById('resAction').textContent=res.what_to_do;
+
+  const bar=document.getElementById('resBar');
+  bar.style.width=res.risk_score+'%';
+  bar.style.background=color;
+
+  const list=document.getElementById('resReasons');
+  list.innerHTML='';
+  (res.reasons||[]).forEach(r=>{
+    const li=document.createElement('li');
+    li.className='res-reason';
+    li.innerHTML='<div class="res-reason-dot" style="background:'+color+'"></div>'+r;
+    list.appendChild(li);
+  });
+
+  if(res.risk_level==='HIGH'){
+    card.style.borderColor='rgba(255,71,87,0.3)';
+    document.querySelector('.res-action').style.borderLeftColor=color;
+    document.querySelector('.res-action').style.background='rgba(255,71,87,0.08)';
+  }else{
+    card.style.borderColor='var(--border)';
+    document.querySelector('.res-action').style.borderLeftColor='var(--teal)';
+    document.querySelector('.res-action').style.background='var(--teal-dim)';
+  }
+
+  card.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// Nav scroll
+window.addEventListener('scroll',()=>{
+  document.querySelector('.nav').classList.toggle('scrolled',window.scrollY>20);
+});
+
+// ── Currency Map ──
+const CURRENCY_MAP={
+  'IN':'INR \u20b9','US':'USD $','GB':'GBP \u00a3','NG':'NGN \u20a6',
+  'DE':'EUR \u20ac','FR':'EUR \u20ac','IT':'EUR \u20ac','ES':'EUR \u20ac',
+  'JP':'JPY \u00a5','CN':'CNY \u00a5','KR':'KRW \u20a9','BR':'BRL R$',
+  'ZA':'ZAR R','AE':'AED','SA':'SAR','AU':'AUD A$','CA':'CAD C$',
+  'MX':'MXN','RU':'RUB','TR':'TRY','EG':'EGP','KE':'KES','GH':'GHS',
+  'PH':'PHP','ID':'IDR','MY':'MYR','TH':'THB','VN':'VND','BD':'BDT',
+  'PK':'PKR','LK':'LKR','NP':'NPR'
+};
+
+// ── Translations ──
+const TRANSLATIONS={
+  en:{title:'Scan Any Message',sub:'Paste a suspicious message or upload a screenshot. Get an AI-powered fraud verdict in seconds.',tabText:'Text Message',tabImage:'Image / Screenshot',placeholder:'Paste a suspicious message from WhatsApp, SMS, email, or any app...',upload:'Click to upload or drag & drop<br>PNG, JPG, or PDF',btn:'Analyse Message',prices:'Prices shown in',free:'\u2713 3 free scans remaining today',info:'3 free scans per day',noStore:'No message stored'},
+  es:{title:'Escanear Mensaje',sub:'Pega un mensaje sospechoso o sube una captura. Obt\u00e9n un veredicto de fraude con IA en segundos.',tabText:'Mensaje de Texto',tabImage:'Imagen / Captura',placeholder:'Pega un mensaje sospechoso de WhatsApp, SMS, correo o cualquier app...',upload:'Haz clic para subir o arrastra<br>PNG, JPG o PDF',btn:'Analizar Mensaje',prices:'Precios en',free:'\u2713 3 escaneos gratis restantes hoy',info:'3 escaneos gratis al d\u00eda',noStore:'Ning\u00fan mensaje almacenado'},
+  fr:{title:'Scanner un Message',sub:'Collez un message suspect ou t\u00e9l\u00e9chargez une capture d\'\u00e9cran. Obtenez un verdict en quelques secondes.',tabText:'Message Texte',tabImage:'Image / Capture',placeholder:'Collez un message suspect de WhatsApp, SMS, email ou toute application...',upload:'Cliquez pour t\u00e9l\u00e9charger<br>PNG, JPG ou PDF',btn:'Analyser le Message',prices:'Prix affich\u00e9s en',free:'\u2713 3 scans gratuits restants aujourd\'hui',info:'3 scans gratuits par jour',noStore:'Aucun message stock\u00e9'},
+  hi:{title:'\u0915\u094b\u0908 \u092d\u0940 \u0938\u0902\u0926\u0947\u0936 \u0938\u094d\u0915\u0948\u0928 \u0915\u0930\u0947\u0902',sub:'\u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902 \u092f\u093e \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f \u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0947\u0902\u0964 AI \u0938\u0947 \u0924\u0941\u0930\u0902\u0924 \u092b\u0948\u0938\u0932\u093e \u092a\u093e\u090f\u0902\u0964',tabText:'\u091f\u0947\u0915\u094d\u0938\u094d\u091f \u0938\u0902\u0926\u0947\u0936',tabImage:'\u0907\u092e\u0947\u091c / \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f',placeholder:'WhatsApp, SMS, \u0908\u092e\u0947\u0932 \u0938\u0947 \u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092f\u0939\u093e\u0901 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902...',upload:'\u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902<br>PNG, JPG \u092f\u093e PDF',btn:'\u0938\u0902\u0926\u0947\u0936 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0947\u0902',prices:'\u092e\u0942\u0932\u094d\u092f',free:'\u2713 \u0906\u091c 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928 \u0936\u0947\u0937',info:'\u092a\u094d\u0930\u0924\u093f\u0926\u093f\u0928 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928',noStore:'\u0915\u094b\u0908 \u0938\u0902\u0926\u0947\u0936 \u0938\u0902\u0917\u094d\u0930\u0939\u0940\u0924 \u0928\u0939\u0940\u0902'},
+  pt:{title:'Escanear Mensagem',sub:'Cole uma mensagem suspeita ou envie uma captura de tela. Receba um veredito de fraude com IA em segundos.',tabText:'Mensagem de Texto',tabImage:'Imagem / Captura',placeholder:'Cole uma mensagem suspeita do WhatsApp, SMS, email...',upload:'Clique para enviar<br>PNG, JPG ou PDF',btn:'Analisar Mensagem',prices:'Pre\u00e7os em',free:'\u2713 3 scans gratuitos restantes hoje',info:'3 scans gratuitos por dia',noStore:'Nenhuma mensagem armazenada'},
+  ar:{title:'\u0641\u062d\u0635 \u0623\u064a \u0631\u0633\u0627\u0644\u0629',sub:'\u0627\u0644\u0635\u0642 \u0631\u0633\u0627\u0644\u0629 \u0645\u0634\u0628\u0648\u0647\u0629 \u0623\u0648 \u0627\u0631\u0641\u0639 \u0644\u0642\u0637\u0629 \u0634\u0627\u0634\u0629. \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u062d\u0643\u0645 \u0627\u0644\u0627\u062d\u062a\u064a\u0627\u0644 \u0628\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a.',tabText:'\u0631\u0633\u0627\u0644\u0629 \u0646\u0635\u064a\u0629',tabImage:'\u0635\u0648\u0631\u0629 / \u0644\u0642\u0637\u0629',placeholder:'\u0627\u0644\u0635\u0642 \u0631\u0633\u0627\u0644\u0629 \u0645\u0634\u0628\u0648\u0647\u0629 \u0647\u0646\u0627...',upload:'\u0627\u0646\u0642\u0631 \u0644\u0644\u062a\u062d\u0645\u064a\u0644<br>PNG\u060c JPG \u0623\u0648 PDF',btn:'\u062a\u062d\u0644\u064a\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629',prices:'\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0628',free:'\u2713 3 \u0641\u062d\u0648\u0635\u0627\u062a \u0645\u062c\u0627\u0646\u064a\u0629 \u0645\u062a\u0628\u0642\u064a\u0629 \u0627\u0644\u064a\u0648\u0645',info:'3 \u0641\u062d\u0648\u0635\u0627\u062a \u0645\u062c\u0627\u0646\u064a\u0629 \u064a\u0648\u0645\u064a\u0627\u064b',noStore:'\u0644\u0627 \u064a\u062a\u0645 \u062a\u062e\u0632\u064a\u0646 \u0627\u0644\u0631\u0633\u0627\u0626\u0644'},
+  zh:{title:'\u626b\u63cf\u4efb\u4f55\u6d88\u606f',sub:'\u7c98\u8d34\u53ef\u7591\u6d88\u606f\u6216\u4e0a\u4f20\u622a\u56fe\u3002\u51e0\u79d2\u949f\u5185\u83b7\u53d6AI\u6b3a\u8bc8\u5224\u5b9a\u3002',tabText:'\u6587\u5b57\u6d88\u606f',tabImage:'\u56fe\u7247 / \u622a\u56fe',placeholder:'\u5728\u6b64\u7c98\u8d34\u6765\u81ea WhatsApp\u3001\u77ed\u4fe1\u3001\u90ae\u4ef6\u7684\u53ef\u7591\u6d88\u606f...',upload:'\u70b9\u51fb\u4e0a\u4f20<br>PNG\u3001JPG \u6216 PDF',btn:'\u5206\u6790\u6d88\u606f',prices:'\u4ef7\u683c\u663e\u793a\u4e3a',free:'\u2713 \u4eca\u5929\u5269\u4f59 3 \u6b21\u514d\u8d39\u626b\u63cf',info:'\u6bcf\u5929 3 \u6b21\u514d\u8d39\u626b\u63cf',noStore:'\u4e0d\u5b58\u50a8\u4efb\u4f55\u6d88\u606f'}
+};
+
+async function detectLocation(){
+  const cached=localStorage.getItem('dovtek_geo');
+  if(cached){
+    try{const d=JSON.parse(cached);if(Date.now()-d.ts<3600000){applyGeo(d);return;}}catch(e){}
+  }
+  try{
+    const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    const geo={country:d.country_name,code:d.country_code,ts:Date.now()};
+    localStorage.setItem('dovtek_geo',JSON.stringify(geo));
+    applyGeo(geo);
+  }catch(e){
+    try{
+      const r2=await fetch('https://api.country.is',{signal:AbortSignal.timeout(4000)});
+      const d2=await r2.json();
+      const geo={country:d2.country||'Unknown',code:d2.country||'US',ts:Date.now()};
+      localStorage.setItem('dovtek_geo',JSON.stringify(geo));
+      applyGeo(geo);
+    }catch(e2){
+      applyGeo({country:'your region',code:'US'});
+    }
+  }
+}
+
+function applyGeo(geo){
+  const code=geo.code||'US';
+  const currency=CURRENCY_MAP[code]||'USD $';
+  document.getElementById('locBadge').textContent=code;
+  document.getElementById('locCountry').textContent=geo.country||'Unknown';
+  document.getElementById('locCurrency').textContent=currency;
+}
+
+function changeLang(lang){
+  localStorage.setItem('dovtek_lang',lang);
+  applyLanguage(lang);
+}
+
+function applyLanguage(lang){
+  const t=TRANSLATIONS[lang]||TRANSLATIONS.en;
+  document.querySelector('.hero-h').textContent=t.title;
+  document.querySelector('.hero-p').textContent=t.sub;
+  document.getElementById('tabText').textContent=t.tabText;
+  document.getElementById('tabImage').textContent=t.tabImage;
+  document.getElementById('scanInput').placeholder=t.placeholder;
+  document.getElementById('fileName').innerHTML=t.upload;
+  document.getElementById('scanBtn').textContent=t.btn;
+  document.querySelector('[data-i18n="prices"]').textContent=t.prices;
+  document.querySelector('[data-i18n="free"]').textContent=t.free;
+  document.getElementById('scanCount').textContent=t.info;
+  // Set dir for RTL languages
+  document.body.dir=lang==='ar'?'rtl':'ltr';
+}
+
+// Init
+(function(){
+  const saved=localStorage.getItem('dovtek_lang')||'en';
+  document.getElementById('langSelect').value=saved;
+  if(saved!=='en') applyLanguage(saved);
+
+  // Update scan count label
+  if (token) {
+    document.getElementById('scanCount').textContent = getRemaining() + ' scans remaining today';
+  } else {
+    document.getElementById('scanCount').textContent = '1 free scan (guest) · Sign up for 3/day';
+  }
+  updateRemainingDisplay();
+})();
+
+detectLocation();
+</script>
+</body>
+</html>
