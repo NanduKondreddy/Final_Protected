@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dov-tek — AI Fraud Scanner</title>
+<title>ShieldIQ by Dovtek — AI Fraud Scanner</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/global.css">
@@ -66,7 +66,7 @@
 <body>
 
 <nav class="nav">
-  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>Dov<span class="accent">-tek</span></a>
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>Dovtek | Shield<span class="accent">IQ</span></a>
   <ul class="nav-links">
     <li><a href="/">Home</a></li>
     <li><a href="/scan" class="active">Scan</a></li>
@@ -78,9 +78,6 @@
       <option value="es">Español</option>
       <option value="fr">Français</option>
       <option value="hi">हिन्दी</option>
-      <option value="pt">Português</option>
-      <option value="ar">العربية</option>
-      <option value="zh">中文</option>
     </select>
     <span id="userInfo" style="display:none"></span>
     <a class="btn-ghost" href="#" id="authBtn" onclick="handleAuth()">Log In</a>
@@ -111,6 +108,7 @@
       <div id="zoneText">
         <div class="textarea-wrap">
           <textarea class="scan-textarea" id="scanInput" placeholder="Paste a suspicious message from WhatsApp, SMS, email, or any app..."></textarea>
+          <button onclick="document.getElementById('scanInput').value=''" style="position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.1); border:none; color:var(--white); padding:4px 8px; border-radius:4px; font-size:12px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Clear</button>
         </div>
         <div class="translate-bar" id="translateBar">
           <div class="translate-indicator" id="translateStatus">
@@ -126,16 +124,13 @@
           <input type="file" id="fileInput" hidden accept="image/*,.pdf" onchange="handleFile(this)">
         </div>
       </div>
-      <button class="btn-scan" id="scanBtn" onclick="performScan()">Analyse Message</button>
+      <button class="btn-scan" id="scanBtn" onclick="performScan()">Analyze Message</button>
     </div>
     <div class="user-bar" id="userBar">
       <span id="scanCount">3 free scans per day</span> · <span>No message stored</span> · <a href="/dashboard">View History</a>
     </div>
-    <div class="loc-bar" id="locBar">
-      <span class="loc-badge" id="locBadge">...</span>
-      <span>Detected: <strong id="locCountry">detecting...</strong></span>
-      <span>·</span>
-      <span data-i18n="prices">Prices shown in</span> <span class="loc-currency" id="locCurrency">$</span>
+    <div class="loc-bar" id="locBar" style="padding: 8px 24px; font-size: 11px; background: transparent; border-top: none; color: var(--muted); display:flex; justify-content:center;">
+      <span id="locCountry">detecting...</span> &nbsp;&bull;&nbsp; <span id="locCurrency">$</span>
     </div>
     <div class="free-bar" id="freeBar">✓ <span id="remainingCount">3</span> free scans remaining today</div>
   </div>
@@ -159,13 +154,13 @@
       <div style="font-size:24px;font-weight:800;margin-bottom:8px">Daily limit reached</div>
       <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-        <a href="mailto:dovtekofficial@gmail.com?subject=Dov-tek Pro Inquiry" style="padding:14px 16px;border-radius:10px;border:1px solid rgba(0,212,160,0.2);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
-          <span style="font-weight:700;font-size:15px;color:#fff">Dov-tek Pro</span>
-          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">₹165 / mo</span>
+        <a href="/checkout?plan=pro" style="padding:14px 16px;border-radius:10px;border:1px solid rgba(0,212,160,0.2);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
+          <span style="font-weight:700;font-size:15px;color:#fff">Dovtek Pro</span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">$3.99 / mo</span>
         </a>
-        <a href="mailto:dovtekofficial@gmail.com?subject=Dov-tek Shield Plus Inquiry" style="padding:14px 16px;border-radius:10px;border:1px solid var(--teal);background:rgba(0,212,160,0.08);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
+        <a href="/checkout?plan=plus" style="padding:14px 16px;border-radius:10px;border:1px solid var(--teal);background:rgba(0,212,160,0.08);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
           <span style="font-weight:700;font-size:15px;color:#fff">🛡️ Shield Plus <span style="font-size:10px;color:#94a3b8;font-weight:400">Recommended</span></span>
-          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">₹414 / mo</span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">$9.99 / mo</span>
         </a>
       </div>
       <button onclick="document.getElementById('upgradeOverlay').style.display='none'" style="font-family:var(--font-mono);font-size:11px;color:#475569;cursor:pointer;text-decoration:underline;background:none;border:none">Maybe later — I'll wait until tomorrow</button>
@@ -176,10 +171,10 @@
   <div class="result-card" id="resultCard">
     <div class="result-header">
       <div>
-        <div class="res-level" id="resLevel">HIGH RISK</div>
-        <div class="res-summary" id="resSummary" style="margin-top:8px"></div>
+        <div class="res-level" id="resLevel">AWAITING SCAN</div>
+        <div class="res-summary" id="resSummary" style="margin-top:8px">Your scan result will appear here after analysis.</div>
       </div>
-      <div class="res-score" id="resScore">0</div>
+      <div class="res-score" id="resScore">-</div>
     </div>
     <div class="result-body">
       <div class="res-bar"><div class="res-bar-fill" id="resBar"></div></div>
@@ -194,8 +189,17 @@
 
 <footer class="footer">
   <div class="footer-inner">
-    <div><div class="footer-brand">Dov<span class="accent">-tek</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
-    <ul class="footer-links"><li><a href="/">Home</a></li><li><a href="/scan">Scan</a></li><li><a href="/privacy">Privacy</a></li></ul>
+    <div><div class="footer-brand">Dovtek | Shield<span class="accent">IQ</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
+    <ul class="footer-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/scan">Scan</a></li>
+      <li><a href="/about">About the Team</a></li>
+      <li><a href="/ai">How the AI Works</a></li>
+      <li><a href="/privacy">Privacy & Data</a></li>
+      <li><a href="/security">Security</a></li>
+      <li><a href="/terms">Terms of Use</a></li>
+      <li><a href="/contact">Contact</a></li>
+    </ul>
     <div class="footer-bottom">
       <div class="footer-note">🔒 Privacy-first · No message content ever stored</div>
       <div class="footer-note">© 2026 Dov-tek Technologies</div>
@@ -313,7 +317,7 @@ async function performScan(){
   if(mode==='image'&&!file){showToast('Please upload a file','error');return}
 
   const btn=document.getElementById('scanBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analysing with AI...';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analyzing with AI...';
   document.getElementById('resultCard').style.display='none';
 
   const fd=new FormData();
@@ -342,7 +346,7 @@ async function performScan(){
   }catch(err){
     showToast(err.message,'error');
   }finally{
-    btn.disabled=false;btn.textContent='Analyse Message';
+    btn.disabled=false;btn.textContent='Analyze Message';
   }
 }
 
@@ -403,15 +407,11 @@ const CURRENCY_MAP={
   'PK':'PKR','LK':'LKR','NP':'NPR'
 };
 
-// ── Translations ──
 const TRANSLATIONS={
-  en:{title:'Scan Any Message',sub:'Paste a suspicious message or upload a screenshot. Get an AI-powered fraud verdict in seconds.',tabText:'Text Message',tabImage:'Image / Screenshot',placeholder:'Paste a suspicious message from WhatsApp, SMS, email, or any app...',upload:'Click to upload or drag & drop<br>PNG, JPG, or PDF',btn:'Analyse Message',prices:'Prices shown in',free:'\u2713 3 free scans remaining today',info:'3 free scans per day',noStore:'No message stored'},
+  en:{title:'Scan Any Message',sub:'Paste a suspicious message or upload a screenshot. Get an AI-powered fraud verdict in seconds.',tabText:'Text Message',tabImage:'Image / Screenshot',placeholder:'Paste a suspicious message from WhatsApp, SMS, email, or any app...',upload:'Click to upload or drag & drop<br>PNG, JPG, or PDF',btn:'Analyze Message',prices:'Prices shown in',free:'\u2713 3 free scans remaining today',info:'3 free scans per day',noStore:'No message stored'},
   es:{title:'Escanear Mensaje',sub:'Pega un mensaje sospechoso o sube una captura. Obt\u00e9n un veredicto de fraude con IA en segundos.',tabText:'Mensaje de Texto',tabImage:'Imagen / Captura',placeholder:'Pega un mensaje sospechoso de WhatsApp, SMS, correo o cualquier app...',upload:'Haz clic para subir o arrastra<br>PNG, JPG o PDF',btn:'Analizar Mensaje',prices:'Precios en',free:'\u2713 3 escaneos gratis restantes hoy',info:'3 escaneos gratis al d\u00eda',noStore:'Ning\u00fan mensaje almacenado'},
   fr:{title:'Scanner un Message',sub:'Collez un message suspect ou t\u00e9l\u00e9chargez une capture d\'\u00e9cran. Obtenez un verdict en quelques secondes.',tabText:'Message Texte',tabImage:'Image / Capture',placeholder:'Collez un message suspect de WhatsApp, SMS, email ou toute application...',upload:'Cliquez pour t\u00e9l\u00e9charger<br>PNG, JPG ou PDF',btn:'Analyser le Message',prices:'Prix affich\u00e9s en',free:'\u2713 3 scans gratuits restants aujourd\'hui',info:'3 scans gratuits par jour',noStore:'Aucun message stock\u00e9'},
-  hi:{title:'\u0915\u094b\u0908 \u092d\u0940 \u0938\u0902\u0926\u0947\u0936 \u0938\u094d\u0915\u0948\u0928 \u0915\u0930\u0947\u0902',sub:'\u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902 \u092f\u093e \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f \u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0947\u0902\u0964 AI \u0938\u0947 \u0924\u0941\u0930\u0902\u0924 \u092b\u0948\u0938\u0932\u093e \u092a\u093e\u090f\u0902\u0964',tabText:'\u091f\u0947\u0915\u094d\u0938\u094d\u091f \u0938\u0902\u0926\u0947\u0936',tabImage:'\u0907\u092e\u0947\u091c / \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f',placeholder:'WhatsApp, SMS, \u0908\u092e\u0947\u0932 \u0938\u0947 \u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092f\u0939\u093e\u0901 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902...',upload:'\u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902<br>PNG, JPG \u092f\u093e PDF',btn:'\u0938\u0902\u0926\u0947\u0936 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0947\u0902',prices:'\u092e\u0942\u0932\u094d\u092f',free:'\u2713 \u0906\u091c 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928 \u0936\u0947\u0937',info:'\u092a\u094d\u0930\u0924\u093f\u0926\u093f\u0928 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928',noStore:'\u0915\u094b\u0908 \u0938\u0902\u0926\u0947\u0936 \u0938\u0902\u0917\u094d\u0930\u0939\u0940\u0924 \u0928\u0939\u0940\u0902'},
-  pt:{title:'Escanear Mensagem',sub:'Cole uma mensagem suspeita ou envie uma captura de tela. Receba um veredito de fraude com IA em segundos.',tabText:'Mensagem de Texto',tabImage:'Imagem / Captura',placeholder:'Cole uma mensagem suspeita do WhatsApp, SMS, email...',upload:'Clique para enviar<br>PNG, JPG ou PDF',btn:'Analisar Mensagem',prices:'Pre\u00e7os em',free:'\u2713 3 scans gratuitos restantes hoje',info:'3 scans gratuitos por dia',noStore:'Nenhuma mensagem armazenada'},
-  ar:{title:'\u0641\u062d\u0635 \u0623\u064a \u0631\u0633\u0627\u0644\u0629',sub:'\u0627\u0644\u0635\u0642 \u0631\u0633\u0627\u0644\u0629 \u0645\u0634\u0628\u0648\u0647\u0629 \u0623\u0648 \u0627\u0631\u0641\u0639 \u0644\u0642\u0637\u0629 \u0634\u0627\u0634\u0629. \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u062d\u0643\u0645 \u0627\u0644\u0627\u062d\u062a\u064a\u0627\u0644 \u0628\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a.',tabText:'\u0631\u0633\u0627\u0644\u0629 \u0646\u0635\u064a\u0629',tabImage:'\u0635\u0648\u0631\u0629 / \u0644\u0642\u0637\u0629',placeholder:'\u0627\u0644\u0635\u0642 \u0631\u0633\u0627\u0644\u0629 \u0645\u0634\u0628\u0648\u0647\u0629 \u0647\u0646\u0627...',upload:'\u0627\u0646\u0642\u0631 \u0644\u0644\u062a\u062d\u0645\u064a\u0644<br>PNG\u060c JPG \u0623\u0648 PDF',btn:'\u062a\u062d\u0644\u064a\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629',prices:'\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0628',free:'\u2713 3 \u0641\u062d\u0648\u0635\u0627\u062a \u0645\u062c\u0627\u0646\u064a\u0629 \u0645\u062a\u0628\u0642\u064a\u0629 \u0627\u0644\u064a\u0648\u0645',info:'3 \u0641\u062d\u0648\u0635\u0627\u062a \u0645\u062c\u0627\u0646\u064a\u0629 \u064a\u0648\u0645\u064a\u0627\u064b',noStore:'\u0644\u0627 \u064a\u062a\u0645 \u062a\u062e\u0632\u064a\u0646 \u0627\u0644\u0631\u0633\u0627\u0626\u0644'},
-  zh:{title:'\u626b\u63cf\u4efb\u4f55\u6d88\u606f',sub:'\u7c98\u8d34\u53ef\u7591\u6d88\u606f\u6216\u4e0a\u4f20\u622a\u56fe\u3002\u51e0\u79d2\u949f\u5185\u83b7\u53d6AI\u6b3a\u8bc8\u5224\u5b9a\u3002',tabText:'\u6587\u5b57\u6d88\u606f',tabImage:'\u56fe\u7247 / \u622a\u56fe',placeholder:'\u5728\u6b64\u7c98\u8d34\u6765\u81ea WhatsApp\u3001\u77ed\u4fe1\u3001\u90ae\u4ef6\u7684\u53ef\u7591\u6d88\u606f...',upload:'\u70b9\u51fb\u4e0a\u4f20<br>PNG\u3001JPG \u6216 PDF',btn:'\u5206\u6790\u6d88\u606f',prices:'\u4ef7\u683c\u663e\u793a\u4e3a',free:'\u2713 \u4eca\u5929\u5269\u4f59 3 \u6b21\u514d\u8d39\u626b\u63cf',info:'\u6bcf\u5929 3 \u6b21\u514d\u8d39\u626b\u63cf',noStore:'\u4e0d\u5b58\u50a8\u4efb\u4f55\u6d88\u606f'}
+  hi:{title:'\u0915\u094b\u0908 \u092d\u0940 \u0938\u0902\u0926\u0947\u0936 \u0938\u094d\u0915\u0948\u0928 \u0915\u0930\u0947\u0902',sub:'\u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902 \u092f\u093e \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f \u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0947\u0902\u0964 AI \u0938\u0947 \u0924\u0941\u0930\u0902\u0924 \u092b\u0948\u0938\u0932\u093e \u092a\u093e\u090f\u0902\u0964',tabText:'\u091f\u0947\u0915\u094d\u0938\u094d\u091f \u0938\u0902\u0926\u0947\u0936',tabImage:'\u0907\u092e\u0947\u091c / \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f',placeholder:'WhatsApp, SMS, \u0908\u092e\u0947\u0932 \u0938\u0947 \u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092f\u0939\u093e\u0901 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902...',upload:'\u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902<br>PNG, JPG \u092f\u093e PDF',btn:'\u0938\u0902\u0926\u0947\u0936 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0947\u0902',prices:'\u092e\u0942\u0932\u094d\u092f',free:'\u2713 \u0906\u091c 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928 \u0936\u0947\u0937',info:'\u092a\u094d\u0930\u0924\u093f\u0926\u093f\u0928 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928',noStore:'\u0915\u094b\u0908 \u0938\u0902\u0926\u0947\u0936 \u0938\u0902\u0917\u094d\u0930\u0939\u0940\u0924 \u0928\u0939\u0940\u0902'}
 };
 
 async function detectLocation(){
@@ -456,12 +456,8 @@ let _isTranslating = false;
 
 function updateTranslateBar(lang) {
   const bar = document.getElementById('translateBar');
-  if (lang === 'en') {
-    bar.style.display = 'none';
-  } else {
-    bar.style.display = 'flex';
-    document.getElementById('translateLangName').textContent = LANG_NAMES[lang] || lang;
-  }
+  bar.style.display = 'flex';
+  document.getElementById('translateLangName').textContent = LANG_NAMES[lang] || lang;
 }
 
 function setTranslateStatus(state, msg) {
@@ -470,7 +466,7 @@ function setTranslateStatus(state, msg) {
   dot.className = 'dot';
   if (state === 'idle') {
     const lang = localStorage.getItem('dovtek_lang') || 'en';
-    msgEl.innerHTML = 'Auto-translate ON · Type in English → auto-converts to <span id="translateLangName">' + (LANG_NAMES[lang]||lang) + '</span>';
+    msgEl.innerHTML = 'Auto-translate ON · Automatically translating to <span id="translateLangName">' + (LANG_NAMES[lang]||lang) + '</span>';
   } else if (state === 'translating') {
     dot.classList.add('translating');
     msgEl.textContent = '⏳ Translating...';
@@ -484,7 +480,7 @@ function setTranslateStatus(state, msg) {
 
 async function doAutoTranslate(text) {
   const lang = localStorage.getItem('dovtek_lang') || 'en';
-  if (lang === 'en' || !text.trim() || _isTranslating) return;
+  if (!text.trim() || _isTranslating) return;
 
   // Don't re-translate what we already translated
   if (text.trim() === _lastTranslatedText) return;
@@ -495,7 +491,7 @@ async function doAutoTranslate(text) {
   const targetLang = LANG_CODES_MYMEMORY[lang] || lang;
 
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.trim())}&langpair=en|${targetLang}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.trim())}&langpair=Autodetect|${targetLang}`;
     const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
     const data = await resp.json();
 
@@ -505,8 +501,12 @@ async function doAutoTranslate(text) {
       const textarea = document.getElementById('scanInput');
       if (textarea.value.trim() === text.trim()) {
         _lastTranslatedText = translated;
-        textarea.value = translated;
-        setTranslateStatus('done', 'Translated to ' + LANG_NAMES[lang]);
+        if (translated !== text.trim()) {
+          textarea.value = translated;
+          setTranslateStatus('done', 'Translated to ' + LANG_NAMES[lang]);
+        } else {
+          setTranslateStatus('idle');
+        }
         setTimeout(() => setTranslateStatus('idle'), 3000);
       }
     } else {
@@ -524,8 +524,6 @@ async function doAutoTranslate(text) {
 (function() {
   const textarea = document.getElementById('scanInput');
   textarea.addEventListener('input', function() {
-    const lang = localStorage.getItem('dovtek_lang') || 'en';
-    if (lang === 'en') return;
     // Don't trigger if text matches last translation (avoid loops)
     if (this.value.trim() === _lastTranslatedText) return;
 

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — ShieldIQ</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.container{max-width:800px;margin:100px auto 60px;padding:0 24px}
+.checkout-header { text-align:center; margin-bottom: 40px; }
+.checkout-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+.checkout-header p { color: var(--warm); font-size: 15px; }
+
+.checkout-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; }
+@media(max-width: 768px) { .checkout-grid { grid-template-columns: 1fr; } }
+
+.order-summary { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; height: fit-content; }
+.order-summary h2 { font-size: 18px; margin-bottom: 24px; font-weight: 700; }
+.plan-details { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.plan-name { font-weight: 700; font-size: 18px; color: var(--teal); }
+.plan-price { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+.total-row { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 20px; }
+
+.payment-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; position: relative; overflow: hidden; }
+.payment-form h2 { font-size: 18px; margin-bottom: 24px; font-weight: 700; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.form-group input { width: 100%; padding: 12px 16px; background: var(--darker); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
+.form-group input:focus { border-color: var(--teal); }
+.row { display: flex; gap: 16px; }
+.row .form-group { flex: 1; }
+
+.pay-btn { width: 100%; padding: 16px; background: var(--gradient-primary); color: var(--black); border: none; border-radius: var(--radius-sm); font-family: var(--font-heading); font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,212,160,0.25); margin-top: 24px; display: flex; justify-content: center; align-items: center; }
+.pay-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,212,160,0.35); }
+.pay-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.secure-badge { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--muted); }
+.secure-badge svg { width: 14px; height: 14px; color: var(--teal); }
+
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.2); border-top-color: var(--black); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
+
+/* Success overlay */
+.success-overlay { position: absolute; inset: 0; background: var(--card); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 32px; }
+.success-overlay.active { opacity: 1; pointer-events: auto; }
+.success-icon { width: 64px; height: 64px; background: rgba(0,212,160,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--teal); font-size: 32px; margin-bottom: 24px; }
+.success-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.success-text { color: var(--warm); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>Dovtek | Shield<span class="accent">IQ</span></a>
+  <div class="nav-actions">
+    <a class="btn-ghost" href="/dashboard">Cancel</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="checkout-header">
+    <h1>Complete your upgrade</h1>
+    <p>Secure checkout for your ShieldIQ subscription.</p>
+  </div>
+
+  <div class="checkout-grid">
+    <!-- Payment Form -->
+    <div class="payment-form">
+      <h2>Payment Details</h2>
+      <div class="form-group">
+        <label>Name on Card</label>
+        <input type="text" placeholder="Jane Doe" id="cardName">
+      </div>
+      <div class="form-group">
+        <label>Card Number</label>
+        <input type="text" placeholder="4111 1111 1111 1111" id="cardNumber" maxlength="19">
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Expiry</label>
+          <input type="text" placeholder="MM/YY" id="cardExp" maxlength="5">
+        </div>
+        <div class="form-group">
+          <label>CVV</label>
+          <input type="text" placeholder="123" id="cardCvv" maxlength="4">
+        </div>
+      </div>
+      <button class="pay-btn" id="payBtn" onclick="processPayment()">Subscribe Now</button>
+      <div class="secure-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Payments are secure and encrypted
+      </div>
+
+      <div class="success-overlay" id="successOverlay">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Payment Successful!</div>
+        <div class="success-text">Your account has been upgraded. Redirecting you to the dashboard...</div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <h2>Order Summary</h2>
+      <div class="plan-details">
+        <div>
+          <div class="plan-name" id="planName">Dovtek Pro</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Billed monthly</div>
+        </div>
+        <div class="plan-price" id="planPrice">$3.99</div>
+      </div>
+      <div class="total-row">
+        <span>Total today</span>
+        <span id="planTotal" style="color:var(--teal)">$3.99</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Format card number with spaces
+document.getElementById('cardNumber').addEventListener('input', function (e) {
+  this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+});
+
+// Format expiry MM/YY
+document.getElementById('cardExp').addEventListener('input', function (e) {
+  this.value = this.value.replace(/\D/g, '');
+  if (this.value.length > 2) {
+    this.value = this.value.slice(0, 2) + '/' + this.value.slice(2);
+  }
+});
+
+// Setup plan details based on URL param
+const urlParams = new URLSearchParams(window.location.search);
+const plan = urlParams.get('plan') || 'pro';
+
+const CURRENCY_MAP={
+  'IN':'₹','US':'$','GB':'£','NG':'₦','EU':'€','DE':'€','FR':'€','IT':'€','ES':'€',
+  'JP':'¥','CN':'¥','KR':'₩','BR':'R$','ZA':'R','AE':'AED','SA':'SAR','AU':'A$',
+  'CA':'C$','MX':'MX$','RU':'₽','TR':'₺','EG':'E£','KE':'KSh','GH':'GH₵','PH':'₱',
+  'ID':'Rp','MY':'RM','TH':'฿','VN':'₫','BD':'৳','PK':'₨','LK':'Rs','NP':'₨'
+};
+
+function applyDynamicPricing() {
+  const cached=localStorage.getItem('dovtek_geo');
+  let code = 'US';
+  let currency = '$';
+  if(cached){
+    try{const d=JSON.parse(cached); code = d.code || 'US';}catch(e){}
+  }
+  currency = CURRENCY_MAP[code] || '$';
+  
+  const rates = {'IN':83, 'NG':1400, 'GB':0.79, 'EU':0.92, 'DE':0.92, 'FR':0.92, 'IT':0.92, 'ES':0.92, 'ZA':18.5, 'BR':5.1, 'AU':1.5, 'CA':1.37, 'AE':3.67, 'KE':130, 'GH':14};
+  const rate = rates[code] || 1;
+  
+  let price = plan === 'plus' ? 9.99 : 3.99;
+  let finalPrice = price * rate;
+  
+  if(rate > 10) {
+    finalPrice = Math.round(finalPrice);
+  } else {
+    finalPrice = finalPrice.toFixed(2);
+  }
+  
+  const priceStr = currency + finalPrice;
+  document.getElementById('planPrice').textContent = priceStr;
+  document.getElementById('planTotal').textContent = priceStr;
+  
+  if(plan === 'plus') {
+    document.getElementById('planName').textContent = '🛡️ Shield Plus';
+    document.getElementById('planName').style.color = 'var(--teal)';
+  } else {
+    document.getElementById('planName').textContent = 'Dovtek Pro';
+    document.getElementById('planName').style.color = 'var(--white)';
+  }
+}
+
+applyDynamicPricing();
+
+function processPayment() {
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Processing...';
+  
+  // Fake processing delay
+  setTimeout(() => {
+    document.getElementById('successOverlay').classList.add('active');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 2500);
+  }, 1500);
+}
+</script>
+</body>
+</html>

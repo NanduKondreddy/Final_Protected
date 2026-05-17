@@ -71,6 +71,10 @@ async def serve_scan_page():
 async def serve_dashboard():
     return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
+@app.get("/checkout")
+async def serve_checkout():
+    return FileResponse(os.path.join(FRONTEND_DIR, "checkout.html"))
+
 @app.get("/privacy")
 async def serve_privacy():
     return FileResponse(os.path.join(FRONTEND_DIR, "privacy.html"))
