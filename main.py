@@ -59,22 +59,45 @@ if os.path.isdir(os.path.join(FRONTEND_DIR, "assets")):
 
 
 # ── HTML Page Routes ─────────────────────────────────────────────────────────
+class NoCacheFileResponse(FileResponse):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        self.headers["Pragma"] = "no-cache"
+        self.headers["Expires"] = "0"
+
 @app.get("/")
 async def serve_home():
-    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 @app.get("/scan")
 async def serve_scan_page():
-    return FileResponse(os.path.join(FRONTEND_DIR, "scan.html"))
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "scan.html"))
 
 @app.get("/dashboard")
 async def serve_dashboard():
-    return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
 @app.get("/checkout")
 async def serve_checkout():
-    return FileResponse(os.path.join(FRONTEND_DIR, "checkout.html"))
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "checkout.html"))
 
 @app.get("/privacy")
 async def serve_privacy():
-    return FileResponse(os.path.join(FRONTEND_DIR, "privacy.html"))
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "privacy.html"))
+
+@app.get("/security")
+async def serve_security():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "security.html"))
+
+@app.get("/terms")
+async def serve_terms():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "terms.html"))
+
+@app.get("/about")
+async def serve_about():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "about.html"))
+
+@app.get("/contact")
+async def serve_contact():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "contact.html"))
