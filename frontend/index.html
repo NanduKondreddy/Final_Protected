@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShieldIQ by Dovtek — AI Fraud Detection for Everyone</title>
+  <title>ShieldIQ by SHIELD IQ — AI Fraud Detection for Everyone</title>
   <meta name="description"
-    content="Dov-tek detects fraud in any message — WhatsApp, SMS, email. Paste it, get a verdict in 2 seconds. Free, instant, global.">
+    content="SHIELD IQ detects fraud in any message — WhatsApp, SMS, email. Paste it, get a verdict in 2 seconds. Free, instant, global.">
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
   <link
@@ -248,58 +248,37 @@
       line-height: 1.6
     }
 
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      margin-top: 40px
+    .video-wrapper {
+      max-width: 900px;
+      margin: 40px auto 0;
+      border-radius: var(--radius-lg);
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(0, 212, 160, 0.2), rgba(59, 130, 246, 0.2));
+      border: 1px solid rgba(26, 31, 46, 0.8);
+      box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 212, 160, 0.05);
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
 
-    @media(max-width:700px) {
-      .steps {
-        grid-template-columns: 1fr
-      }
+    .video-wrapper:hover {
+      border-color: rgba(0, 212, 160, 0.4);
+      box-shadow: var(--shadow-lg), var(--shadow-glow-teal);
     }
 
-    .step {
+    .video-container {
+      width: 100%;
+      border-radius: calc(var(--radius-lg) - 1px);
+      overflow: hidden;
       background: var(--card);
-      border: 1px solid var(--border);
-      padding: 32px 24px
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .step-num {
-      font-size: 48px;
-      font-weight: 800;
-      line-height: 1;
-      background: var(--gradient-primary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 16px
-    }
-
-    .step-title {
-      font-weight: 700;
-      font-size: 17px;
-      margin-bottom: 10px
-    }
-
-    .step-text {
-      font-size: 14px;
-      color: var(--warm);
-      line-height: 1.8
-    }
-
-    .step-time {
-      display: inline-block;
-      margin-top: 14px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--teal);
-      letter-spacing: 0.08em;
-      border: 1px solid rgba(0, 212, 160, 0.2);
-      padding: 4px 12px;
-      border-radius: 3px
+    .video-container video {
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     .features-grid {
@@ -595,7 +574,7 @@
           fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           <circle cx="12" cy="11" r="3" fill="currentColor"></circle>
-        </svg></span>Dovtek | Shield<span class="accent">IQ</span></a>
+        </svg></span>SHIELD <span class="accent">IQ</span></a>
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
       <li><a href="#features">Features</a></li>
@@ -709,24 +688,12 @@
   <section class="section reveal" id="how">
     <div class="tag">How It Works</div>
     <h2 class="section-title">Paste. Scan. Know.</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01</div>
-        <div class="step-title">Paste the message</div>
-        <p class="step-text">WhatsApp, SMS, email, social DM — copy and paste anything suspicious. Or upload a
-          screenshot.</p><span class="step-time">Instant</span>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <div class="step-title">AI checks it thoroughly</div>
-        <p class="step-text">Two-pass AI analysis checks for urgency, impersonation, suspicious links, and pressure
-          tactics — everything a fraudster uses.</p><span class="step-time">~2 seconds</span>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <div class="step-title">You get the verdict</div>
-        <p class="step-text">A risk score 0-100. Three specific reasons. Exactly what to do next. Your message is
-          discarded the moment the verdict is delivered.</p><span class="step-time">Clear · Yours</span>
+    <div class="video-wrapper">
+      <div class="video-container">
+        <video id="demoVideo" controls autoplay muted loop playsinline>
+          <source src="/assets/demo.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
       </div>
     </div>
   </section>
@@ -787,7 +754,7 @@
 
       <!-- 2. PRO TIER -->
       <div class="feat" style="border-color:var(--border);">
-        <div class="feat-title" style="font-size:24px; color:var(--white);">Dovtek Pro</div>
+        <div class="feat-title" style="font-size:24px; color:var(--white);">SHIELD IQ Pro</div>
         <div
           style="font-family:var(--font-mono); color:var(--muted); font-size:12px; margin-bottom:20px; letter-spacing:0.05em">
           <span id="dynamicPricePro">$3.99</span> / month</div>
@@ -844,7 +811,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <div>
-        <div class="footer-brand">Dovtek | Shield<span class="accent">IQ</span></div>
+        <div class="footer-brand">SHIELD <span class="accent">IQ</span></div>
         <div class="footer-tag">AI Fraud Detection · Global</div>
       </div>
       <ul class="footer-links">
@@ -860,7 +827,7 @@
       </ul>
       <div class="footer-bottom">
         <div class="footer-note">🔒 Privacy-first · No message content ever stored</div>
-        <div class="footer-note">© 2026 Dov-tek Technologies</div>
+        <div class="footer-note">© 2026 SHIELD IQ Technologies</div>
       </div>
     </div>
   </footer>
@@ -871,7 +838,7 @@
   <div class="overlay" id="loginOverlay">
     <div class="modal">
       <button class="modal-x" onclick="closeModal('login')">×</button>
-      <div class="modal-logo">Dov<span class="accent">-tek</span></div>
+      <div class="modal-logo">SHIELD <span class="accent">IQ</span></div>
       <div class="modal-sub-brand">AI Fraud Detection</div>
       <div class="modal-h">Welcome back</div>
       <p class="modal-p">Log in to access your scan history and dashboard.</p>
@@ -893,7 +860,7 @@
   <div class="overlay" id="signupOverlay">
     <div class="modal">
       <button class="modal-x" onclick="closeModal('signup')">×</button>
-      <div class="modal-logo">Dov<span class="accent">-tek</span></div>
+      <div class="modal-logo">SHIELD <span class="accent">IQ</span></div>
       <div class="modal-sub-brand">AI Fraud Detection</div>
       <div class="modal-h">Start for free</div>
       <p class="modal-p">No card. No setup. Scan your first suspicious message in 30 seconds.</p>
@@ -1093,7 +1060,7 @@
       },
       es: {
         heroLine1: "El fraude no te avisa.", heroLine2: "Tu dinero no vuelve.", heroLine3: "Te avisamos — antes de que hagas clic.",
-        heroSub: "Dov-tek analiza mensajes de WhatsApp, SMS, Gmail y cualquier app — al instante. <strong>Silencioso cuando es seguro. Sonoro cuando importa.</strong>",
+        heroSub: "SHIELD IQ analiza mensajes de WhatsApp, SMS, Gmail y cualquier app — al instante. <strong>Silencioso cuando es seguro. Sonoro quando importa.</strong>",
         ctaTryFree: "🛡️ Prueba Gratis — Sin Tarjeta", ctaHowItWorks: "Ver Cómo Funciona",
         trust1: "3 escaneos gratis al día", trust2: "Ningún mensaje guardado", trust3: "Menos de 2 segundos", trust4: "Disponible mundialmente",
         navHow: "Cómo Funciona", navFeatures: "Características", navScanner: "Probar Escáner",
@@ -1114,7 +1081,7 @@
       },
       fr: {
         heroLine1: "La fraude ne vous prévient pas.", heroLine2: "Votre argent ne revient pas.", heroLine3: "Nous vous prévenons — avant que vous cliquiez.",
-        heroSub: "Dov-tek analyse les messages WhatsApp, SMS, Gmail et toute application — instantanément. <strong>Silencieux quand c'est sûr. Bruyant quand ça compte.</strong>",
+        heroSub: "SHIELD IQ analyse les messages WhatsApp, SMS, Gmail et toute application — instantanément. <strong>Silencieux quand c'est sûr. Bruyant quand ça compte.</strong>",
         ctaTryFree: "🛡️ Essai Gratuit — Sans Carte", ctaHowItWorks: "Voir Comment Ça Marche",
         trust1: "3 scans gratuits par jour", trust2: "Aucun message stocké", trust3: "Moins de 2 secondes", trust4: "Disponible partout",
         navHow: "Comment Ça Marche", navFeatures: "Fonctionnalités", navScanner: "Essayer le Scanner",
@@ -1135,7 +1102,7 @@
       },
       hi: {
         heroLine1: "धोखाधड़ी चेतावनी नहीं देती।", heroLine2: "आपका पैसा वापस नहीं आता।", heroLine3: "हम चेतावनी देते हैं — क्लिक करने से पहले।",
-        heroSub: "Dov-tek WhatsApp, SMS, Gmail और हर ऐप के संदेशों को तुरंत स्कैन करता है। <strong>सुरक्षित होने पर शांत। मायने रखने पर ज़ोरदार।</strong>",
+        heroSub: "SHIELD IQ WhatsApp, SMS, Gmail और हर ऐप के संदेशों को तुरंत स्कैन करता है। <strong>सुरक्षित होने पर शांत। मायने रखने पर ज़ोरदार।</strong>",
         ctaTryFree: "🛡️ मुफ़्त आज़माएं — कोई कार्ड नहीं", ctaHowItWorks: "कैसे काम करता है देखें",
         trust1: "रोज़ 3 मुफ़्त स्कैन", trust2: "कोई संदेश संग्रहीत नहीं", trust3: "2 सेकंड से कम", trust4: "दुनियाभर में उपलब्ध",
         navHow: "यह कैसे काम करता है", navFeatures: "विशेषताएं", navScanner: "स्कैनर आज़माएं",
@@ -1156,7 +1123,7 @@
       },
       pt: {
         heroLine1: "A fraude não avisa.", heroLine2: "Seu dinheiro não volta.", heroLine3: "Avisamos você — antes de clicar.",
-        heroSub: "Dov-tek escaneia mensagens do WhatsApp, SMS, Gmail e qualquer app — instantaneamente. <strong>Silencioso quando seguro. Alto quando importa.</strong>",
+        heroSub: "SHIELD IQ escaneia mensagens do WhatsApp, SMS, Gmail e qualquer app — instantaneamente. <strong>Silencioso quando seguro. Alto quando importa.</strong>",
         ctaTryFree: "🛡️ Experimente Grátis — Sem Cartão", ctaHowItWorks: "Ver Como Funciona",
         trust1: "3 scans grátis por dia", trust2: "Nenhuma mensagem armazenada", trust3: "Menos de 2 segundos", trust4: "Disponível mundialmente",
         navHow: "Como Funciona", navFeatures: "Recursos", navScanner: "Experimentar Scanner",
@@ -1177,7 +1144,7 @@
       },
       ar: {
         heroLine1: "الاحتيال لا يحذرك.", heroLine2: "أموالك لا تعود.", heroLine3: "نحن نحذرك — قبل أن تضغط.",
-        heroSub: "Dov-tek يفحص الرسائل عبر واتساب وSMS وجيميل وكل تطبيق — فورياً. <strong>صامت عند الأمان. صاخب عند الأهمية.</strong>",
+        heroSub: "SHIELD IQ يفحص الرسائل عبر واتساب وSMS وجيميل وكل تطبيق — فورياً. <strong>صامت عند الأمان. صاخب عند الأهمية.</strong>",
         ctaTryFree: "🛡️ جرب مجاناً — بدون بطاقة", ctaHowItWorks: "اعرف كيف يعمل",
         trust1: "3 فحوصات مجانية يومياً", trust2: "لا تُحفظ الرسائل", trust3: "أقل من ثانيتين", trust4: "متاح عالمياً",
         navHow: "كيف يعمل", navFeatures: "الميزات", navScanner: "جرب الماسح",
@@ -1198,7 +1165,7 @@
       },
       zh: {
         heroLine1: "欺诈不会提前警告你。", heroLine2: "你的钱回不来了。", heroLine3: "我们在你点击前警告你。",
-        heroSub: "Dov-tek即时扫描WhatsApp、短信、Gmail及所有应用的消息。<strong>安全时静默，重要时警报。</strong>",
+        heroSub: "SHIELD IQ即时扫描WhatsApp、短信、Gmail及所有应用的消息。<strong>安全时静默，重要时警报。</strong>",
         ctaTryFree: "🛡️ 免费试用 — 无需信用卡", ctaHowItWorks: "了解工作原理",
         trust1: "每天3次免费扫描", trust2: "从不存储消息", trust3: "不到2秒", trust4: "全球可用",
         navHow: "工作原理", navFeatures: "功能特点", navScanner: "试用扫描器",
@@ -1308,14 +1275,14 @@
         if (desktopAuth) {
           desktopAuth.innerHTML = `
         <a class="btn-ghost" href="/dashboard">Dashboard</a>
-        <a class="btn btn-primary btn-sm" href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');location.reload();return false" style="background:var(--dark);border:1px solid var(--border);color:var(--white);">Logout</a>
+        <a class="btn btn-primary btn-sm" href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="background:var(--dark);border:1px solid var(--border);color:var(--white);">Logout</a>
       `;
         }
         const mobileAuth = document.getElementById('mobileAuthNav');
         if (mobileAuth) {
           mobileAuth.innerHTML = `
         <a href="/dashboard">Dashboard</a>
-        <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');location.reload();return false" style="color:#ef4444">Logout</a>
+        <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="color:#ef4444">Logout</a>
       `;
         }
 

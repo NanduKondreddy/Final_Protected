@@ -16,7 +16,7 @@ from prompts import DEMO_SCENARIOS
 # Create all DB tables on startup if they don't exist
 db_models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Dovtek API", version="2.0.0")
+app = FastAPI(title="SHIELD IQ API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,

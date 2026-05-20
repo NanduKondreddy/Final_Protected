@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShieldIQ by Dovtek — AI Fraud Scanner</title>
+<title>ShieldIQ by SHIELD IQ — AI Fraud Scanner</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/global.css">
@@ -66,7 +66,7 @@
 <body>
 
 <nav class="nav">
-  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>Dovtek | Shield<span class="accent">IQ</span></a>
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>SHIELD <span class="accent">IQ</span></a>
   <ul class="nav-links">
     <li><a href="/">Home</a></li>
     <li><a href="/scan" class="active">Scan</a></li>
@@ -155,7 +155,7 @@
       <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
         <a href="/checkout?plan=pro" style="padding:14px 16px;border-radius:10px;border:1px solid rgba(0,212,160,0.2);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
-          <span style="font-weight:700;font-size:15px;color:#fff">Dovtek Pro</span>
+          <span style="font-weight:700;font-size:15px;color:#fff">SHIELD IQ Pro</span>
           <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700">$3.99 / mo</span>
         </a>
         <a href="/checkout?plan=plus" style="padding:14px 16px;border-radius:10px;border:1px solid var(--teal);background:rgba(0,212,160,0.08);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
@@ -189,7 +189,7 @@
 
 <footer class="footer">
   <div class="footer-inner">
-    <div><div class="footer-brand">Dovtek | Shield<span class="accent">IQ</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
+    <div><div class="footer-brand">SHIELD <span class="accent">IQ</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
     <ul class="footer-links">
       <li><a href="/">Home</a></li>
       <li><a href="/scan">Scan</a></li>
@@ -202,7 +202,7 @@
     </ul>
     <div class="footer-bottom">
       <div class="footer-note">🔒 Privacy-first · No message content ever stored</div>
-      <div class="footer-note">© 2026 Dov-tek Technologies</div>
+      <div class="footer-note">© 2026 SHIELD IQ Technologies</div>
     </div>
   </div>
 </footer>
@@ -240,7 +240,7 @@ function updateRemainingDisplay() {
     freeBar.style.background = rem === 0 ? '#ef4444' : '';
     freeBar.innerHTML = rem === 0
       ? '✗ No scans remaining — <a href="/" style="color:#000;font-weight:800;text-decoration:underline">Upgrade</a>'
-      : '✓ <span id="remainingCount">' + rem + '</span> free scan' + (rem === 1 ? '' : 's') + ' remaining today';
+      : '✓&nbsp;<span id="remainingCount">' + rem + '</span>&nbsp;free scan' + (rem === 1 ? '' : 's') + ' remaining today';
   }
 }
 
@@ -264,6 +264,20 @@ function incrementScanCount() {
         document.getElementById('scanCount').textContent='Logged in as '+u.full_name;
       })
       .catch(()=>{});
+
+    fetch(API+'/scans/history?page_size=100',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(data=>{
+        const scans = data.scans || [];
+        const todayCount = scans.filter(s => s.scanned_at && s.scanned_at.slice(0,10) === TODAY).length;
+        localStorage.setItem('dovtek_scan_user_' + TODAY, todayCount);
+        updateRemainingDisplay();
+        const scanCountEl = document.getElementById('scanCount');
+        if (scanCountEl) {
+          scanCountEl.textContent = getRemaining() + ' scans remaining today';
+        }
+      })
+      .catch(()=>{});
   }
 })();
 
@@ -271,6 +285,9 @@ function handleAuth(){
   if(token){
     localStorage.removeItem('dovtek_token');
     localStorage.removeItem('dovtek_user');
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('dovtek_scan_')) localStorage.removeItem(k);
+    });
     location.reload();
   } else {
     location.href='/';
