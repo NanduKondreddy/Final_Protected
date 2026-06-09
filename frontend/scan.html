@@ -219,8 +219,8 @@
   <div class="overlay" id="upgradeOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
     <div style="background:#0d1117;border:1px solid rgba(0,212,160,0.25);border-radius:20px;padding:40px;max-width:460px;width:100%;text-align:center;position:relative">
       <div style="font-size:56px;margin-bottom:16px">🔒</div>
-      <div style="font-size:24px;font-weight:800;margin-bottom:8px">Daily limit reached</div>
-      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
+      <div style="font-size:24px;font-weight:800;margin-bottom:8px" id="upgradeModalTitle">Daily limit reached</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px" id="upgradeModalDesc">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
         <a href="/checkout?plan=pro" style="padding:14px 16px;border-radius:10px;border:1px solid rgba(0,212,160,0.2);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
           <span style="font-weight:700;font-size:15px;color:#fff">SHIELD IQ Pro</span>
@@ -584,6 +584,10 @@ async function performScan(){
   // ── Quota check ──
   if (getRemaining() <= 0) {
     if (token) {
+      const titleEl = document.getElementById('upgradeModalTitle');
+      const descEl = document.getElementById('upgradeModalDesc');
+      if (titleEl) titleEl.textContent = 'Daily limit reached';
+      if (descEl) descEl.textContent = "You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.";
       document.getElementById('upgradeOverlay').style.display = 'flex';
     } else {
       document.getElementById('guestGateOverlay').style.display = 'flex';
@@ -610,13 +614,46 @@ async function performScan(){
   try{
     const resp=await fetch(API+'/scan',{method:'POST',body:fd,headers});
     const data=await resp.json();
-    if(!resp.ok)throw new Error(data.detail||'Analysis failed');
+    if(!resp.ok) {
+      let msg = 'Analysis failed';
+      if (data && data.detail) {
+        if (typeof data.detail === 'string') {
+          msg = data.detail;
+        } else if (typeof data.detail === 'object') {
+          msg = data.detail.message || data.detail.error || JSON.stringify(data.detail);
+          const titleEl = document.getElementById('upgradeModalTitle');
+          const descEl = document.getElementById('upgradeModalDesc');
+          if (data.detail.error === 'feature_locked') {
+            if (titleEl) titleEl.textContent = 'Unlock Premium Feature';
+            if (descEl) descEl.textContent = data.detail.message || 'PDF and image scanning requires Pro. Upgrade to get unlimited scans, prioritize AI execution, and more.';
+            setTimeout(() => {
+              document.getElementById('upgradeOverlay').style.display = 'flex';
+            }, 1000);
+          } else if (data.detail.error === 'quota_exceeded') {
+            if (titleEl) titleEl.textContent = 'Daily limit reached';
+            if (descEl) descEl.textContent = data.detail.message || "You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.";
+            setTimeout(() => {
+              if (token) {
+                document.getElementById('upgradeOverlay').style.display = 'flex';
+              } else {
+                document.getElementById('guestGateOverlay').style.display = 'flex';
+              }
+            }, 1000);
+          }
+        }
+      }
+      throw new Error(msg);
+    }
     incrementScanCount();
     renderResult(data);
     // If user just used their last scan, show the gate after result
     if (getRemaining() === 0) {
       setTimeout(() => {
         if (token) {
+          const titleEl = document.getElementById('upgradeModalTitle');
+          const descEl = document.getElementById('upgradeModalDesc');
+          if (titleEl) titleEl.textContent = 'Daily limit reached';
+          if (descEl) descEl.textContent = "You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.";
           document.getElementById('upgradeOverlay').style.display = 'flex';
         } else {
           document.getElementById('guestGateOverlay').style.display = 'flex';
@@ -965,8 +1002,10 @@ function applyLanguage(lang){
   document.getElementById('scanInput').placeholder=t.placeholder;
   document.getElementById('fileName').innerHTML=t.upload;
   document.getElementById('scanBtn').textContent=t.btn;
-  document.querySelector('[data-i18n="prices"]').textContent=t.prices;
-  document.querySelector('[data-i18n="free"]').textContent=t.free;
+  const elPrices = document.querySelector('[data-i18n="prices"]');
+  if (elPrices) elPrices.textContent=t.prices;
+  const elFree = document.querySelector('[data-i18n="free"]');
+  if (elFree) elFree.textContent=t.free;
   document.getElementById('scanCount').textContent=t.info;
   // Set dir for RTL languages
   document.body.dir=lang==='ar'?'rtl':'ltr';

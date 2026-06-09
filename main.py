@@ -229,3 +229,8 @@ async def serve_contact():
 @app.get("/admin.html")
 async def serve_admin():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
+
+@app.get("/super-admin")
+@app.get("/super-admin.html")
+async def serve_super_admin():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "super-admin.html"))

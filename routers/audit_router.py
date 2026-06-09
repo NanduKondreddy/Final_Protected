@@ -200,3 +200,57 @@ def resolve_ticket(body: ResolveTicketRequest, admin_key: str = Query(default=""
     db.commit()
     return {"status": "success", "message": "Ticket marked as resolved"}
 
+
+# ── B2B Enterprise Partner Accounts & Global Audit Trail Endpoints ───────────
+
+class GeneratePartnerRequest(BaseModel):
+    partner_name: str
+    tier: str = "enterprise"
+    daily_limit: int = 10000
+
+class RevokePartnerRequest(BaseModel):
+    key_id: str
+
+
+@router.get("/global-history", summary="Admin — retrieve scan logs across overall customers")
+async def get_global_history(
+    admin_key: str = Query(default=""),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    days: int = Query(default=30, ge=1, le=365)
+):
+    if not ADMIN_KEY or admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return get_user_history(api_key_id=None, limit=limit, offset=offset, days=days)
+
+
+@router.get("/partners", summary="Admin — list all B2B partner accounts and credentials")
+def get_partners(admin_key: str = Query(default="")):
+    if not ADMIN_KEY or admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    from enterprise.api_key_manager import list_keys
+    return list_keys()
+
+
+@router.post("/partners/generate", summary="Admin — generate new B2B partner account and API credential")
+def create_partner(body: GeneratePartnerRequest, admin_key: str = Query(default="")):
+    if not ADMIN_KEY or admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    from enterprise.api_key_manager import generate_key
+    return generate_key(
+        partner_name=body.partner_name,
+        tier=body.tier,
+        daily_limit=body.daily_limit
+    )
+
+
+@router.post("/partners/revoke", summary="Admin — revoke/deactivate B2B partner account credential")
+def deactivate_partner(body: RevokePartnerRequest, admin_key: str = Query(default="")):
+    if not ADMIN_KEY or admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=404, detail="Admin access required")
+    from enterprise.api_key_manager import revoke_key
+    success = revoke_key(body.key_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Partner account not found")
+    return {"status": "success", "message": f"Partner account credential {body.key_id} revoked successfully"}
+
