@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — ShieldIQ</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.container { max-width: 520px; margin: 120px auto 60px; padding: 0 24px; }
+
+.checkout-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+}
+
+.plan-icon { font-size: 56px; margin-bottom: 20px; }
+
+.plan-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.plan-badge.pro  { background: var(--white); color: var(--black); }
+.plan-badge.plus { background: var(--teal);  color: var(--black); }
+
+.plan-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.plan-price {
+  font-family: var(--font-mono);
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.plan-period {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.usd-note {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  text-align: left;
+}
+.feature-list li {
+  font-size: 13px;
+  color: var(--warm);
+  padding: 7px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feature-list li .icon { color: var(--teal); font-size: 15px; flex-shrink: 0; }
+.feature-list li.locked { color: var(--muted); }
+
+.pay-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--gradient-primary);
+  color: var(--black);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,212,160,0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.pay-btn:hover    { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,212,160,0.35); }
+.pay-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.secure-note {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: var(--black);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="/">
+    <span class="nav-brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <circle cx="12" cy="11" r="3" fill="currentColor"></circle>
+      </svg>
+    </span>
+    SHIELD <span class="accent">IQ</span>
+  </a>
+  <div class="nav-actions">
+    <a class="btn-ghost" href="/dashboard">Cancel</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="checkout-card" id="checkoutCard">
+
+    <div class="plan-icon" id="planIcon">🛡️</div>
+    <div class="plan-badge" id="planBadge">Pro</div>
+    <div class="plan-name"  id="planName">ShieldIQ Pro</div>
+    <div class="plan-price" id="planPrice">—</div>
+    <div class="plan-period">per month · cancel anytime</div>
+    <div class="usd-note"   id="usdNote"></div>
+
+    <ul class="feature-list" id="featureList"></ul>
+
+    <button class="pay-btn" id="payBtn" onclick="startCheckout()">
+      Continue to Payment
+    </button>
+
+    <div class="secure-note">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      Secured by Paystack · Accepts cards, bank transfer & USSD
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Auth guard ─────────────────────────────────────────────────────────────
+const token   = localStorage.getItem('dovtek_token');
+const userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+
+if (!token) {
+  const p = new URLSearchParams(location.search).get('plan') || 'pro';
+  sessionStorage.setItem('post_auth_redirect', `/checkout?plan=${p}`);
+  location.href = '/?signup=1';
+}
+
+// ── Plan config ────────────────────────────────────────────────────────────
+const urlParams   = new URLSearchParams(location.search);
+const planKey     = urlParams.get('plan') === 'plus' ? 'plus' : 'pro';
+const currentPlan = userObj.plan || 'free';
+const PLAN_RANK   = { free: 0, pro: 1, plus: 2 };
+
+const PLANS = {
+  pro: {
+    icon: '🛡️',
+    badge: 'PRO',
+    badgeClass: 'pro',
+    name: 'ShieldIQ Pro',
+    usd: 3.99,
+    features: [
+      { text: 'Unlimited manual scans',           locked: false },
+      { text: 'Confidence score breakdown',        locked: false },
+      { text: 'Advanced PDF & Document scanning',  locked: false },
+      { text: 'Full Scan History & Export',        locked: false },
+      { text: 'Chrome Extension access',           locked: false },
+      { text: 'Auto-background scanning',          locked: true  },
+      { text: 'Full-screen fraud alerts',          locked: true  },
+    ]
+  },
+  plus: {
+    icon: '⚡',
+    badge: 'SHIELD PLUS',
+    badgeClass: 'plus',
+    name: 'Shield Plus',
+    usd: 9.99,
+    features: [
+      { text: 'Everything in Pro',                         locked: false },
+      { text: 'Auto-Scans WhatsApp, SMS, Email & DMs',     locked: false },
+      { text: 'Silent when Safe',                          locked: false },
+      { text: 'Full-screen fraud alerts before you click', locked: false },
+      { text: 'Unlimited AI Document Scanning',            locked: false },
+      { text: 'Chrome Extension access',                   locked: false },
+    ]
+  }
+};
+
+// ── Currency ───────────────────────────────────────────────────────────────
+const CURRENCY_MAP = {
+  'NG':'₦','GH':'GH₵','KE':'KSh','ZA':'R','IN':'₹',
+  'GB':'£','DE':'€','FR':'€','IT':'€','ES':'€',
+  'AU':'A$','CA':'C$','AE':'AED','BR':'R$','US':'$',
+};
+const RATES = {
+  'NG':1400,'GH':14,'KE':130,'ZA':18.5,'IN':83,
+  'GB':0.79,'DE':0.92,'FR':0.92,'IT':0.92,'ES':0.92,
+  'AU':1.5,'CA':1.37,'AE':3.67,'BR':5.1,
+};
+
+function guessCountryByTimezone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+      if (tz.includes('Lagos')) return 'NG';
+      if (tz.includes('London')) return 'GB';
+      if (tz.includes('Johannesburg')) return 'ZA';
+      if (tz.includes('Nairobi')) return 'KE';
+      if (tz.includes('Accra')) return 'GH';
+    }
+    const offset = new Date().getTimezoneOffset();
+    if (offset === -330) return 'IN';
+    if (offset === -60) return 'NG';
+  } catch (e) {}
+  return 'US';
+}
+
+const geo         = JSON.parse(localStorage.getItem('dovtek_geo') || '{}');
+let countryCode   = geo.code;
+if (!countryCode) {
+  countryCode = guessCountryByTimezone();
+}
+const currency    = CURRENCY_MAP[countryCode] || '$';
+const rate        = RATES[countryCode] || 1;
+const plan        = PLANS[planKey];
+const localAmt    = plan.usd * rate;
+const displayAmt  = currency + (rate > 10
+  ? Math.round(localAmt).toLocaleString()
+  : localAmt.toFixed(2));
+
+// ── Block repurchase ───────────────────────────────────────────────────────
+if (PLAN_RANK[currentPlan] >= PLAN_RANK[planKey] && currentPlan !== 'free') {
+  document.getElementById('checkoutCard').innerHTML = `
+    <div style="padding:20px 0;">
+      <div style="font-size:56px;margin-bottom:20px;">⚡</div>
+      <div style="font-size:22px;font-weight:800;color:var(--white);margin-bottom:12px;">
+        You're already on ${currentPlan === 'plus' ? 'Shield Plus' : 'ShieldIQ Pro'}
+      </div>
+      <p style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:28px;">
+        ${currentPlan === 'plus'
+          ? "You're on our highest plan — you have everything ShieldIQ offers."
+          : "You already have this plan active. Upgrade to Shield Plus for auto-background scanning."}
+      </p>
+      ${currentPlan === 'pro' ? `
+        <a href="/checkout?plan=plus"
+          style="display:inline-block;padding:14px 28px;background:var(--teal);
+                 color:#000;font-weight:700;border-radius:8px;text-decoration:none;
+                 font-size:14px;margin-bottom:16px;">
+          Upgrade to Shield Plus →
+        </a><br>` : ''}
+      <a href="/dashboard"
+        style="font-family:var(--font-mono);font-size:12px;color:var(--muted);
+               text-decoration:underline;">← Back to Dashboard</a>
+    </div>`;
+  // Stop rest of script from running
+  throw new Error('already_subscribed');
+}
+
+// ── Render plan ────────────────────────────────────────────────────────────
+document.getElementById('planIcon').textContent        = plan.icon;
+document.getElementById('planBadge').textContent       = plan.badge;
+document.getElementById('planBadge').className         = `plan-badge ${plan.badgeClass}`;
+document.getElementById('planName').textContent        = plan.name;
+document.getElementById('planPrice').textContent       = displayAmt;
+document.getElementById('payBtn').textContent          = `Continue to Payment →`;
+
+if (countryCode !== 'US' && rate !== 1) {
+  document.getElementById('usdNote').textContent = `≈ $${plan.usd} USD · Paystack converts automatically`;
+}
+
+const list = document.getElementById('featureList');
+plan.features.forEach(f => {
+  const li = document.createElement('li');
+  li.className = f.locked ? 'locked' : '';
+  li.innerHTML = f.locked
+    ? `<span class="icon">🔒</span>${f.text} <em style="font-size:11px;color:var(--muted);margin-left:4px;">(Shield Plus only)</em>`
+    : `<span class="icon">✓</span>${f.text}`;
+  list.appendChild(li);
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── Checkout ───────────────────────────────────────────────────────────────
+async function startCheckout() {
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Connecting to Paystack...';
+
+  try {
+    const res = await fetch('/api/billing/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ plan: planKey, country_code: countryCode })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const detail = data.detail || {};
+      if (detail.error === 'already_subscribed') {
+        showToast(detail.message);
+        btn.disabled = false;
+        btn.textContent = 'Continue to Payment →';
+        return;
+      }
+      throw new Error(detail.message || 'Could not initialise payment');
+    }
+
+    // ── DUMMY MODE ──────────────────────────────────────────────────────
+    if (data.mode === 'dummy') {
+      btn.innerHTML = '<span class="spinner"></span> Processing...';
+
+      setTimeout(async () => {
+        try {
+          const activateRes = await fetch('/api/billing/activate-dummy', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ plan: planKey })
+          });
+
+          if (!activateRes.ok) throw new Error('Activation failed');
+          const activateData = await activateRes.json();
+
+          const updated = { ...userObj, plan: activateData.plan };
+          localStorage.setItem('dovtek_user', JSON.stringify(updated));
+
+          btn.innerHTML = '✓ Plan Activated!';
+          btn.style.background = 'linear-gradient(135deg,#0d9488,#0f766e)';
+          btn.style.color = '#fff';
+
+          setTimeout(() => {
+            location.href = `/dashboard?upgraded=true&plan=${planKey}`;
+          }, 1200);
+
+        } catch(err) {
+          btn.disabled = false;
+          btn.textContent = 'Continue to Payment →';
+          showToast(err.message || 'Activation failed — please try again');
+        }
+      }, 1500);
+
+      return;
+    }
+
+    // ── LIVE PAYSTACK ───────────────────────────────────────────────────
+    // Store reference for verification on callback
+    sessionStorage.setItem('paystack_ref',  data.reference);
+    sessionStorage.setItem('paystack_plan', planKey);
+
+    btn.innerHTML = '<span class="spinner"></span> Redirecting to Paystack...';
+
+    // Small delay so user sees the message before redirect
+    setTimeout(() => {
+      location.href = data.authorization_url;
+    }, 600);
+
+  } catch(err) {
+    if (err.message === 'already_subscribed') return;
+    btn.disabled = false;
+    btn.textContent = 'Continue to Payment →';
+    showToast(err.message || 'Something went wrong — please try again');
+  }
+}
+</script>
+</body>
+</html>

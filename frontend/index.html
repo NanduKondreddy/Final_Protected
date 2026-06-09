@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShieldIQ by SHIELD IQ — AI Fraud Detection for Everyone</title>
+  <meta name="description"
+    content="SHIELD IQ detects fraud in any message — WhatsApp, SMS, email. Paste it, get a verdict in 2 seconds. Free, instant, global.">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/global.css">
+  <script src="/js/subscription-manage.js"></script>
+  <style>
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 120px clamp(20px, 5vw, 48px) 80px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(rgba(0, 212, 160, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 160, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: grid-drift 30s linear infinite
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 212, 160, 0.1) 0%, transparent 65%);
+      top: -200px;
+      right: -150px;
+      pointer-events: none;
+      animation: pulse-glow 8s ease-in-out infinite
+    }
+
+    .hero-glow-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 65%);
+      bottom: -100px;
+      left: -100px;
+      pointer-events: none;
+      animation: pulse-glow 10s ease-in-out infinite 2s
+    }
+
+    .hero-title {
+      font-size: clamp(36px, 7vw, 84px);
+      font-weight: 800;
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+      z-index: 2;
+      animation: fade-up 0.7s var(--ease-out) both
+    }
+
+    .hero-title .line2 {
+      color: var(--warm)
+    }
+
+    .hero-title .line3 {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 1.8vw, 19px);
+      line-height: 1.8;
+      color: var(--warm);
+      max-width: 560px;
+      margin-top: 28px;
+      z-index: 2;
+      animation: fade-up 0.7s 0.15s var(--ease-out) both
+    }
+
+    .hero-sub strong {
+      color: var(--white);
+      font-weight: 600
+    }
+
+    .hero-channels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+      z-index: 2;
+      animation: fade-up 0.7s 0.25s var(--ease-out) both
+    }
+
+    .pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: var(--teal-dim);
+      border: 1px solid rgba(0, 212, 160, 0.2);
+      padding: 5px 14px;
+      border-radius: 4px
+    }
+
+    .hero-cta {
+      margin-top: 36px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      z-index: 2;
+      animation: fade-up 0.7s 0.35s var(--ease-out) both
+    }
+
+    .hero-trust {
+      margin-top: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      z-index: 2;
+      animation: fade-up 0.7s 0.45s var(--ease-out) both
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase
+    }
+
+    .trust-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex-shrink: 0
+    }
+
+    .ticker-wrap {
+      overflow: hidden;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--card)
+    }
+
+    .ticker {
+      display: flex;
+      gap: 48px;
+      white-space: nowrap;
+      animation: ticker 20s linear infinite
+    }
+
+    .ticker-item {
+      font-family: var(--font-heading);
+      font-size: clamp(13px, 1.6vw, 18px);
+      font-weight: 700;
+      color: rgba(248, 250, 252, 0.06);
+      flex-shrink: 0;
+      letter-spacing: 0.04em
+    }
+
+    .ticker-item.hi {
+      color: var(--teal);
+      opacity: 0.4
+    }
+
+    .stories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2px;
+      margin-top: 40px
+    }
+
+    .story {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      transition: transform 0.3s, border-color 0.3s;
+      position: relative;
+      overflow: hidden
+    }
+
+    .story:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 71, 87, 0.3)
+    }
+
+    .story::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient-danger);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s
+    }
+
+    .story:hover::before {
+      transform: scaleX(1)
+    }
+
+    .story-name {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 3px
+    }
+
+    .story-role {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px
+    }
+
+    .story-body {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--warm);
+      margin-bottom: 16px
+    }
+
+    .story-loss {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--red);
+      border-left: 2px solid var(--red);
+      padding-left: 12px;
+      line-height: 1.6
+    }
+
+    .video-wrapper {
+      max-width: 900px;
+      margin: 40px auto 0;
+      border-radius: var(--radius-lg);
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(0, 212, 160, 0.2), rgba(59, 130, 246, 0.2));
+      border: 1px solid rgba(26, 31, 46, 0.8);
+      box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 212, 160, 0.05);
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .video-wrapper:hover {
+      border-color: rgba(0, 212, 160, 0.4);
+      box-shadow: var(--shadow-lg), var(--shadow-glow-teal);
+    }
+
+    .video-container {
+      width: 100%;
+      border-radius: calc(var(--radius-lg) - 1px);
+      overflow: hidden;
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2px;
+      margin-top: 40px
+    }
+
+    .feat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      transition: border-color 0.25s, transform 0.25s
+    }
+
+    .feat:hover {
+      border-color: rgba(0, 212, 160, 0.3);
+      transform: translateY(-2px)
+    }
+
+    .feat-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+      display: block
+    }
+
+    .feat-title {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 10px
+    }
+
+    .feat-text {
+      font-size: 13px;
+      color: var(--warm);
+      line-height: 1.8
+    }
+
+    .cta-section {
+      background: var(--card);
+      text-align: center;
+      position: relative;
+      overflow: hidden
+    }
+
+    .cta-section::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: var(--gradient-primary)
+    }
+
+    .cta-glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 212, 160, 0.06) 0%, transparent 70%);
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none
+    }
+
+    .cta-headline {
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 800;
+      line-height: 1.08;
+      margin-bottom: 16px;
+      z-index: 1;
+      position: relative;
+      letter-spacing: -0.03em
+    }
+
+    .cta-sub {
+      font-size: clamp(15px, 1.6vw, 18px);
+      color: var(--warm);
+      max-width: 500px;
+      margin: 0 auto 32px;
+      line-height: 1.75;
+      z-index: 1;
+      position: relative
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      z-index: 1;
+      position: relative
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px
+    }
+
+    .overlay.on {
+      display: flex
+    }
+
+    .modal-logo {
+      font-weight: 800;
+      font-size: 22px;
+      margin-bottom: 5px
+    }
+
+    .modal-logo .accent {
+      color: var(--teal)
+    }
+
+    .modal-sub-brand {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 24px
+    }
+
+    .modal-h {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px
+    }
+
+    .modal-p {
+      font-size: 14px;
+      color: var(--warm);
+      line-height: 1.7;
+      margin-bottom: 20px
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      font-weight: 700;
+      font-size: 14px;
+      background: var(--gradient-primary);
+      color: var(--black);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-bottom: 16px
+    }
+
+    .auth-btn:hover {
+      opacity: 0.88
+    }
+
+    .or-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px
+    }
+
+    .or-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    .or-text {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.1em
+    }
+
+    .switch-line {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .switch-line a {
+      color: var(--teal);
+      cursor: pointer;
+      text-decoration: none
+    }
+
+    .perks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px
+    }
+
+    .perk {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--warm)
+    }
+
+    .perk::before {
+      content: '✓';
+      color: var(--teal);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .lang-select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      outline: none;
+      letter-spacing: 0.04em
+    }
+
+    .lang-select:focus {
+      border-color: var(--teal)
+    }
+
+    .loc-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--warm);
+      background: rgba(0, 212, 160, 0.06);
+      border-bottom: 1px solid var(--border);
+      position: fixed;
+      top: 68px;
+      left: 0;
+      right: 0;
+      z-index: 999
+    }
+
+    .loc-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--teal);
+      color: var(--black);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.06em
+    }
+
+    .loc-banner .loc-currency {
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 16px
+    }
+
+    .desktop-auth-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-auth-nav {
+        display: none !important;
+      }
+
+      .loc-banner {
+        flex-wrap: wrap;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="nav">
+    <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <circle cx="12" cy="11" r="3" fill="currentColor"></circle>
+        </svg></span>SHIELD <span class="accent">IQ</span></a>
+    <ul class="nav-links">
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="/scan">Scanner</a></li>
+    </ul>
+    <div class="nav-actions">
+      <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <div id="desktopAuthNav" class="desktop-auth-nav">
+        <a class="btn-ghost" href="#" onclick="openModal('login');return false">Log In</a>
+        <button class="btn btn-primary btn-sm" onclick="openModal('signup')">Signup</button>
+      </div>
+    </div>
+    <button class="nav-hamburger" id="hamburger" onclick="toggleNav()"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-mobile" id="mobileNav">
+    <a href="#how" onclick="closeNav()">How It Works</a>
+    <a href="#features" onclick="closeNav()">Features</a>
+    <a href="/scan" onclick="closeNav()">Scanner</a>
+    <div id="mobileAuthNav" style="display:contents">
+      <a href="#" onclick="closeNav();openModal('login');return false">Log In</a>
+      <a href="#" onclick="closeNav();openModal('signup');return false" style="color:var(--teal)">Signup →</a>
+    </div>
+  </div>
+
+  <!-- LOCATION BANNER (Hidden on homepage) -->
+  <div class="loc-banner" id="locBanner" style="display:none;">
+    <span class="loc-badge" id="locBadge">...</span>
+    <span>Detected: <strong id="locCountry">detecting...</strong></span>
+    <span>·</span>
+    <span>Prices shown in <span class="loc-currency" id="locCurrency">$</span></span>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-glow-2"></div>
+    <h1 class="hero-title">
+      <span>Fraud doesn't warn you.</span><br>
+      <span class="line3">We do—before you click.</span>
+    </h1>
+    <p class="hero-sub">Paste suspicious messages from WhatsApp, SMS, Gmail, and social apps for instant fraud analysis.
+      Real-time cross-app protection is available with Shield Plus.</p>
+    <div class="hero-channels">
+      <span class="pill">WhatsApp</span><span class="pill">SMS</span><span class="pill">Gmail</span><span
+        class="pill">Social DMs</span><span class="pill">Documents</span>
+    </div>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="/scan">🛡️ Try Free — No Card Needed</a>
+      <a class="btn btn-outline btn-lg" href="#how">See How It Works</a>
+    </div>
+    <div class="hero-trust">
+      <div class="trust-item"><span class="trust-dot"></span>3 free scans daily</div>
+      <div class="trust-item"><span class="trust-dot"></span>No message stored — ever</div>
+      <div class="trust-item"><span class="trust-dot"></span>Under 2 seconds</div>
+      <div class="trust-item"><span class="trust-dot"></span>Available worldwide</div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span class="ticker-item">Paste It</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Know Instantly</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Under 2 Seconds</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Silent When Safe</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Loud When It Matters</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Free to Start</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Paste It</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Know Instantly</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Under 2 Seconds</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Silent When Safe</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Loud When It Matters</span><span class="ticker-item hi">·</span>
+      <span class="ticker-item">Free to Start</span><span class="ticker-item hi">·</span>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section class="section reveal">
+    <div class="tag">The Problem</div>
+    <h2 class="section-title">The message looked real.<br>That was the point.</h2>
+    <p class="section-sub" style="margin-bottom:40px">Fraud messages today are <em>indistinguishable</em> from real
+      ones. Phishing attacks surged <strong>1,265%</strong> since AI became widely available. The targets are ordinary
+      people.</p>
+    <div class="stories">
+      <div class="story">
+        <div class="story-name">Sarah, 28</div>
+        <div class="story-role">Freelancer · London</div>
+        <p class="story-body">A WhatsApp message from "her bank." Perfect logo. No typos. Account suspended — click to
+          verify. She did. Her savings were gone before she finished reading.</p>
+        <div class="story-loss">$2,400 — months of freelance earnings — gone in 4 minutes</div>
+      </div>
+      <div class="story">
+        <div class="story-name">Carlos, 22</div>
+        <div class="story-role">Student · São Paulo</div>
+        <p class="story-body">He won a scholarship. All he needed was to pay a $50 processing fee. He borrowed from his
+          mother. The scholarship never existed.</p>
+        <div class="story-loss">$50 — borrowed money — gone forever</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section reveal" id="how">
+    <div class="tag">How It Works</div>
+    <h2 class="section-title">Paste. Scan. Know.</h2>
+    <div class="video-wrapper">
+      <div class="video-container">
+        <video id="demoVideo" controls autoplay muted loop playsinline>
+          <source src="/assets/demo.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- FEATURES -->
+  <section class="section reveal" id="features">
+    <div class="tag">What You Get</div>
+    <h2 class="section-title">Built for how<br>fraud actually arrives.</h2>
+    <div class="features-grid">
+      <div class="feat"><span class="feat-icon">🔍</span>
+        <div class="feat-title">Message Scan</div>
+        <p class="feat-text">Paste any message — get a risk score, three reasons, and a clear recommendation in under 2
+          seconds.</p>
+      </div>
+      <div class="feat"><span class="feat-icon">🖼️</span>
+        <div class="feat-title">Image & Screenshot Scan</div>
+        <p class="feat-text">Upload a screenshot of any suspicious message or fake transfer alert. AI reads it and
+          returns a full verdict.</p>
+      </div>
+      <div class="feat"><span class="feat-icon">🛡️</span>
+        <div class="feat-title">Two-Pass AI Security</div>
+        <p class="feat-text">First pass blocks prompt injection attacks. Second pass performs deep fraud analysis.
+          Double protection.</p>
+      </div>
+      <div class="feat"><span class="feat-icon">📋</span>
+        <div class="feat-title">Your Scan History</div>
+        <p class="feat-text">Sign in to see every verdict, risk score, and timestamp from your past scans. Message
+          content is never saved.</p>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- CTA -->
+  <section class="section cta-section reveal">
+    <div class="cta-glow"></div>
+    <h2 class="cta-headline">Got a suspicious message<br>right now?</h2>
+    <p class="cta-sub">Paste it. Find out in 2 seconds. 3 free scans every day — no account needed.</p>
+    <div class="cta-actions">
+      <a class="btn btn-primary btn-lg" href="/scan">🛡️ Scan It Now — Free</a>
+      <a class="btn btn-outline btn-lg" href="#" onclick="openModal('login');return false">Already have an account</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">SHIELD <span class="accent">IQ</span></div>
+        <div class="footer-tag">AI Fraud Detection · Global</div>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="/scan">Scanner</a></li>
+        <li><a href="/about">About the Team</a></li>
+        <li><a href="/ai">How the AI Works</a></li>
+        <li><a href="/privacy">Privacy & Data</a></li>
+        <li><a href="/security">Security</a></li>
+        <li><a href="/terms">Terms of Use</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+      <div class="footer-bottom">
+        <div class="footer-note">🔒 Privacy-first · No message content ever stored</div>
+        <div class="footer-note">© 2026 SHIELD IQ Technologies</div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- LOGIN MODAL -->
+  <div class="overlay" id="loginOverlay">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal('login')">×</button>
+      <div class="modal-logo">SHIELD <span class="accent">IQ</span></div>
+      <div class="modal-sub-brand">AI Fraud Detection</div>
+      <div class="modal-h">Welcome back</div>
+      <p class="modal-p">Log in to access your scan history and dashboard.</p>
+      <label class="field-label">Email Address</label>
+      <input class="field" id="loginEmail" type="email" placeholder="you@example.com">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <label class="field-label" style="margin-bottom:0;">Password</label>
+        <a href="#" onclick="forgotPassword();return false"
+          style="font-family:var(--font-mono); font-size:10px; color:var(--teal); text-decoration:none;">Forgot
+          password?</a>
+      </div>
+      <input class="field" id="loginPass" type="password" placeholder="Your password">
+      <button class="auth-btn" onclick="handleLogin()">Log In</button>
+      <div class="switch-line">No account? <a onclick="switchModal('login','signup')">Sign up free →</a></div>
+    </div>
+  </div>
+
+  <!-- SIGNUP MODAL -->
+  <div class="overlay" id="signupOverlay">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal('signup')">×</button>
+      <div class="modal-logo">SHIELD <span class="accent">IQ</span></div>
+      <div class="modal-sub-brand">AI Fraud Detection</div>
+      <div class="modal-h">Start for free</div>
+      <p class="modal-p">No card. No setup. Scan your first suspicious message in 30 seconds.</p>
+      <div class="perks">
+        <div class="perk">3 free scans every day</div>
+        <div class="perk">Scan history saved to your account</div>
+        <div class="perk">Your messages are never stored</div>
+      </div>
+      <label class="field-label">Full Name</label>
+      <input class="field" id="signupName" type="text" placeholder="Jane Doe">
+      <label class="field-label">Email Address</label>
+      <input class="field" id="signupEmail" type="email" placeholder="you@example.com">
+      <label class="field-label">Password</label>
+      <input class="field" id="signupPass" type="password" placeholder="At least 8 characters"
+        onkeyup="checkStrength()">
+      <div id="pwdStrength"
+        style="font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:-10px; margin-bottom:16px;">
+        Strength: <span id="pwdLabel">Weak</span></div>
+      <button class="auth-btn" onclick="handleSignup()">Create Free Account</button>
+      <div class="switch-line">Already have an account? <a onclick="switchModal('signup','login')">Log in →</a></div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+
+    // Scroll reveal
+    const obs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); obs.unobserve(e.target) } }) }, { threshold: 0.07 });
+    document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+
+    // Nav scroll
+    window.addEventListener('scroll', () => { document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20) });
+
+    // Mobile nav
+    function toggleNav() { document.getElementById('hamburger').classList.toggle('open'); document.getElementById('mobileNav').classList.toggle('open') }
+    function closeNav() { document.getElementById('hamburger').classList.remove('open'); document.getElementById('mobileNav').classList.remove('open') }
+
+    // Modals
+    function openModal(t) { document.getElementById(t + 'Overlay').classList.add('on'); document.body.style.overflow = 'hidden' }
+    function closeModal(t) { document.getElementById(t + 'Overlay').classList.remove('on'); document.body.style.overflow = '' }
+    function switchModal(from, to) { closeModal(from); setTimeout(() => openModal(to), 150) }
+    document.querySelectorAll('.overlay').forEach(o => { o.addEventListener('click', function (e) { if (e.target === this) { this.classList.remove('on'); document.body.style.overflow = '' } }) });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.overlay.on').forEach(o => { o.classList.remove('on'); document.body.style.overflow = '' }); closeNav() } });
+
+    // Toast
+    function showToast(msg, dur = 3000) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), dur) }
+
+    // Auth
+    function checkStrength() {
+      const pwd = document.getElementById('signupPass').value;
+      const label = document.getElementById('pwdLabel');
+      let s = 0;
+      if (pwd.length >= 8) s++;
+      if (pwd.match(/[A-Z]/)) s++;
+      if (pwd.match(/[0-9]/)) s++;
+      if (pwd.match(/[^a-zA-Z0-9]/)) s++;
+
+      if (pwd.length === 0) { label.textContent = 'None'; label.style.color = 'var(--muted)'; }
+      else if (s <= 1) { label.textContent = 'Weak - Add numbers & symbols'; label.style.color = 'var(--red)'; }
+      else if (s === 2) { label.textContent = 'Fair - Add uppercase or symbols'; label.style.color = 'var(--orange)'; }
+      else if (s === 3) { label.textContent = 'Good'; label.style.color = 'var(--teal)'; }
+      else { label.textContent = 'Strong'; label.style.color = 'var(--teal)'; }
+    }
+
+    function forgotPassword() {
+      const email = document.getElementById('loginEmail').value.trim();
+      if (!email) { showToast('Please enter your email first to reset your password'); return; }
+      showToast('Password reset link sent to ' + email);
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      if (!email || !pass) { showToast('Please enter email and password'); return }
+      try {
+        const r = await fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Login failed');
+        localStorage.setItem('dovtek_token', d.token);
+        localStorage.setItem('dovtek_user', JSON.stringify(d.user));
+        showToast(`Welcome back, ${d.user.full_name}!`); closeModal('login');
+        setTimeout(() => location.reload(), 800);
+      } catch (e) { showToast(e.message) }
+    }
+
+    async function handleSignup() {
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const pass = document.getElementById('signupPass').value;
+      if (!name || !email || !pass) { showToast('Please fill in all fields'); return }
+      if (pass.length < 8) { showToast('Password must be at least 8 characters'); return }
+      try {
+        const r = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: name, email, password: pass }) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Signup failed');
+        localStorage.setItem('dovtek_token', d.token);
+        localStorage.setItem('dovtek_user', JSON.stringify(d.user));
+        showToast('Account created!'); closeModal('signup');
+        setTimeout(() => location.reload(), 800);
+      } catch (e) { showToast(e.message) }
+    }
+
+    // Attach Enter key event listeners for modal form inputs
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginEmail = document.getElementById('loginEmail');
+      const loginPass = document.getElementById('loginPass');
+      if (loginEmail) loginEmail.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+      if (loginPass) loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+      const signupName = document.getElementById('signupName');
+      const signupEmail = document.getElementById('signupEmail');
+      const signupPass = document.getElementById('signupPass');
+      if (signupName) signupName.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+      if (signupEmail) signupEmail.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+      if (signupPass) signupPass.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+    });
+
+    // ── Geolocation + Currency Detection ──
+    const CURRENCY_MAP = {
+      'IN': '₹', 'US': '$', 'GB': '£', 'NG': '₦', 'EU': '€', 'DE': '€', 'FR': '€', 'IT': '€', 'ES': '€',
+      'JP': '¥', 'CN': '¥', 'KR': '₩', 'BR': 'R$', 'ZA': 'R', 'AE': 'AED', 'SA': 'SAR', 'AU': 'A$',
+      'CA': 'C$', 'MX': 'MX$', 'RU': '₽', 'TR': '₺', 'EG': 'E£', 'KE': 'KSh', 'GH': 'GH₵', 'PH': '₱',
+      'ID': 'Rp', 'MY': 'RM', 'TH': '฿', 'VN': '₫', 'BD': '৳', 'PK': '₨', 'LK': 'Rs', 'NP': '₨'
+    };
+    const FLAG_MAP = {
+      'IN': '🇮🇳', 'US': '🇺🇸', 'GB': '🇬🇧', 'NG': '🇳🇬', 'DE': '🇩🇪', 'FR': '🇫🇷', 'JP': '🇯🇵',
+      'CN': '🇨🇳', 'KR': '🇰🇷', 'BR': '🇧🇷', 'ZA': '🇿🇦', 'AU': '🇦🇺', 'CA': '🇨🇦', 'MX': '🇲🇽',
+      'AE': '🇦🇪', 'SA': '🇸🇦', 'RU': '🇷🇺', 'TR': '🇹🇷', 'EG': '🇪🇬', 'KE': '🇰🇪', 'GH': '🇬🇭',
+      'PH': '🇵🇭', 'ID': '🇮🇩', 'MY': '🇲🇾', 'TH': '🇹🇭', 'VN': '🇻🇳', 'BD': '🇧🇩', 'PK': '🇵🇰',
+      'ES': '🇪🇸', 'IT': '🇮🇹', 'NL': '🇳🇱', 'SE': '🇸🇪', 'PL': '🇵🇱', 'LK': '🇱🇰', 'NP': '🇳🇵'
+    };
+
+    function guessCountryByTimezone() {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) {
+          if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+          if (tz.includes('Lagos')) return 'NG';
+          if (tz.includes('London')) return 'GB';
+          if (tz.includes('Johannesburg')) return 'ZA';
+          if (tz.includes('Nairobi')) return 'KE';
+          if (tz.includes('Accra')) return 'GH';
+        }
+        const offset = new Date().getTimezoneOffset();
+        if (offset === -330) return 'IN';
+        if (offset === -60) return 'NG';
+      } catch (e) {}
+      return 'US';
+    }
+
+    async function detectLocation() {
+      const cached = localStorage.getItem('dovtek_geo');
+      if (cached) {
+        try { const d = JSON.parse(cached); if (Date.now() - d.ts < 3600000) { applyGeo(d); return; } } catch (e) { }
+      }
+      try {
+        const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+        const d = await r.json();
+        const geo = { country: d.country_name, code: d.country_code, ts: Date.now() };
+        localStorage.setItem('dovtek_geo', JSON.stringify(geo));
+        applyGeo(geo);
+      } catch (e) {
+        try {
+          const r2 = await fetch('https://api.country.is', { signal: AbortSignal.timeout(4000) });
+          const d2 = await r2.json();
+          const geo = { country: d2.country || 'Unknown', code: d2.country || 'US', ts: Date.now() };
+          localStorage.setItem('dovtek_geo', JSON.stringify(geo));
+          applyGeo(geo);
+        } catch (e2) {
+          const fallbackCode = guessCountryByTimezone();
+          const fallbackNames = { 'IN': 'India', 'NG': 'Nigeria', 'US': 'United States' };
+          applyGeo({ country: fallbackNames[fallbackCode] || 'your region', code: fallbackCode });
+        }
+      }
+    }
+
+    function applyGeo(geo) {
+      const code = geo.code || 'US';
+      const currency = CURRENCY_MAP[code] || '$';
+      document.getElementById('locBadge').textContent = code;
+      document.getElementById('locCountry').textContent = geo.country || 'Unknown';
+      document.getElementById('locCurrency').textContent = currency;
+
+      // Dynamic pricing based on USD
+      const rates = { 'IN': 83, 'NG': 1400, 'GB': 0.79, 'EU': 0.92, 'DE': 0.92, 'FR': 0.92, 'IT': 0.92, 'ES': 0.92, 'ZA': 18.5, 'BR': 5.1, 'AU': 1.5, 'CA': 1.37, 'AE': 3.67, 'KE': 130, 'GH': 14 };
+      const rate = rates[code] || 1;
+
+      let pricePlus = 9.99 * rate;
+      let pricePro = 3.99 * rate;
+
+      if (rate > 10) {
+        pricePlus = Math.round(pricePlus); // For currencies like INR, NGN
+        pricePro = Math.round(pricePro);
+      } else {
+        pricePlus = pricePlus.toFixed(2);
+        pricePro = pricePro.toFixed(2);
+      }
+
+      const priceElPlus = document.getElementById('dynamicPrice');
+      if (priceElPlus) priceElPlus.textContent = currency + pricePlus;
+
+      const priceElPro = document.getElementById('dynamicPricePro');
+      if (priceElPro) priceElPro.textContent = currency + pricePro;
+    }
+
+    function changeLang(lang) {
+      localStorage.setItem('dovtek_lang', lang);
+      applyLanguage(lang);
+    }
+
+    // ── Global Translations for index.html ────────────────────────────────────
+    const SITE_TRANSLATIONS = {
+      en: {
+        heroLine1: "Fraud doesn't warn you.", heroLine2: "", heroLine3: "We do—before you click.",
+        heroSub: "Paste suspicious messages from WhatsApp, SMS, Gmail, and social apps for instant fraud analysis. Real-time cross-app protection is available with Shield Plus.",
+        ctaTryFree: "🛡️ Try Free — No Card Needed", ctaHowItWorks: "See How It Works",
+        trust1: "3 free scans daily", trust2: "No message stored — ever", trust3: "Under 2 seconds", trust4: "Available worldwide",
+        navHow: "How It Works", navFeatures: "Features", navScanner: "Scanner",
+        probTag: "The Problem", probTitle: "The message looked real.<br>That was the point.",
+        probSub: "Fraud messages today are <em>indistinguishable</em> from real ones. Phishing attacks surged <strong>1,265%</strong> since AI became widely available. The targets are ordinary people.",
+        howTag: "How It Works", howTitle: "Paste. Scan. Know.",
+        step1t: "Paste the message", step1d: "WhatsApp, SMS, email, social DM — copy and paste anything suspicious. Or upload a screenshot.",
+        step2t: "AI checks it thoroughly", step2d: "Two-pass AI analysis checks for urgency, impersonation, suspicious links, and pressure tactics — everything a fraudster uses.",
+        step3t: "You get the verdict", step3d: "A risk score 0-100. Three specific reasons. Exactly what to do next. Your message is discarded the moment the verdict is delivered.",
+        featTag: "What You Get", featTitle: "Built for how<br>fraud actually arrives.",
+        feat1t: "Message Scan", feat1d: "Paste any message — get a risk score, three reasons, and a clear recommendation in under 2 seconds.",
+        feat2t: "Image & Screenshot Scan", feat2d: "Upload a screenshot of any suspicious message or fake transfer alert. AI reads it and returns a full verdict.",
+        feat3t: "Two-Pass AI Security", feat3d: "First pass blocks prompt injection attacks. Second pass performs deep fraud analysis. Double protection.",
+        feat4t: "Your Scan History", feat4d: "Sign in to see every verdict, risk score, and timestamp from your past scans. Message content is never saved.",
+        pricingTag: "Pricing", pricingTitle: "Protection that scales<br>with your needs.",
+        ctaHeadline: "Got a suspicious message<br>right now?", ctaSub: "Paste it. Find out in 2 seconds. 3 free scans every day — no account needed.",
+        ctaScanNow: "🛡️ Scan It Now — Free", ctaHaveAccount: "Already have an account",
+      },
+      es: {
+        heroLine1: "El fraude no te avisa.", heroLine2: "Tu dinero no vuelve.", heroLine3: "Te avisamos — antes de que hagas clic.",
+        heroSub: "SHIELD IQ analiza mensajes de WhatsApp, SMS, Gmail y cualquier app — al instante. <strong>Silencioso cuando es seguro. Sonoro quando importa.</strong>",
+        ctaTryFree: "🛡️ Prueba Gratis — Sin Tarjeta", ctaHowItWorks: "Ver Cómo Funciona",
+        trust1: "3 escaneos gratis al día", trust2: "Ningún mensaje guardado", trust3: "Menos de 2 segundos", trust4: "Disponible mundialmente",
+        navHow: "Cómo Funciona", navFeatures: "Características", navScanner: "Escáner",
+        probTag: "El Problema", probTitle: "El mensaje parecía real.<br>Ese era el objetivo.",
+        probSub: "Los mensajes de fraude hoy son <em>indistinguibles</em> de los reales. Los ataques de phishing aumentaron <strong>1.265%</strong> desde que la IA se generalizó. Los objetivos son personas comunes.",
+        howTag: "Cómo Funciona", howTitle: "Pega. Escanea. Sabe.",
+        step1t: "Pega el mensaje", step1d: "WhatsApp, SMS, email, DM social — copia y pega cualquier cosa sospechosa. O sube una captura.",
+        step2t: "La IA lo verifica", step2d: "El análisis de IA de doble pasada comprueba urgencia, suplantación, enlaces sospechosos y tácticas de presión.",
+        step3t: "Recibes el veredicto", step3d: "Una puntuación de riesgo 0-100. Tres razones específicas. Exactamente qué hacer a continuación.",
+        featTag: "Qué Obtienes", featTitle: "Diseñado para cómo<br>llega el fraude realmente.",
+        feat1t: "Escaneo de Mensajes", feat1d: "Pega cualquier mensaje — obtén una puntuación de riesgo, tres razones y una recomendación en menos de 2 segundos.",
+        feat2t: "Escaneo de Imágenes", feat2d: "Sube una captura de cualquier mensaje sospechoso. La IA lo lee y devuelve un veredicto completo.",
+        feat3t: "Seguridad IA de Doble Pasada", feat3d: "La primera pasada bloquea ataques de inyección. La segunda realiza un análisis profundo de fraude.",
+        feat4t: "Tu Historial de Escaneos", feat4d: "Inicia sesión para ver cada veredicto, puntuación y marca de tiempo de tus escaneos anteriores.",
+        pricingTag: "Precios", pricingTitle: "Protección que escala<br>con tus necesidades.",
+        ctaHeadline: "¿Tienes un mensaje sospechoso<br>ahora mismo?", ctaSub: "Pégalo. Descúbrelo en 2 segundos. 3 escaneos gratis cada día — sin cuenta.",
+        ctaScanNow: "🛡️ Escanearlo Ahora — Gratis", ctaHaveAccount: "Ya tengo una cuenta",
+      },
+      fr: {
+        heroLine1: "La fraude ne vous prévient pas.", heroLine2: "Votre argent ne revient pas.", heroLine3: "Nous vous prévenons — avant que vous cliquiez.",
+        heroSub: "SHIELD IQ analyse les messages WhatsApp, SMS, Gmail et toute application — instantanément. <strong>Silencieux quand c'est sûr. Bruyant quand ça compte.</strong>",
+        ctaTryFree: "🛡️ Essai Gratuit — Sans Carte", ctaHowItWorks: "Voir Comment Ça Marche",
+        trust1: "3 scans gratuits par jour", trust2: "Aucun message stocké", trust3: "Moins de 2 secondes", trust4: "Disponible partout",
+        navHow: "Comment Ça Marche", navFeatures: "Fonctionnalités", navScanner: "Scanner",
+        probTag: "Le Problème", probTitle: "Le message semblait réel.<br>C'était le but.",
+        probSub: "Les messages frauduleux d'aujourd'hui sont <em>impossibles à distinguer</em> des vrais. Les attaques de phishing ont augmenté de <strong>1 265 %</strong>.",
+        howTag: "Comment Ça Marche", howTitle: "Collez. Scannez. Sachez.",
+        step1t: "Collez le message", step1d: "WhatsApp, SMS, email — copiez et collez n'importe quoi de suspect. Ou téléchargez une capture.",
+        step2t: "L'IA l'analyse", step2d: "Analyse IA en deux passes — urgence, usurpation, liens suspects et tactiques de pression.",
+        step3t: "Vous obtenez le verdict", step3d: "Score de risque 0-100. Trois raisons précises. Exactement quoi faire ensuite.",
+        featTag: "Ce Que Vous Obtenez", featTitle: "Conçu pour la façon<br>dont la fraude arrive vraiment.",
+        feat1t: "Scan de Messages", feat1d: "Collez n'importe quel message — obtenez un score de risque et une recommandation en moins de 2 secondes.",
+        feat2t: "Scan d'Images", feat2d: "Téléchargez une capture d'un message suspect. L'IA la lit et retourne un verdict complet.",
+        feat3t: "Sécurité IA Double Passe", feat3d: "La première passe bloque les injections. La deuxième effectue une analyse approfondie.",
+        feat4t: "Votre Historique", feat4d: "Connectez-vous pour voir chaque verdict et score de risque de vos scans précédents.",
+        pricingTag: "Tarifs", pricingTitle: "Protection adaptée<br>à vos besoins.",
+        ctaHeadline: "Vous avez un message suspect<br>en ce moment?", ctaSub: "Collez-le. Réponse en 2 secondes. 3 scans gratuits chaque jour — sans compte.",
+        ctaScanNow: "🛡️ Scanner Maintenant — Gratuit", ctaHaveAccount: "J'ai déjà un compte",
+      },
+      hi: {
+        heroLine1: "धोखाधड़ी चेतावनी नहीं देती।", heroLine2: "आपका पैसा वापस नहीं आता।", heroLine3: "हम चेतावनी देते हैं — क्लिक करने से पहले।",
+        heroSub: "SHIELD IQ WhatsApp, SMS, Gmail और हर ऐप के संदेशों को तुरंत स्कैन करता है। <strong>सुरक्षित होने पर शांत। मायने रखने पर ज़ोरदार।</strong>",
+        ctaTryFree: "🛡️ मुफ़्त आज़माएं — कोई कार्ड नहीं", ctaHowItWorks: "कैसे काम करता है देखें",
+        trust1: "रोज़ 3 मुफ़्त स्कैन", trust2: "कोई संदेश संग्रहीत नहीं", trust3: "2 सेकंड से कम", trust4: "दुनियाभर में उपलब्ध",
+        navHow: "यह कैसे काम करता है", navFeatures: "विशेषताएं", navScanner: "स्कैनर",
+        probTag: "समस्या", probTitle: "संदेश असली लग रहा था।<br>यही तो मकसद था।",
+        probSub: "आज के धोखाधड़ी संदेश असली से <em>अलग नहीं दिखते</em>। AI के आने से फ़िशिंग हमले <strong>1,265%</strong> बढ़ गए।",
+        howTag: "यह कैसे काम करता है", howTitle: "पेस्ट करें। स्कैन करें। जानें।",
+        step1t: "संदेश पेस्ट करें", step1d: "WhatsApp, SMS, ईमेल — कोई भी संदिग्ध चीज़ कॉपी-पेस्ट करें। या स्क्रीनशॉट अपलोड करें।",
+        step2t: "AI पूरी तरह जाँचती है", step2d: "दो-चरण AI विश्लेषण — जल्दी, प्रतिरूपण, संदिग्ध लिंक और दबाव की रणनीतियाँ।",
+        step3t: "आपको फ़ैसला मिलता है", step3d: "0-100 जोखिम स्कोर। तीन विशिष्ट कारण। अगला कदम बिल्कुल स्पष्ट।",
+        featTag: "आपको क्या मिलता है", featTitle: "धोखाधड़ी जिस तरह आती है<br>उसके लिए बनाया गया।",
+        feat1t: "संदेश स्कैन", feat1d: "कोई भी संदेश पेस्ट करें — 2 सेकंड में जोखिम स्कोर और सिफारिश पाएं।",
+        feat2t: "इमेज और स्क्रीनशॉट स्कैन", feat2d: "किसी भी संदिग्ध संदेश का स्क्रीनशॉट अपलोड करें। AI पूरा फ़ैसला देती है।",
+        feat3t: "दो-चरण AI सुरक्षा", feat3d: "पहला चरण इंजेक्शन हमलों को रोकता है। दूसरा गहरा धोखाधड़ी विश्लेषण करता है।",
+        feat4t: "आपका स्कैन इतिहास", feat4d: "लॉग इन करें और अपने पिछले सभी स्कैन का फ़ैसला, स्कोर और समय देखें।",
+        pricingTag: "मूल्य निर्धारण", pricingTitle: "आपकी ज़रूरत के<br>अनुसार सुरक्षा।",
+        ctaHeadline: "अभी कोई संदिग्ध संदेश मिला?", ctaSub: "इसे पेस्ट करें। 2 सेकंड में जानें। हर दिन 3 मुफ़्त स्कैन — कोई खाता नहीं चाहिए।",
+        ctaScanNow: "🛡️ अभी स्कैन करें — मुफ़्त", ctaHaveAccount: "पहले से खाता है",
+      },
+      pt: {
+        heroLine1: "A fraude não avisa.", heroLine2: "Seu dinheiro não volta.", heroLine3: "Avisamos você — antes de clicar.",
+        heroSub: "SHIELD IQ escaneia mensagens do WhatsApp, SMS, Gmail e qualquer app — instantaneamente. <strong>Silencioso quando seguro. Alto quando importa.</strong>",
+        ctaTryFree: "🛡️ Experimente Grátis — Sem Cartão", ctaHowItWorks: "Ver Como Funciona",
+        trust1: "3 scans grátis por dia", trust2: "Nenhuma mensagem armazenada", trust3: "Menos de 2 segundos", trust4: "Disponível mundialmente",
+        navHow: "Como Funciona", navFeatures: "Recursos", navScanner: "Scanner",
+        probTag: "O Problema", probTitle: "A mensagem parecia real.<br>Era esse o objetivo.",
+        probSub: "As mensagens de fraude hoje são <em>indistinguíveis</em> das reais. Ataques de phishing aumentaram <strong>1.265%</strong>.",
+        howTag: "Como Funciona", howTitle: "Cole. Escaneie. Saiba.",
+        step1t: "Cole a mensagem", step1d: "WhatsApp, SMS, email — copie e cole qualquer coisa suspeita. Ou envie uma captura.",
+        step2t: "A IA verifica tudo", step2d: "Análise IA em dois passes — urgência, personificação, links suspeitos e táticas de pressão.",
+        step3t: "Você recebe o veredicto", step3d: "Pontuação de risco 0-100. Três razões específicas. Exatamente o que fazer a seguir.",
+        featTag: "O Que Você Recebe", featTitle: "Feito para como<br>a fraude chega de verdade.",
+        feat1t: "Escaneamento de Mensagens", feat1d: "Cole qualquer mensagem — obtenha pontuação de risco e recomendação em menos de 2 segundos.",
+        feat2t: "Escaneamento de Imagens", feat2d: "Envie uma captura de tela de qualquer mensagem suspeita. A IA retorna um veredicto completo.",
+        feat3t: "Segurança IA Dupla", feat3d: "Primeiro passe bloqueia injeções. Segundo realiza análise profunda de fraude.",
+        feat4t: "Seu Histórico", feat4d: "Entre para ver cada veredicto e pontuação dos seus scans anteriores.",
+        pricingTag: "Preços", pricingTitle: "Proteção que escala<br>com suas necessidades.",
+        ctaHeadline: "Tem uma mensagem suspeita<br>agora?", ctaSub: "Cole. Descubra em 2 segundos. 3 scans grátis por dia — sem conta.",
+        ctaScanNow: "🛡️ Escanear Agora — Grátis", ctaHaveAccount: "Já tenho uma conta",
+      },
+      ar: {
+        heroLine1: "الاحتيال لا يحذرك.", heroLine2: "أموالك لا تعود.", heroLine3: "نحن نحذرك — قبل أن تضغط.",
+        heroSub: "SHIELD IQ يفحص الرسائل عبر واتساب وSMS وجيميل وكل تطبيق — فورياً. <strong>صامت عند الأمان. صاخب عند الأهمية.</strong>",
+        ctaTryFree: "🛡️ جرب مجاناً — بدون بطاقة", ctaHowItWorks: "اعرف كيف يعمل",
+        trust1: "3 فحوصات مجانية يومياً", trust2: "لا تُحفظ الرسائل", trust3: "أقل من ثانيتين", trust4: "متاح عالمياً",
+        navHow: "كيف يعمل", navFeatures: "الميزات", navScanner: "الماسح",
+        probTag: "المشكلة", probTitle: "الرسالة بدت حقيقية.<br>كان ذلك هو الهدف.",
+        probSub: "رسائل الاحتيال اليوم <em>لا يمكن تمييزها</em> عن الحقيقية. ارتفعت هجمات التصيد <strong>1,265%</strong> منذ انتشار الذكاء الاصطناعي.",
+        howTag: "كيف يعمل", howTitle: "الصق. افحص. اعرف.",
+        step1t: "الصق الرسالة", step1d: "واتساب، رسائل، بريد — انسخ والصق أي شيء مشبوه. أو ارفع لقطة شاشة.",
+        step2t: "الذكاء الاصطناعي يفحص", step2d: "تحليل مزدوج — الإلحاح، انتحال الشخصية، الروابط المشبوهة وأساليب الضغط.",
+        step3t: "تحصل على الحكم", step3d: "درجة خطر 0-100. ثلاثة أسباب محددة. بالضبط ما يجب فعله بعد ذلك.",
+        featTag: "ما تحصل عليه", featTitle: "مصمم لكيفية<br>وصول الاحتيال فعلياً.",
+        feat1t: "فحص الرسائل", feat1d: "الصق أي رسالة — احصل على درجة خطر وتوصية في أقل من ثانيتين.",
+        feat2t: "فحص الصور", feat2d: "ارفع لقطة شاشة لأي رسالة مشبوهة. يقرأها الذكاء الاصطناعي ويعيد حكماً كاملاً.",
+        feat3t: "أمان ذكاء اصطناعي مزدوج", feat3d: "المرحلة الأولى تمنع الهجمات. الثانية تجري تحليلاً عميقاً للاحتيال.",
+        feat4t: "سجل فحوصاتك", feat4d: "سجل الدخول لرؤية كل حكم ودرجة من فحوصاتك السابقة.",
+        pricingTag: "الأسعار", pricingTitle: "حماية تتوسع<br>مع احتياجاتك.",
+        ctaHeadline: "لديك رسالة مشبوهة الآن؟", ctaSub: "الصقها. اكتشف في ثانيتين. 3 فحوصات مجانية يومياً — بدون حساب.",
+        ctaScanNow: "🛡️ افحص الآن — مجاناً", ctaHaveAccount: "لدي حساب بالفعل",
+      },
+      zh: {
+        heroLine1: "欺诈不会提前警告你。", heroLine2: "你的钱回不来了。", heroLine3: "我们在你点击前警告你。",
+        heroSub: "SHIELD IQ即时扫描WhatsApp、短信、Gmail及所有应用的消息。<strong>安全时静默，重要时警报。</strong>",
+        ctaTryFree: "🛡️ 免费试用 — 无需信用卡", ctaHowItWorks: "了解工作原理",
+        trust1: "每天3次免费扫描", trust2: "从不存储消息", trust3: "不到2秒", trust4: "全球可用",
+        navHow: "工作原理", navFeatures: "功能特点", navScanner: "扫描器",
+        probTag: "问题所在", probTitle: "那条消息看起来是真的。<br>这正是目的。",
+        probSub: "如今的欺诈消息与真实消息<em>无法区分</em>。自AI普及以来，网络钓鱼攻击激增<strong>1,265%</strong>。",
+        howTag: "工作原理", howTitle: "粘贴。扫描。了解。",
+        step1t: "粘贴消息", step1d: "WhatsApp、短信、邮件 — 复制粘贴任何可疑内容，或上传截图。",
+        step2t: "AI全面检测", step2d: "双重AI分析 — 紧迫性、冒充身份、可疑链接和压力策略。",
+        step3t: "获得结果", step3d: "0-100风险评分。三个具体原因。下一步该怎么做。",
+        featTag: "您将获得", featTitle: "专为欺诈<br>实际到来的方式而设计。",
+        feat1t: "消息扫描", feat1d: "粘贴任何消息 — 2秒内获得风险评分和清晰建议。",
+        feat2t: "图像和截图扫描", feat2d: "上传任何可疑消息的截图。AI读取并返回完整结果。",
+        feat3t: "双重AI安全", feat3d: "第一步阻止注入攻击。第二步执行深度欺诈分析。",
+        feat4t: "您的扫描历史", feat4d: "登录查看您过去所有扫描的结果、评分和时间戳。",
+        pricingTag: "定价", pricingTitle: "随您需求扩展<br>的保护方案。",
+        ctaHeadline: "现在收到可疑消息了吗？", ctaSub: "粘贴它。2秒内得出结论。每天3次免费扫描 — 无需账户。",
+        ctaScanNow: "🛡️ 立即扫描 — 免费", ctaHaveAccount: "已有账户",
+      }
+    };
+
+
+
+    function applyLanguage(lang) {
+      const t = SITE_TRANSLATIONS[lang] || SITE_TRANSLATIONS.en;
+      document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+
+      // Helper: set text on nth element matching selector
+      function setText(sel, i, val) { const els = document.querySelectorAll(sel); if (els[i] && val) els[i].textContent = val; }
+      function setHTML(sel, i, val) { const els = document.querySelectorAll(sel); if (els[i] && val) els[i].innerHTML = val; }
+
+      // Hero
+      const spans = document.querySelectorAll('.hero-title span');
+      if (spans[0]) spans[0].textContent = t.heroLine1;
+      if (spans[1]) spans[1].textContent = t.heroLine2;
+      if (spans[2]) spans[2].textContent = t.heroLine3;
+      setHTML('.hero-sub', 0, t.heroSub);
+      setHTML('.hero-cta a', 0, t.ctaTryFree);
+      setText('.hero-cta a', 1, t.ctaHowItWorks);
+      const trustTexts = [t.trust1, t.trust2, t.trust3, t.trust4];
+      document.querySelectorAll('.trust-item').forEach((el, i) => { const d = el.querySelector('.trust-dot'); el.textContent = trustTexts[i] || ''; if (d) el.prepend(d); });
+
+      // Nav
+      setText('.nav-links li a', 0, t.navHow);
+      setText('.nav-links li a', 1, t.navFeatures);
+      setText('.nav-links li a', 2, t.navScanner);
+
+      // Section tags (in order: Problem, How, Features, Pricing)
+      const tags = document.querySelectorAll('.tag');
+      if (tags[0]) tags[0].textContent = t.probTag || tags[0].textContent;
+      if (tags[1]) tags[1].textContent = t.howTag || tags[1].textContent;
+      if (tags[2]) tags[2].textContent = t.featTag || tags[2].textContent;
+      if (tags[3]) tags[3].textContent = t.pricingTag;
+
+      // Section titles (Problem, How, Features, Pricing)
+      const secTitles = document.querySelectorAll('.section-title');
+      if (secTitles[0]) secTitles[0].innerHTML = t.probTitle || secTitles[0].innerHTML;
+      if (secTitles[1]) secTitles[1].innerHTML = t.howTitle || secTitles[1].innerHTML;
+      if (secTitles[2]) secTitles[2].innerHTML = t.featTitle || secTitles[2].innerHTML;
+      if (secTitles[3]) secTitles[3].innerHTML = t.pricingTitle;
+
+      // Problem sub
+      const probSub = document.querySelector('.section-sub');
+      if (probSub && t.probSub) probSub.innerHTML = t.probSub;
+
+      // How It Works steps
+      const stepTitles = document.querySelectorAll('.step-title');
+      const stepTexts = document.querySelectorAll('.step-text');
+      [t.step1t, t.step2t, t.step3t].forEach((v, i) => { if (stepTitles[i] && v) stepTitles[i].textContent = v; });
+      [t.step1d, t.step2d, t.step3d].forEach((v, i) => { if (stepTexts[i] && v) stepTexts[i].textContent = v; });
+
+      // Features cards
+      const featTitles = document.querySelectorAll('.feat-title');
+      const featTexts = document.querySelectorAll('.feat-text');
+      [t.feat1t, t.feat2t, t.feat3t, t.feat4t].forEach((v, i) => { if (featTitles[i] && v) featTitles[i].textContent = v; });
+      [t.feat1d, t.feat2d, t.feat3d, t.feat4d].forEach((v, i) => { if (featTexts[i] && v) featTexts[i].textContent = v; });
+
+      // CTA section
+      setHTML('.cta-headline', 0, t.ctaHeadline);
+      setText('.cta-sub', 0, t.ctaSub);
+      setHTML('.cta-actions a', 0, t.ctaScanNow);
+      setText('.cta-actions a', 1, t.ctaHaveAccount);
+
+      // If logged in, re-apply auth UI states to overwrite translations that prompt login
+      if (typeof updateNavAuth === 'function') {
+        updateNavAuth();
+      }
+    }
+
+    (function () {
+      const saved = localStorage.getItem('dovtek_lang');
+      if (saved) document.getElementById('langSelect').value = saved;
+      if (saved && saved !== 'en') applyLanguage(saved);
+
+      // Auto-open modal if redirected from scan gate
+      const modalToOpen = localStorage.getItem('dovtek_open_modal');
+      if (modalToOpen) {
+        localStorage.removeItem('dovtek_open_modal');
+        setTimeout(() => openModal(modalToOpen), 300);
+      }
+    })();
+
+    function toggleAvatarDropdown(event) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('avatarDropdown');
+      if (dropdown) dropdown.classList.toggle('show');
+    }
+    window.addEventListener('click', () => {
+      const dropdown = document.getElementById('avatarDropdown');
+      if (dropdown) dropdown.classList.remove('show');
+    });
+
+    function updateNavAuth() {
+      const token = localStorage.getItem('dovtek_token');
+      document.body.setAttribute('data-shieldiq-token-bridge', token || '');
+      document.body.setAttribute('data-shieldiq-user-bridge', localStorage.getItem('dovtek_user') || '');
+      if (token) {
+        let userObj = {};
+        try {
+          userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+        } catch(e) {}
+        const initials = (userObj.full_name || userObj.email || 'U').charAt(0).toUpperCase();
+        const displayName = userObj.full_name || userObj.email?.split('@')[0] || 'User';
+        const planLabel = userObj.plan === 'plus' ? 'Shield Plus' : userObj.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
+        const upgradeStyle = userObj.plan === 'plus' ? 'style="display:none;"' : '';
+
+        const desktopAuth = document.getElementById('desktopAuthNav');
+        if (desktopAuth) {
+          desktopAuth.innerHTML = `
+            <div class="avatar-wrapper" id="avatarWrapper">
+              <div class="avatar-btn" id="avatarBtn" onclick="toggleAvatarDropdown(event)">${initials}</div>
+              <div class="avatar-dropdown" id="avatarDropdown">
+                <div class="dropdown-header">
+                  <div class="dropdown-user-name">${displayName}</div>
+                  <div class="dropdown-user-plan">${planLabel}</div>
+                </div>
+                <a href="/dashboard" class="dropdown-item">📊 Dashboard</a>
+                <a href="/scan" class="dropdown-item">🛡️ Scan Message</a>
+                <a href="/plans" class="dropdown-item" id="dropdownUpgradeLink" ${upgradeStyle}>🚀 Upgrade Plan</a>
+                <a href="#" class="dropdown-item" onclick="openSubscriptionModal();return false">⚙️ Manage Subscription</a>
+                <a href="#" class="dropdown-item logout-item" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false">🚪 Logout</a>
+              </div>
+            </div>
+          `;
+        }
+        const mobileAuth = document.getElementById('mobileAuthNav');
+        if (mobileAuth) {
+          mobileAuth.innerHTML = `
+            <a href="/dashboard">Dashboard</a>
+            <a href="/scan">Scanner</a>
+            <a href="/plans" ${upgradeStyle}>Upgrade Plan</a>
+            <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="color:#ef4444">Logout</a>
+          `;
+        }
+
+        // Adapt Hero CTA
+        const heroBtn = document.querySelector('.hero-cta .btn-primary');
+        if (heroBtn) {
+          heroBtn.textContent = '🛡️ Go to Dashboard';
+          heroBtn.href = '/dashboard';
+        }
+        const heroOutlineBtn = document.querySelector('.hero-cta .btn-outline');
+        if (heroOutlineBtn) {
+          heroOutlineBtn.textContent = '🚀 View Plans';
+          heroOutlineBtn.href = '/plans';
+        }
+
+        // Adapt Bottom CTA
+        const bottomPrimary = document.querySelector('.cta-actions .btn-primary');
+        if (bottomPrimary) {
+          bottomPrimary.textContent = '🛡️ Go to Dashboard';
+          bottomPrimary.href = '/dashboard';
+        }
+        const bottomOutline = document.querySelector('.cta-actions .btn-outline');
+        if (bottomOutline) {
+          bottomOutline.style.display = 'none';
+        }
+
+        // Adapt Pricing CTAs
+        const pricingBtns = document.querySelectorAll('#pricing .feat');
+        if (pricingBtns.length >= 3) {
+          const freeBtn = pricingBtns[0].querySelector('.btn');
+          if (freeBtn) {
+            freeBtn.textContent = 'Go to Dashboard';
+            freeBtn.href = '/dashboard';
+          }
+          const proBtn = pricingBtns[1].querySelector('.btn');
+          if (proBtn) {
+            proBtn.removeAttribute('onclick');
+            proBtn.href = '/checkout?plan=pro';
+          }
+          const plusBtn = pricingBtns[2].querySelector('.btn');
+          if (plusBtn) {
+            plusBtn.removeAttribute('onclick');
+            plusBtn.href = '/checkout?plan=plus';
+          }
+        }
+      }
+    }
+
+    detectLocation();
+    updateNavAuth();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the AI Works — SHIELD IQ</title>
+<meta name="description" content="Learn about the AI technology behind SHIELD IQ's real-time fraud detection.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.page-wrap{max-width:760px;margin:0 auto;padding:120px clamp(20px,5vw,48px) 80px}
+.policy-header{margin-bottom:56px;padding-bottom:36px;border-bottom:1px solid var(--border)}
+.policy-title{font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.06;margin-bottom:16px;letter-spacing:-0.03em}
+.policy-intro{font-size:15px;color:var(--warm);max-width:580px;margin-top:12px;line-height:1.8}
+.p-section{margin-bottom:48px}
+.section-num{font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.section-num::before{content:'';width:20px;height:1px;background:var(--teal)}
+.p-section h2{font-size:clamp(20px,2.5vw,26px);font-weight:800;line-height:1.1;margin-bottom:16px;letter-spacing:-0.02em}
+.p-section p{font-size:15px;color:var(--warm);line-height:1.85;margin-bottom:14px}
+.p-section p strong{color:var(--white);font-weight:600}
+.teal-box{background:var(--teal-dim);border:1px solid rgba(0,212,160,0.2);border-radius:var(--radius-sm);padding:18px 22px;margin:16px 0}
+.teal-box p{color:var(--warm);font-size:14px;margin-bottom:0}
+.teal-box p strong{color:var(--teal)}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.policy-footer{margin-top:72px;padding-top:28px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px}
+.policy-footer-brand{font-weight:800;font-size:16px}.policy-footer-brand .accent{color:var(--teal)}
+.policy-footer-note{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.06em}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>SHIELD <span class="accent">IQ</span></a>
+  <ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/scan">Scan</a></li></ul>
+  <div class="nav-actions"><a class="btn-ghost" href="/">← Back to Home</a></div>
+</nav>
+
+<div class="page-wrap">
+  <div class="policy-header">
+    <div class="tag">AI Tech</div>
+    <h1 class="policy-title">How the AI Works</h1>
+    <p class="policy-intro">SHIELD IQ uses state-of-the-art Natural Language Processing (NLP) and optical intelligence models to evaluate messages for fraud, social engineering, and security threats.</p>
+  </div>
+
+  <div class="p-section">
+    <div class="section-num">01</div>
+    <h2>Semantic Risk Analysis</h2>
+    <p>Our algorithm breaks down the input text to search for common psychological cues used by bad actors. This includes detecting **high-urgency tone patterns**, pressure tactics, unusual payment requests, and impersonation flags (such as pretending to represent banks, delivery agencies, or support agents).</p>
+    <p>We analyze grammatical cues, syntactic irregularities, and link/domain properties to assess the validity of the sender's claim.</p>
+  </div>
+  <div class="section-divider"></div>
+
+  <div class="p-section">
+    <div class="section-num">02</div>
+    <h2>Screenshot OCR Processing</h2>
+    <p>When you upload an image or screenshot, the system utilizes high-accuracy **Optical Character Recognition (OCR)** to transcribe textual content from the image. The extracted text is then passed to our semantic classifier to detect scams within conversations, SMS windows, and emails.</p>
+    <div class="teal-box">
+      <p><strong>Ephemeral Scan Handling:</strong> Both text and image inputs are parsed in memory in real-time. No raw data, images, or chat contents are ever stored on our databases after the scan is finalized.</p>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <div class="p-section">
+    <div class="section-num">03</div>
+    <h2>Risk Scoring Engine</h2>
+    <p>The final output is represented as a score from <strong>0 to 100</strong>, indicating the severity of the threat:</p>
+    <ul>
+      <li style="color: var(--teal); margin-bottom: 8px;"><strong>LOW Risk (0-39):</strong> Clear message structure, safe or verified domain matching, and normal conversational patterns.</li>
+      <li style="color: #f59e0b; margin-bottom: 8px;"><strong>MEDIUM Risk (40-69):</strong> Suspicious link shorteners, slightly urgent tone, or ambiguous payment contexts requiring vigilance.</li>
+      <li style="color: #ff4757; margin-bottom: 8px;"><strong>HIGH Risk (70-100):</strong> Extreme urgency, spoofed company signatures, coercive demands for personal details, or known phishing URLs.</li>
+    </ul>
+  </div>
+
+  <div class="policy-footer">
+    <div class="policy-footer-brand">SHIELD <span class="accent">IQ</span></div>
+    <div class="policy-footer-note">© 2026 SHIELD IQ Technologies.</div>
+  </div>
+</div>
+</body>
+</html>

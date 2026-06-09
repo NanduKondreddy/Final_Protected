@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:320px;background:#07111f;color:#e2e8f0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.header{display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo{width:30px;height:30px;border-radius:8px;background:#00d4a0;color:#061018;font-weight:900;display:flex;align-items:center;justify-content:center}
+.brand{font-size:15px;font-weight:800;flex:1}.brand span{color:#00d4a0}
+.status{font-size:10px;color:#00d4a0;border:1px solid rgba(0,212,160,.25);background:rgba(0,212,160,.1);border-radius:999px;padding:4px 8px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(255,255,255,.08)}
+.stat{padding:12px;text-align:center;background:rgba(255,255,255,.025)}
+.num{font-size:24px;font-weight:900}.safe .num{color:#00d4a0}.med .num{color:#f59e0b}.high .num{color:#ff4757}
+.lbl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.08em}
+.section{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.title{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:800}
+.field{width:100%;background:#0b1828;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:#e2e8f0;padding:9px;font-size:12px;margin-bottom:8px}
+.btn{width:100%;border:none;border-radius:6px;background:#00d4a0;color:#061018;padding:10px;font-weight:900;cursor:pointer}
+.row{display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;padding:3px 0}.on{color:#00d4a0}.off{color:#64748b}
+.scan{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.scan:last-child{border-bottom:none}.dot{width:8px;height:8px;border-radius:50%;background:#00d4a0}.dot.MEDIUM{background:#f59e0b}.dot.HIGH{background:#ff4757}
+.scan-main{flex:1;min-width:0}.scan-title{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.scan-meta{font-size:10px;color:#64748b}.score{font-weight:900;font-size:12px}
+.empty{font-size:12px;color:#64748b;padding:8px 0}
+.links{display:flex}.link{flex:1;padding:11px;text-align:center;color:#00d4a0;background:transparent;border:none;cursor:pointer;font-size:11px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">FS</div>
+  <div class="brand">Fraud<span>Shield</span></div>
+  <div class="status">ACTIVE</div>
+</div>
+<div class="stats">
+  <div class="stat safe"><div class="num" id="lowCount">0</div><div class="lbl">Safe</div></div>
+  <div class="stat med"><div class="num" id="medCount">0</div><div class="lbl">Caution</div></div>
+  <div class="stat high"><div class="num" id="highCount">0</div><div class="lbl">Blocked</div></div>
+</div>
+<div class="section">
+  <div class="title">Settings</div>
+  <label style="font-size:10px;color:#64748b;display:block;margin-bottom:4px;">Backend URL</label>
+  <input class="field" id="apiBase" placeholder="http://127.0.0.1:8000">
+  <label style="font-size:10px;color:#64748b;display:block;margin-bottom:4px;">Auth Token (JWT)</label>
+  <input class="field" type="password" id="authToken" placeholder="Paste Shield Plus token here">
+  <button class="btn" id="saveSettings">Save Settings</button>
+</div>
+<div class="section">
+  <div class="title">Protection</div>
+  <div class="row"><span>WhatsApp Web</span><span id="waState">Checking</span></div>
+  <div class="row"><span>Gmail</span><span id="gmState">Checking</span></div>
+  <div class="row"><span>Social Media</span><span id="socState">Checking</span></div>
+  <div class="row"><span>Safe messages</span><span class="on">Silent</span></div>
+</div>
+<div class="section">
+  <div class="title">Recent Scans</div>
+  <div id="recentScans"><div class="empty">No scans yet.</div></div>
+</div>
+<div class="links">
+  <button class="link" id="openScanner">Open Scanner</button>
+  <button class="link" id="resetStats">Reset Stats</button>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

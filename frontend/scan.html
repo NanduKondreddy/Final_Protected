@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldIQ by SHIELD IQ — AI Fraud Scanner</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<script src="/js/subscription-manage.js"></script>
+<style>
+.container{max-width:820px;margin:100px auto 60px;padding:0 24px}
+.hero-h{font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:12px;letter-spacing:-0.03em}
+.hero-p{color:var(--warm);font-size:17px;margin-bottom:40px;line-height:1.65}
+.scan-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg)}
+.scan-header{border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.scan-label{font-family:var(--font-mono);font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:0.1em}
+.scan-status{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+.scan-status-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 2s infinite}
+.scan-tabs{display:flex;background:rgba(0,0,0,0.3);padding:4px;margin:16px 24px 0;border-radius:8px;gap:4px}
+.sub-tab{flex:1;padding:10px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all 0.2s}
+.sub-tab.on{background:var(--border);color:var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.scan-body{padding:24px}
+.textarea-wrap{position:relative;margin-bottom:20px}
+.scan-textarea{width:100%;min-height:180px;background:var(--darker);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:20px;color:var(--white);font-family:var(--font-body);font-size:15px;line-height:1.65;outline:none;resize:vertical;transition:border-color 0.2s}
+.scan-textarea:focus{border-color:var(--teal)}
+.scan-textarea::placeholder{color:var(--dim)}
+.upload-zone{width:100%;min-height:180px;border:2px dashed var(--border);border-radius:var(--radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:all 0.25s;margin-bottom:20px;background:rgba(0,0,0,0.15)}
+.upload-zone:hover{border-color:var(--teal);background:var(--teal-dim)}
+.upload-zone.active{border-color:var(--teal);background:var(--teal-dim)}
+.upload-icon{font-size:36px}
+.upload-text{font-family:var(--font-mono);font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+.btn-scan{width:100%;padding:16px;background:var(--gradient-primary);color:var(--black);border:none;border-radius:var(--radius-md);font-family:var(--font-heading);font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(0,212,160,0.25)}
+.btn-scan:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(0,212,160,0.35)}
+.btn-scan:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.result-card{display:none;margin-top:32px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;animation:fade-up 0.5s var(--ease-out)}
+.result-header{padding:20px 24px;display:flex;justify-content:space-between;align-items:center}
+.res-level{font-family:var(--font-mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em}
+.res-score{font-family:var(--font-heading);font-size:48px;font-weight:800;line-height:1}
+.result-body{padding:0 24px 24px}
+.res-bar{height:6px;background:var(--border);border-radius:3px;margin-bottom:20px;overflow:hidden}
+.res-bar-fill{height:100%;border-radius:3px;transition:width 1s var(--ease-out)}
+.res-summary{font-size:16px;line-height:1.7;color:var(--off-white);margin-bottom:24px}
+.res-reasons{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.res-reason{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--warm);line-height:1.6}
+.res-reason-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:7px}
+.res-action{padding:16px 20px;border-radius:var(--radius-md);border-left:4px solid var(--teal);background:var(--teal-dim)}
+.res-action-label{font-family:var(--font-mono);font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;display:block}
+.res-action-text{font-weight:600;font-size:14px;color:var(--white);line-height:1.6}
+.user-bar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--darker);border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--muted);flex-wrap:wrap}
+.user-bar a{color:var(--teal);text-decoration:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:var(--black);border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px;vertical-align:middle}
+.loc-bar{display:flex;align-items:center;justify-content:center;padding:12px 24px;background:rgba(0,212,160,0.06);border-top:1px solid var(--border);font-family:var(--font-mono);font-size:12px;color:var(--warm);gap:8px}
+.loc-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--teal);color:var(--black);font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;letter-spacing:0.06em}
+.loc-currency{color:var(--teal);font-weight:700;font-size:16px}
+.lang-select{background:var(--card);border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;outline:none;letter-spacing:0.04em}
+.lang-select:focus{border-color:var(--teal)}
+.free-bar{display:flex;align-items:center;justify-content:center;padding:10px 24px;background:var(--teal);color:var(--black);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.06em;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.translate-bar{display:none;align-items:center;gap:8px;padding:8px 4px;margin-bottom:4px}
+.translate-indicator{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.03em}
+.translate-indicator .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.translate-indicator .dot.translating{animation:pulse-dot 0.8s ease infinite}
+.translate-indicator .dot.error{background:#ef4444}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>SHIELD <span class="accent">IQ</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/scan" class="active">Scan</a></li>
+  </ul>
+  <div class="nav-actions">
+    <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <option value="hi">हिन्दी</option>
+    </select>
+    <span id="userInfo" style="display:none"></span>
+    <a class="btn-ghost" href="#" id="authBtn" onclick="handleAuth()">Log In</a>
+    <a class="btn btn-primary btn-sm" href="#" onclick="openModal('signup')">Signup</a>
+  </div>
+  <button class="nav-hamburger" onclick="document.getElementById('mobileNav').classList.toggle('open');this.classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-mobile" id="mobileNav">
+  <a href="/">Home</a><a href="/scan">Scan</a>
+  <div id="mobileAuthNav" style="display:flex; flex-direction:column;">
+    <a href="#" onclick="openModal('login');document.getElementById('mobileNav').classList.remove('open')">Log In</a>
+    <a href="#" onclick="openModal('signup');document.getElementById('mobileNav').classList.remove('open')" style="color:var(--teal)">Sign Up</a>
+  </div>
+</div>
+
+<div class="container">
+  <h1 class="hero-h">Scan Any Message</h1>
+  <p class="hero-p">Paste a suspicious message or upload a screenshot. Get an AI-powered fraud verdict in seconds.</p>
+
+  <div class="scan-card">
+    <div class="scan-header">
+      <span class="scan-label">🛡️ Message Scanner</span>
+      <div class="scan-status"><div class="scan-status-dot"></div>AI Ready</div>
+    </div>
+    <div class="scan-tabs">
+      <button class="sub-tab on" id="tabText" onclick="switchTab('text')">Text Message</button>
+      <button class="sub-tab" id="tabImage" onclick="switchTab('image')">Image / Screenshot</button>
+    </div>
+    <div class="scan-body">
+      <div id="zoneText">
+        <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto; padding-bottom:4px;">
+          <button onclick="loadDemo('demo1')" style="font-family:var(--font-mono); font-size:11px; padding:6px 12px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--white); cursor:pointer; white-space:nowrap;">Try Example: Bank Phishing</button>
+          <button onclick="loadDemo('demo2')" style="font-family:var(--font-mono); font-size:11px; padding:6px 12px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--white); cursor:pointer; white-space:nowrap;">Try Example: CEO Impersonation</button>
+          <button onclick="loadDemo('demo3')" style="font-family:var(--font-mono); font-size:11px; padding:6px 12px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--white); cursor:pointer; white-space:nowrap;">Try Example: Safe Message</button>
+        </div>
+        <div class="textarea-wrap">
+          <textarea class="scan-textarea" id="scanInput" placeholder="Paste a suspicious message from WhatsApp, SMS, email, or any app..."></textarea>
+          <button onclick="document.getElementById('scanInput').value=''" style="position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.1); border:none; color:var(--white); padding:4px 8px; border-radius:4px; font-size:12px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Clear</button>
+        </div>
+        <div class="translate-bar" id="translateBar">
+          <div class="translate-indicator" id="translateStatus">
+            <span class="dot" id="translateDot"></span>
+            <span id="translateMsg">Auto-translate ON · Type in English → auto-converts to <span id="translateLangName">—</span></span>
+          </div>
+        </div>
+      </div>
+      <div id="zoneImage" style="display:none">
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <span class="upload-icon">🖼️</span>
+          <span class="upload-text" id="fileName">Click to upload or drag & drop<br>PNG, JPG, or PDF</span>
+          <input type="file" id="fileInput" hidden accept="image/*,.pdf" onchange="handleFile(this)">
+        </div>
+      </div>
+      <button class="btn-scan" id="scanBtn" onclick="performScan()">Analyze Message</button>
+    </div>
+    <div class="user-bar" id="userBar">
+      <span id="scanCount">3 free scans per day</span> · <span>No message stored</span> · <a href="/dashboard" onclick="handleDashboardClick(event)">View History</a>
+    </div>
+    <div class="loc-bar" id="locBar" style="padding: 8px 24px; font-size: 11px; background: transparent; border-top: none; color: var(--muted); display:flex; justify-content:center;">
+      <span id="locCountry">detecting...</span> &nbsp;&bull;&nbsp; <span id="locCurrency">$</span>
+    </div>
+    <div class="free-bar" id="freeBar">✓ <span id="remainingCount">3</span> free scans remaining today</div>
+  </div>
+
+  <!-- Guest Gate Modal (For unauthenticated users who use their 1 scan) -->
+  <div class="overlay" id="guestGateOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+    <div style="background:#0d1117;border:1px solid rgba(0,212,160,0.3);border-radius:16px;padding:36px;max-width:420px;width:100%;text-align:center;position:relative">
+      <div style="font-size:48px;margin-bottom:16px">🔒</div>
+      <div style="font-weight:800;font-size:22px;margin-bottom:8px">Daily Limit Reached</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:24px">Guest users are limited to 1 scan per day. Create a free account to get 3 scans daily, see scan history, and unlock advanced features.</p>
+      <a href="#" onclick="document.getElementById('guestGateOverlay').style.display='none';openModal('signup')" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#00d4a0,#00b98a);color:#000;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;margin-bottom:12px">Create Free Account →</a>
+      <a href="#" onclick="document.getElementById('guestGateOverlay').style.display='none';openModal('login')" style="display:block;width:100%;padding:13px;border:1px solid rgba(255,255,255,0.12);color:#fff;font-weight:600;font-size:14px;border-radius:8px;text-decoration:none">Already have an account? Log In</a>
+      <button onclick="document.getElementById('guestGateOverlay').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:22px;cursor:pointer">×</button>
+    </div>
+  </div>
+
+  <!-- Dashboard Gate Modal (For guest users trying to access dashboard) -->
+  <div class="overlay" id="dashboardGateOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+    <div style="background:#0d1117;border:1px solid rgba(0,212,160,0.3);border-radius:16px;padding:36px;max-width:420px;width:100%;text-align:center;position:relative">
+      <div style="font-size:48px;margin-bottom:16px">🔑</div>
+      <div style="font-weight:800;font-size:22px;margin-bottom:8px">Authentication Required</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:24px">You cannot access the dashboard until you create a free account or log in. Sign up now to track scans, see risk telemetry, and more.</p>
+      <a href="#" onclick="document.getElementById('dashboardGateOverlay').style.display='none';openModal('signup')" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#00d4a0,#00b98a);color:#000;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;margin-bottom:12px">Sign Up Now →</a>
+      <a href="#" onclick="document.getElementById('dashboardGateOverlay').style.display='none';openModal('login')" style="display:block;width:100%;padding:13px;border:1px solid rgba(255,255,255,0.12);color:#fff;font-weight:600;font-size:14px;border-radius:8px;text-decoration:none">Already have an account? Log In</a>
+      <button onclick="document.getElementById('dashboardGateOverlay').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:22px;cursor:pointer">×</button>
+    </div>
+  </div>
+
+  <!-- LOGIN MODAL -->
+  <div class="overlay" id="loginOverlay">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal('login')">×</button>
+      <div class="modal-logo" style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
+      <div class="modal-sub-brand" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">AI Fraud Detection</div>
+      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Welcome back</div>
+      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:24px;text-align:center;">Log in to access your scan history and dashboard.</p>
+      <label class="field-label">Email Address</label>
+      <input class="field" id="loginEmail" type="email" placeholder="you@example.com">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <label class="field-label" style="margin-bottom:0;">Password</label>
+        <a href="#" onclick="forgotPassword();return false"
+          style="font-family:var(--font-mono); font-size:10px; color:var(--teal); text-decoration:none;">Forgot password?</a>
+      </div>
+      <input class="field" id="loginPass" type="password" placeholder="Your password">
+      <button class="auth-btn" onclick="handleLogin()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Log In</button>
+      <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">No account? <a onclick="switchModal('login','signup')" style="color:var(--teal);cursor:pointer;text-decoration:none;">Sign up free →</a></div>
+    </div>
+  </div>
+
+  <!-- SIGNUP MODAL -->
+  <div class="overlay" id="signupOverlay">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal('signup')">×</button>
+      <div class="modal-logo" style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
+      <div class="modal-sub-brand" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">AI Fraud Detection</div>
+      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Start for free</div>
+      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:20px;text-align:center;">No card. No setup. Scan your first suspicious message in 30 seconds.</p>
+      <div class="perks" style="margin-bottom:24px;background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 18px;display:flex;flex-direction:column;gap:8px;">
+        <div class="perk" style="font-size:12px;color:var(--white);display:flex;align-items:center;gap:8px;">✓ 3 free scans every day</div>
+        <div class="perk" style="font-size:12px;color:var(--white);display:flex;align-items:center;gap:8px;">✓ Scan history saved to your account</div>
+        <div class="perk" style="font-size:12px;color:var(--white);display:flex;align-items:center;gap:8px;">✓ Your messages are never stored</div>
+      </div>
+      <label class="field-label">Full Name</label>
+      <input class="field" id="signupName" type="text" placeholder="Jane Doe">
+      <label class="field-label">Email Address</label>
+      <input class="field" id="signupEmail" type="email" placeholder="you@example.com">
+      <label class="field-label">Password</label>
+      <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()">
+      <div id="pwdStrength" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:-10px; margin-bottom:16px;">
+        Strength: <span id="pwdLabel">None</span></div>
+      <button class="auth-btn" onclick="handleSignup()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Create Free Account</button>
+      <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Already have an account? <a onclick="switchModal('signup','login')" style="color:var(--teal);cursor:pointer;text-decoration:none;">Log in →</a></div>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal (For logged-in users who hit 3 scans) -->
+  <div class="overlay" id="upgradeOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
+    <div style="background:#0d1117;border:1px solid rgba(0,212,160,0.25);border-radius:20px;padding:40px;max-width:460px;width:100%;text-align:center;position:relative">
+      <div style="font-size:56px;margin-bottom:16px">🔒</div>
+      <div style="font-size:24px;font-weight:800;margin-bottom:8px">Daily limit reached</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:28px">You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <a href="/checkout?plan=pro" style="padding:14px 16px;border-radius:10px;border:1px solid rgba(0,212,160,0.2);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
+          <span style="font-weight:700;font-size:15px;color:#fff">SHIELD IQ Pro</span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700" id="upgPricePro">$3.99 / mo</span>
+        </a>
+        <a href="/checkout?plan=plus" style="padding:14px 16px;border-radius:10px;border:1px solid var(--teal);background:rgba(0,212,160,0.08);display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:border-color 0.2s">
+          <span style="font-weight:700;font-size:15px;color:#fff">🛡️ Shield Plus <span style="font-size:10px;color:#94a3b8;font-weight:400">Recommended</span></span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--teal);font-weight:700" id="upgPricePlus">$9.99 / mo</span>
+        </a>
+      </div>
+      <a href="/plans" style="color:var(--teal);font-size:12px;font-family:var(--font-mono);text-decoration:underline;margin-bottom:20px;display:inline-block;">View full plan details & features →</a>
+      <button onclick="document.getElementById('upgradeOverlay').style.display='none'" style="font-family:var(--font-mono);font-size:11px;color:#475569;cursor:pointer;text-decoration:underline;background:none;border:none;display:block;margin:0 auto 10px;">Maybe later — I'll wait until tomorrow</button>
+      <button onclick="document.getElementById('upgradeOverlay').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:22px;cursor:pointer">×</button>
+    </div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div>
+        <div class="res-level" id="resLevel">AWAITING SCAN</div>
+        <div class="res-summary" id="resSummary" style="margin-top:8px">Your scan result will appear here after analysis.</div>
+      </div>
+      <div class="res-score" id="resScore">-</div>
+    </div>
+    <div class="result-body">
+      <div class="res-bar"><div class="res-bar-fill" id="resBar"></div></div>
+      <ul class="res-reasons" id="resReasons"></ul>
+      <div class="res-action">
+        <span class="res-action-label">Recommendation</span>
+        <p class="res-action-text" id="resAction"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div><div class="footer-brand">SHIELD <span class="accent">IQ</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
+    <ul class="footer-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/scan">Scan</a></li>
+      <li><a href="/about">About the Team</a></li>
+      <li><a href="/ai">How the AI Works</a></li>
+      <li><a href="/privacy">Privacy & Data</a></li>
+      <li><a href="/security">Security</a></li>
+      <li><a href="/terms">Terms of Use</a></li>
+      <li><a href="/contact">Contact</a></li>
+    </ul>
+    <div class="footer-bottom">
+      <div class="footer-note">🔒 Privacy-first · No message content ever stored</div>
+      <div class="footer-note">© 2026 SHIELD IQ Technologies</div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let mode = 'text';
+const token = localStorage.getItem('dovtek_token');
+document.body.setAttribute('data-shieldiq-token-bridge', token || '');
+document.body.setAttribute('data-shieldiq-user-bridge', localStorage.getItem('dovtek_user') || '');
+
+function handleDashboardClick(e) {
+  if (!token) {
+    e.preventDefault();
+    document.getElementById('dashboardGateOverlay').style.display = 'flex';
+  }
+}
+
+// ── Scan Quota Helpers ──────────────────────────────────────────────────────
+const GUEST_LIMIT = 1;
+const USER_LIMIT = 3;
+const TODAY = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+// Use separate keys so guest and logged-in user quotas never clash
+const SCAN_STORAGE_KEY = token ? 'dovtek_scan_user_' + TODAY : 'dovtek_scan_guest_' + TODAY;
+
+function getScanCount() {
+  return parseInt(localStorage.getItem(SCAN_STORAGE_KEY) || '0', 10);
+}
+
+function getLimit() {
+  if (token) {
+    try {
+      const user = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+      if (user.plan && user.plan !== 'free') {
+        return Infinity;
+      }
+    } catch (e) {}
+    return USER_LIMIT;
+  }
+  return GUEST_LIMIT;
+}
+
+function getRemaining() {
+  const limit = getLimit();
+  if (limit === Infinity) return Infinity;
+  return Math.max(0, limit - getScanCount());
+}
+
+function updateRemainingDisplay() {
+  const rem = getRemaining();
+  const el = document.getElementById('remainingCount');
+  if (el) el.textContent = rem === Infinity ? '∞' : rem;
+  const freeBar = document.getElementById('freeBar');
+  if (freeBar) {
+    if (rem === Infinity) {
+      try {
+        const user = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+        const planLabel = user.plan ? user.plan.toUpperCase() : 'PRO';
+        freeBar.style.background = '';
+        freeBar.innerHTML = `✓ Active Subscription: <strong>SHIELD IQ ${planLabel}</strong> (Unlimited Scans)`;
+      } catch (e) {
+        freeBar.innerHTML = `✓ Active Subscription: <strong>SHIELD IQ PRO</strong> (Unlimited Scans)`;
+      }
+    } else {
+      freeBar.style.background = rem === 0 ? '#ef4444' : '';
+      freeBar.innerHTML = rem === 0
+        ? '✗ No scans remaining today · <a onclick="openModal(\'signup\')" style="color:#000;font-weight:800;text-decoration:underline;cursor:pointer">Upgrade</a>'
+        : '✓&nbsp;<span id="remainingCount">' + rem + '</span>&nbsp;free scan' + (rem === 1 ? '' : 's') + ' remaining today';
+    }
+  }
+}
+
+function incrementScanCount() {
+  const limit = getLimit();
+  if (limit === Infinity) return; // Premium users do not increment scan counts
+  const current = getScanCount();
+  localStorage.setItem(SCAN_STORAGE_KEY, current + 1);
+  updateRemainingDisplay();
+}
+
+// Auth state
+function toggleAvatarDropdown(event) {
+  event.stopPropagation();
+  const dropdown = document.getElementById('avatarDropdown');
+  if (dropdown) dropdown.classList.toggle('show');
+}
+window.addEventListener('click', () => {
+  const dropdown = document.getElementById('avatarDropdown');
+  if (dropdown) dropdown.classList.remove('show');
+});
+
+// Auth state
+(function initAuth(){
+  if(token){
+    let userObj = {};
+    try {
+      userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+    } catch(e) {}
+    const initials = (userObj.full_name || userObj.email || 'U').charAt(0).toUpperCase();
+    const displayName = userObj.full_name || userObj.email?.split('@')[0] || 'User';
+    const planLabel = userObj.plan === 'plus' ? 'Shield Plus' : userObj.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
+    const upgradeStyle = userObj.plan === 'plus' ? 'style="display:none;"' : '';
+
+    const navActions = document.querySelector('.nav-actions');
+    if (navActions) {
+      navActions.innerHTML = `
+        <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+        <span id="userInfo" style="display:none"></span>
+        <div class="avatar-wrapper" id="avatarWrapper">
+          <div class="avatar-btn" id="avatarBtn" onclick="toggleAvatarDropdown(event)">${initials}</div>
+          <div class="avatar-dropdown" id="avatarDropdown">
+            <div class="dropdown-header">
+              <div class="dropdown-user-name" id="dropdownUserName">${displayName}</div>
+              <div class="dropdown-user-plan" id="dropdownUserPlan">${planLabel}</div>
+            </div>
+            <a href="/dashboard" class="dropdown-item">📊 Dashboard</a>
+            <a href="/scan" class="dropdown-item">🛡️ Scan Message</a>
+            <a href="/plans" class="dropdown-item" id="dropdownUpgradeLink" ${upgradeStyle}>🚀 Upgrade Plan</a>
+            <a href="#" class="dropdown-item" onclick="openSubscriptionModal();return false">⚙️ Manage Subscription</a>
+            <a href="#" class="dropdown-item logout-item" onclick="handleAuth();return false" id="authBtn">🚪 Logout</a>
+          </div>
+        </div>
+      `;
+      // Restore langSelect value
+      const langSel = document.getElementById('langSelect');
+      if (langSel) langSel.value = localStorage.getItem('dovtek_lang') || 'en';
+    }
+
+    const mobileAuthNav = document.getElementById('mobileAuthNav');
+    if (mobileAuthNav) {
+      mobileAuthNav.innerHTML = `
+        <a href="/dashboard">Dashboard</a>
+        <a href="/scan">Scanner</a>
+        <a href="/plans" ${upgradeStyle}>Upgrade Plan</a>
+        <a href="#" onclick="handleAuth();return false" style="color:#ef4444">Logout</a>
+      `;
+    }
+    
+    fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(u=>{
+        localStorage.setItem('dovtek_user', JSON.stringify(u));
+        const initials = (u.full_name || u.email || 'U').charAt(0).toUpperCase();
+        const displayName = u.full_name || u.email?.split('@')[0] || 'User';
+        const planLabel = u.plan === 'plus' ? 'Shield Plus' : u.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
+        
+        const avatarBtn = document.getElementById('avatarBtn');
+        if (avatarBtn) avatarBtn.textContent = initials;
+        const dropdownUserName = document.getElementById('dropdownUserName');
+        if (dropdownUserName) dropdownUserName.textContent = displayName;
+        const dropdownUserPlan = document.getElementById('dropdownUserPlan');
+        if (dropdownUserPlan) dropdownUserPlan.textContent = planLabel;
+        if (u.plan === 'plus') {
+          const upgLink = document.getElementById('dropdownUpgradeLink');
+          if (upgLink) upgLink.style.display = 'none';
+        }
+        
+        const scanCountEl = document.getElementById('scanCount');
+        if (scanCountEl) scanCountEl.textContent='Logged in as '+u.full_name;
+      })
+      .catch(()=>{});
+
+    fetch(API+'/scans/history?page_size=100',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(data=>{
+        const scans = data.scans || [];
+        const todayCount = scans.filter(s => s.scanned_at && s.scanned_at.slice(0,10) === TODAY).length;
+        localStorage.setItem('dovtek_scan_user_' + TODAY, todayCount);
+        updateRemainingDisplay();
+        const scanCountEl = document.getElementById('scanCount');
+        if (scanCountEl) {
+          const rem = getRemaining();
+          scanCountEl.textContent = rem === Infinity ? 'Unlimited scans · Priority AI Active' : rem + ' scans remaining today';
+        }
+      })
+      .catch(()=>{});
+  }
+})();
+
+function handleAuth(){
+  if(token){
+    localStorage.removeItem('dovtek_token');
+    localStorage.removeItem('dovtek_user');
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('dovtek_scan_')) localStorage.removeItem(k);
+    });
+    location.reload();
+  } else {
+    openModal('login');
+  }
+}
+
+// Modal controls
+function openModal(t) {
+  document.getElementById(t + 'Overlay').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(t) {
+  document.getElementById(t + 'Overlay').classList.remove('on');
+  document.body.style.overflow = '';
+}
+function switchModal(from, to) {
+  closeModal(from);
+  setTimeout(() => openModal(to), 150);
+}
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('on');
+      document.body.style.overflow = '';
+    }
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.overlay.on').forEach(o => {
+      o.classList.remove('on');
+      document.body.style.overflow = '';
+    });
+  }
+});
+
+function checkStrength() {
+  const pwd = document.getElementById('signupPass').value;
+  const label = document.getElementById('pwdLabel');
+  let s = 0;
+  if (pwd.length >= 8) s++;
+  if (pwd.match(/[A-Z]/)) s++;
+  if (pwd.match(/[0-9]/)) s++;
+  if (pwd.match(/[^a-zA-Z0-9]/)) s++;
+
+  if (pwd.length === 0) { label.textContent = 'None'; label.style.color = 'var(--muted)'; }
+  else if (s <= 1) { label.textContent = 'Weak - Add uppercase, numbers & symbols'; label.style.color = 'var(--red)'; }
+  else if (s === 2) { label.textContent = 'Fair - Add uppercase or symbols'; label.style.color = 'var(--orange)'; }
+  else if (s === 3) { label.textContent = 'Good'; label.style.color = 'var(--teal)'; }
+  else { label.textContent = 'Strong'; label.style.color = 'var(--teal)'; }
+}
+
+function forgotPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { showToast('Please enter your email first to reset your password'); return; }
+  showToast('Password reset link sent to ' + email);
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { showToast('Please enter email and password'); return }
+  try {
+    const r = await fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Login failed');
+    localStorage.setItem('dovtek_token', d.token);
+    localStorage.setItem('dovtek_user', JSON.stringify(d.user));
+    showToast(`Welcome back, ${d.user.full_name}!`);
+    closeModal('login');
+    setTimeout(() => location.reload(), 800);
+  } catch (e) { showToast(e.message) }
+}
+
+async function handleSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPass').value;
+  if (!name || !email || !pass) { showToast('Please fill in all fields'); return }
+  if (pass.length < 8) { showToast('Password must be at least 8 characters'); return }
+  try {
+    const r = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: name, email, password: pass }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Signup failed');
+    localStorage.setItem('dovtek_token', d.token);
+    localStorage.setItem('dovtek_user', JSON.stringify(d.user));
+    showToast('Account created!');
+    closeModal('signup');
+    setTimeout(() => location.reload(), 800);
+  } catch (e) { showToast(e.message) }
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function switchTab(m){
+  mode=m;
+  document.getElementById('tabText').classList.toggle('on',m==='text');
+  document.getElementById('tabImage').classList.toggle('on',m==='image');
+  document.getElementById('zoneText').style.display=m==='text'?'block':'none';
+  document.getElementById('zoneImage').style.display=m==='image'?'block':'none';
+}
+
+function handleFile(input){
+  if(input.files&&input.files[0]){
+    const f=input.files[0];
+    document.getElementById('fileName').innerHTML='<b>'+f.name+'</b><br>Ready for analysis';
+    document.getElementById('dropZone').classList.add('active');
+    showToast('File selected. Click Analyse.','success');
+  }
+}
+
+async function performScan(){
+  // ── Quota check ──
+  if (getRemaining() <= 0) {
+    if (token) {
+      document.getElementById('upgradeOverlay').style.display = 'flex';
+    } else {
+      document.getElementById('guestGateOverlay').style.display = 'flex';
+    }
+    return;
+  }
+
+  const text=document.getElementById('scanInput').value.trim();
+  const file=document.getElementById('fileInput').files[0];
+  if(mode==='text'&&!text){showToast('Please paste a message','error');return}
+  if(mode==='image'&&!file){showToast('Please upload a file','error');return}
+
+  const btn=document.getElementById('scanBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analyzing with AI...';
+  document.getElementById('resultCard').style.display='none';
+
+  const fd=new FormData();
+  if(mode==='text')fd.append('message',text);
+  else fd.append('file',file);
+
+  const headers={};
+  if(token)headers['Authorization']='Bearer '+token;
+
+  try{
+    const resp=await fetch(API+'/scan',{method:'POST',body:fd,headers});
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.detail||'Analysis failed');
+    incrementScanCount();
+    renderResult(data);
+    // If user just used their last scan, show the gate after result
+    if (getRemaining() === 0) {
+      setTimeout(() => {
+        if (token) {
+          document.getElementById('upgradeOverlay').style.display = 'flex';
+        } else {
+          document.getElementById('guestGateOverlay').style.display = 'flex';
+        }
+      }, 2500);
+    }
+  }catch(err){
+    showToast(err.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent='Analyze Message';
+  }
+}
+
+async function loadDemo(id) {
+  try {
+    const resp = await fetch(API + '/demo/' + id);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    document.getElementById('scanInput').value = data.message;
+    showToast('Example loaded. Click Analyze.', 'success');
+  } catch (e) {
+    showToast('Error loading example scenario', 'error');
+  }
+}
+
+function renderResult(res){
+  const card=document.getElementById('resultCard');
+  card.style.display='block';
+
+  let color='#00d4a0';
+  if(res.risk_level==='HIGH')color='#ff4757';
+  else if(res.risk_level==='MEDIUM')color='#f59e0b';
+
+  let priorityBadge = '';
+  if (res.priority_used) {
+    priorityBadge = ' <span style="display:inline-block; font-size:10px; background:rgba(0,212,160,0.15); color:var(--teal); border:1.5px solid var(--teal); border-radius:4px; padding:2px 6px; font-weight:800; font-family:var(--font-mono); margin-left:12px; vertical-align:middle; text-transform:uppercase; letter-spacing:0.05em;">⚡ Priority AI</span>';
+  }
+
+  document.getElementById('resLevel').innerHTML=res.risk_level+' RISK' + priorityBadge;
+  document.getElementById('resLevel').style.color=color;
+  document.getElementById('resScore').textContent=res.risk_score;
+  document.getElementById('resScore').style.color=color;
+  document.getElementById('resSummary').textContent=res.summary;
+  document.getElementById('resAction').textContent=res.what_to_do;
+
+  const bar=document.getElementById('resBar');
+  bar.style.width=res.risk_score+'%';
+  bar.style.background=color;
+
+  const list=document.getElementById('resReasons');
+  list.innerHTML='';
+  (res.reasons||[]).forEach(r=>{
+    const li=document.createElement('li');
+    li.className='res-reason';
+    li.innerHTML='<div class="res-reason-dot" style="background:'+color+'"></div>'+r;
+    list.appendChild(li);
+  });
+
+  if(res.risk_level==='HIGH'){
+    card.style.borderColor='rgba(255,71,87,0.3)';
+    document.querySelector('.res-action').style.borderLeftColor=color;
+    document.querySelector('.res-action').style.background='rgba(255,71,87,0.08)';
+  }else{
+    card.style.borderColor='var(--border)';
+    document.querySelector('.res-action').style.borderLeftColor='var(--teal)';
+    document.querySelector('.res-action').style.background='var(--teal-dim)';
+  }
+
+  card.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// Nav scroll
+window.addEventListener('scroll',()=>{
+  document.querySelector('.nav').classList.toggle('scrolled',window.scrollY>20);
+});
+
+// ── Currency Map ──
+const CURRENCY_MAP={
+  'IN':'INR \u20b9','US':'USD $','GB':'GBP \u00a3','NG':'NGN \u20a6',
+  'DE':'EUR \u20ac','FR':'EUR \u20ac','IT':'EUR \u20ac','ES':'EUR \u20ac',
+  'JP':'JPY \u00a5','CN':'CNY \u00a5','KR':'KRW \u20a9','BR':'BRL R$',
+  'ZA':'ZAR R','AE':'AED','SA':'SAR','AU':'AUD A$','CA':'CAD C$',
+  'MX':'MXN','RU':'RUB','TR':'TRY','EG':'EGP','KE':'KES','GH':'GHS',
+  'PH':'PHP','ID':'IDR','MY':'MYR','TH':'THB','VN':'VND','BD':'BDT',
+  'PK':'PKR','LK':'LKR','NP':'NPR'
+};
+
+const TRANSLATIONS={
+  en:{title:'Scan Any Message',sub:'Paste a suspicious message or upload a screenshot. Get an AI-powered fraud verdict in seconds.',tabText:'Text Message',tabImage:'Image / Screenshot',placeholder:'Paste a suspicious message from WhatsApp, SMS, email, or any app...',upload:'Click to upload or drag & drop<br>PNG, JPG, or PDF',btn:'Analyze Message',prices:'Prices shown in',free:'\u2713 3 free scans remaining today',info:'3 free scans per day',noStore:'No message stored'},
+  es:{title:'Escanear Mensaje',sub:'Pega un mensaje sospechoso o sube una captura. Obt\u00e9n un veredicto de fraude con IA en segundos.',tabText:'Mensaje de Texto',tabImage:'Imagen / Captura',placeholder:'Pega un mensaje sospechoso de WhatsApp, SMS, correo o cualquier app...',upload:'Haz clic para subir o arrastra<br>PNG, JPG o PDF',btn:'Analizar Mensaje',prices:'Precios en',free:'\u2713 3 escaneos gratis restantes hoy',info:'3 escaneos gratis al d\u00eda',noStore:'Ning\u00fan mensaje almacenado'},
+  fr:{title:'Scanner un Message',sub:'Collez un message suspect ou t\u00e9l\u00e9chargez une capture d\'\u00e9cran. Obtenez un verdict en quelques secondes.',tabText:'Message Texte',tabImage:'Image / Capture',placeholder:'Collez un message suspect de WhatsApp, SMS, email ou toute application...',upload:'Cliquez pour t\u00e9l\u00e9charger<br>PNG, JPG ou PDF',btn:'Analyser le Message',prices:'Prix affich\u00e9s en',free:'\u2713 3 scans gratuits restants aujourd\'hui',info:'3 scans gratuits par jour',noStore:'Aucun message stock\u00e9'},
+  hi:{title:'\u0915\u094b\u0908 \u092d\u0940 \u0938\u0902\u0926\u0947\u0936 \u0938\u094d\u0915\u0948\u0928 \u0915\u0930\u0947\u0902',sub:'\u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902 \u092f\u093e \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f \u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0947\u0902\u0964 AI \u0938\u0947 \u0924\u0941\u0930\u0902\u0924 \u092b\u0948\u0938\u0932\u093e \u092a\u093e\u090f\u0902\u0964',tabText:'\u091f\u0947\u0915\u094d\u0938\u094d\u091f \u0938\u0902\u0926\u0947\u0936',tabImage:'\u0907\u092e\u0947\u091c / \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f',placeholder:'WhatsApp, SMS, \u0908\u092e\u0947\u0932 \u0938\u0947 \u0915\u094b\u0908 \u0938\u0902\u0926\u093f\u0917\u094d\u0927 \u0938\u0902\u0926\u0947\u0936 \u092f\u0939\u093e\u0901 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u0947\u0902...',upload:'\u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902<br>PNG, JPG \u092f\u093e PDF',btn:'\u0938\u0902\u0926\u0947\u0936 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0947\u0902',prices:'\u092e\u0942\u0932\u094d\u092f',free:'\u2713 \u0906\u091c 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928 \u0936\u0947\u0937',info:'\u092a\u094d\u0930\u0924\u093f\u0926\u093f\u0928 3 \u092e\u0941\u092b\u094d\u0924 \u0938\u094d\u0915\u0948\u0928',noStore:'\u0915\u094b\u0908 \u0938\u0902\u0926\u0947\u0936 \u0938\u0902\u0917\u094d\u0930\u0939\u0940\u0924 \u0928\u0939\u0940\u0902'}
+};
+
+function guessCountryByTimezone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+      if (tz.includes('Lagos')) return 'NG';
+      if (tz.includes('London')) return 'GB';
+      if (tz.includes('Johannesburg')) return 'ZA';
+      if (tz.includes('Nairobi')) return 'KE';
+      if (tz.includes('Accra')) return 'GH';
+    }
+    const offset = new Date().getTimezoneOffset();
+    if (offset === -330) return 'IN';
+    if (offset === -60) return 'NG';
+  } catch (e) {}
+  return 'US';
+}
+
+async function detectLocation(){
+  const cached=localStorage.getItem('dovtek_geo');
+  if(cached){
+    try{const d=JSON.parse(cached);if(Date.now()-d.ts<3600000){applyGeo(d);return;}}catch(e){}
+  }
+  try{
+    const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    const geo={country:d.country_name,code:d.country_code,ts:Date.now()};
+    localStorage.setItem('dovtek_geo',JSON.stringify(geo));
+    applyGeo(geo);
+  }catch(e){
+    try{
+      const r2=await fetch('https://api.country.is',{signal:AbortSignal.timeout(4000)});
+      const d2=await r2.json();
+      const geo={country:d2.country||'Unknown',code:d2.country||'US',ts:Date.now()};
+      localStorage.setItem('dovtek_geo',JSON.stringify(geo));
+      applyGeo(geo);
+    }catch(e2){
+      const fallbackCode = guessCountryByTimezone();
+      const fallbackNames = { 'IN': 'India', 'NG': 'Nigeria', 'US': 'United States' };
+      applyGeo({ country: fallbackNames[fallbackCode] || 'your region', code: fallbackCode });
+    }
+  }
+}
+
+function applyGeo(geo){
+  const code=geo.code||'US';
+  const currency=CURRENCY_MAP[code]||'USD $';
+  const elBadge = document.getElementById('locBadge');
+  if (elBadge) elBadge.textContent=code;
+  const elCountry = document.getElementById('locCountry');
+  if (elCountry) elCountry.textContent=geo.country||'Unknown';
+  const elCurrency = document.getElementById('locCurrency');
+  if (elCurrency) elCurrency.textContent=currency;
+
+  // Pricing conversion
+  const rates = { 'IN': 83, 'NG': 1400, 'GB': 0.79, 'EU': 0.92, 'DE': 0.92, 'FR': 0.92, 'IT': 0.92, 'ES': 0.92, 'ZA': 18.5, 'BR': 5.1, 'AU': 1.5, 'CA': 1.37, 'AE': 3.67, 'KE': 130, 'GH': 14 };
+  const rate = rates[code] || 1;
+
+  let pricePlus = 9.99 * rate;
+  let pricePro = 3.99 * rate;
+
+  if (rate > 10) {
+    pricePlus = Math.round(pricePlus);
+    pricePro = Math.round(pricePro);
+  } else {
+    pricePlus = pricePlus.toFixed(2);
+    pricePro = pricePro.toFixed(2);
+  }
+
+  // Extract currency symbol (last char of currency map value, e.g. 'INR \u20b9' -> '\u20b9')
+  const symbol = currency.includes(' ') ? currency.split(' ')[1] : currency;
+
+  const elPro = document.getElementById('upgPricePro');
+  const elPlus = document.getElementById('upgPricePlus');
+  if (elPro) elPro.textContent = symbol + pricePro + ' / mo';
+  if (elPlus) elPlus.textContent = symbol + pricePlus + ' / mo';
+}
+
+// ── Auto-Translate Feature ───────────────────────────────────────────────
+const LANG_NAMES = {en:'English',es:'Español',fr:'Français',hi:'हिन्दी',pt:'Português',ar:'العربية',zh:'中文'};
+const LANG_CODES_MYMEMORY = {es:'es',fr:'fr',hi:'hi',pt:'pt',ar:'ar',zh:'zh-CN'};
+
+let _translateTimer = null;
+let _lastTranslatedText = '';  // track what we already translated to avoid loops
+let _isTranslating = false;
+
+function updateTranslateBar(lang) {
+  const bar = document.getElementById('translateBar');
+  bar.style.display = 'flex';
+  document.getElementById('translateLangName').textContent = LANG_NAMES[lang] || lang;
+}
+
+function setTranslateStatus(state, msg) {
+  const dot = document.getElementById('translateDot');
+  const msgEl = document.getElementById('translateMsg');
+  dot.className = 'dot';
+  if (state === 'idle') {
+    const lang = localStorage.getItem('dovtek_lang') || 'en';
+    msgEl.innerHTML = 'Auto-translate ON · Automatically translating to <span id="translateLangName">' + (LANG_NAMES[lang]||lang) + '</span>';
+  } else if (state === 'translating') {
+    dot.classList.add('translating');
+    msgEl.textContent = '⏳ Translating...';
+  } else if (state === 'done') {
+    msgEl.textContent = '✓ ' + (msg || 'Translated!');
+  } else if (state === 'error') {
+    dot.classList.add('error');
+    msgEl.textContent = '✗ ' + (msg || 'Translation failed');
+  }
+}
+
+function normalizeHomoglyphs(text) {
+  // Map of common homoglyphs (Cyrillic, Ukrainian, Latin alternatives) to standard ASCII characters
+  const map = {
+    // Cyrillic / Greek matches
+    'А': 'A', 'а': 'a',
+    'В': 'B',
+    'Е': 'E', 'е': 'e',
+    'Ѕ': 'S', 'ѕ': 's',
+    'І': 'I', 'і': 'i', 'ї': 'i', 'ј': 'j',
+    'К': 'K', 'к': 'k',
+    'М': 'M',
+    'Н': 'H',
+    'О': 'O', 'о': 'o',
+    'Р': 'P', 'р': 'p',
+    'С': 'C', 'с': 'c',
+    'Т': 'T',
+    'Х': 'X', 'х': 'x',
+    'Ү': 'Y', 'у': 'y',
+    'З': '3',
+    'р': 'p',
+    // Special quotes & spacing characters sometimes used for obfuscation
+    'а': 'a', 'е': 'e', 'і': 'i', 'о': 'o', 'у': 'y',
+  };
+  
+  return text.split('').map(char => map[char] || char).join('');
+}
+
+function chunkText(text, maxLength = 450) {
+  const lines = text.split('\n');
+  const chunks = [];
+  
+  for (let line of lines) {
+    if (!line.trim()) {
+      chunks.push({ text: '', isSeparator: true });
+      continue;
+    }
+    
+    if (line.length <= maxLength) {
+      chunks.push({ text: line, isSeparator: false });
+    } else {
+      // Split long line by words
+      const words = line.split(/\s+/);
+      let currentWordChunk = '';
+      for (let word of words) {
+        if ((currentWordChunk + (currentWordChunk ? ' ' : '') + word).length > maxLength) {
+          if (currentWordChunk) chunks.push({ text: currentWordChunk, isSeparator: false });
+          currentWordChunk = word;
+        } else {
+          currentWordChunk = currentWordChunk ? (currentWordChunk + ' ' + word) : word;
+        }
+      }
+      if (currentWordChunk) {
+        chunks.push({ text: currentWordChunk, isSeparator: false });
+      }
+    }
+    chunks.push({ text: '\n', isSeparator: true });
+  }
+  if (chunks.length > 0 && chunks[chunks.length - 1].text === '\n') {
+    chunks.pop();
+  }
+  return chunks;
+}
+
+async function doAutoTranslate(text) {
+  const lang = localStorage.getItem('dovtek_lang') || 'en';
+  if (!text.trim() || _isTranslating) return;
+
+  // Don't re-translate what we already translated
+  if (text.trim() === _lastTranslatedText) return;
+
+  _isTranslating = true;
+  setTranslateStatus('translating');
+
+  const targetLang = LANG_CODES_MYMEMORY[lang] || lang;
+  const normalizedText = normalizeHomoglyphs(text);
+  const chunks = chunkText(normalizedText, 450);
+
+  try {
+    const promises = chunks.map(async (chunk) => {
+      if (chunk.isSeparator) {
+        return chunk.text;
+      }
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk.text)}&langpair=Autodetect|${targetLang}`;
+      const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      const data = await resp.json();
+      if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      }
+      throw new Error('fail');
+    });
+
+    const translatedParts = await Promise.all(promises);
+    const translated = translatedParts.join('');
+
+    // Only update if textarea still has the same English text (user didn't change it)
+    const textarea = document.getElementById('scanInput');
+    if (textarea.value.trim() === text.trim()) {
+      _lastTranslatedText = translated;
+      if (translated !== text.trim()) {
+        textarea.value = translated;
+        setTranslateStatus('done', 'Translated to ' + LANG_NAMES[lang]);
+      } else {
+        setTranslateStatus('idle');
+      }
+      setTimeout(() => setTranslateStatus('idle'), 3000);
+    }
+  } catch(e) {
+    setTranslateStatus('error', 'Could not translate — try again');
+    setTimeout(() => setTranslateStatus('idle'), 3000);
+  } finally {
+    _isTranslating = false;
+  }
+}
+
+// Attach auto-translate to textarea input (debounced 1.2s after user stops typing)
+(function() {
+  const textarea = document.getElementById('scanInput');
+  textarea.addEventListener('input', function() {
+    // Don't trigger if text matches last translation (avoid loops)
+    if (this.value.trim() === _lastTranslatedText) return;
+
+    clearTimeout(_translateTimer);
+    _translateTimer = setTimeout(() => {
+      doAutoTranslate(this.value);
+    }, 1200);
+  });
+})();
+
+function changeLang(lang){
+  localStorage.setItem('dovtek_lang',lang);
+  applyLanguage(lang);
+  updateTranslateBar(lang);
+  _lastTranslatedText = '';  // reset so re-translate is possible
+}
+
+function applyLanguage(lang){
+  const t=TRANSLATIONS[lang]||TRANSLATIONS.en;
+  document.querySelector('.hero-h').textContent=t.title;
+  document.querySelector('.hero-p').textContent=t.sub;
+  document.getElementById('tabText').textContent=t.tabText;
+  document.getElementById('tabImage').textContent=t.tabImage;
+  document.getElementById('scanInput').placeholder=t.placeholder;
+  document.getElementById('fileName').innerHTML=t.upload;
+  document.getElementById('scanBtn').textContent=t.btn;
+  document.querySelector('[data-i18n="prices"]').textContent=t.prices;
+  document.querySelector('[data-i18n="free"]').textContent=t.free;
+  document.getElementById('scanCount').textContent=t.info;
+  // Set dir for RTL languages
+  document.body.dir=lang==='ar'?'rtl':'ltr';
+}
+
+// Init
+(function(){
+  const saved=localStorage.getItem('dovtek_lang')||'en';
+  document.getElementById('langSelect').value=saved;
+  if(saved!=='en') applyLanguage(saved);
+
+  // Show/hide translate bar
+  updateTranslateBar(saved);
+
+  // Update scan count label
+  if (token) {
+    const rem = getRemaining();
+    document.getElementById('scanCount').textContent = rem === Infinity ? 'Unlimited scans · Priority AI Active' : rem + ' scans remaining today';
+  } else {
+    document.getElementById('scanCount').textContent = '1 free scan (guest) · Sign up for 3/day';
+  }
+  updateRemainingDisplay();
+})();
+
+detectLocation();
+</script>
+</body>
+</html>

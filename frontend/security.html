@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security — SHIELD IQ</title>
+<meta name="description" content="How SHIELD IQ keeps your data and messages secure.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.page-wrap{max-width:760px;margin:0 auto;padding:120px clamp(20px,5vw,48px) 80px}
+.policy-header{margin-bottom:56px;padding-bottom:36px;border-bottom:1px solid var(--border)}
+.policy-title{font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.06;margin-bottom:16px;letter-spacing:-0.03em}
+.policy-intro{font-size:15px;color:var(--warm);max-width:580px;margin-top:12px;line-height:1.8}
+.p-section{margin-bottom:48px}
+.section-num{font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.section-num::before{content:'';width:20px;height:1px;background:var(--teal)}
+.p-section h2{font-size:clamp(20px,2.5vw,26px);font-weight:800;line-height:1.1;margin-bottom:16px;letter-spacing:-0.02em}
+.p-section p{font-size:15px;color:var(--warm);line-height:1.85;margin-bottom:14px}
+.p-section p strong{color:var(--white);font-weight:600}
+.teal-box{background:var(--teal-dim);border:1px solid rgba(0,212,160,0.2);border-radius:var(--radius-sm);padding:18px 22px;margin:16px 0}
+.teal-box p{color:var(--warm);font-size:14px;margin-bottom:0}
+.teal-box p strong{color:var(--teal)}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.policy-footer{margin-top:72px;padding-top:28px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px}
+.policy-footer-brand{font-weight:800;font-size:16px}.policy-footer-brand .accent{color:var(--teal)}
+.policy-footer-note{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.06em}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>SHIELD <span class="accent">IQ</span></a>
+  <ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/scan">Scan</a></li></ul>
+  <div class="nav-actions"><a class="btn-ghost" href="/">← Back to Home</a></div>
+</nav>
+
+<div class="page-wrap">
+  <div class="policy-header">
+    <div class="tag">Security</div>
+    <h1 class="policy-title">Data Storage & Security</h1>
+    <p class="policy-intro">We take your privacy and security seriously. Here is how we ensure your data is protected at every step of the process.</p>
+  </div>
+
+  <div class="p-section">
+    <div class="section-num">01</div>
+    <h2>Encryption Standards</h2>
+    <p>Your account data and scan metadata are stored on secure servers. We use industry-standard security measures including <strong>encryption in transit (HTTPS/TLS)</strong> and <strong>encryption at rest</strong> for sensitive data.</p>
+    <p>Passwords are never stored in plain text. We use a strong, one-way hashing algorithm (bcrypt) that ensures even SHIELD IQ staff cannot read your password.</p>
+  </div>
+  <div class="section-divider"></div>
+
+  <div class="p-section">
+    <div class="section-num">02</div>
+    <h2>Memory-Only Processing</h2>
+    <div class="teal-box">
+      <p><strong>Message content is never stored:</strong> The text you paste or the images you upload for scanning are processed in memory only and are never written to disk or any persistent storage system at any point in our analysis pipeline.</p>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <div class="p-section">
+    <div class="section-num">03</div>
+    <h2>Abuse Prevention</h2>
+    <p>To maintain security and prevent abuse, we monitor usage data to detect unusual patterns that may indicate abuse of our free tier or attempts to misuse the service. This helps us keep the platform safe for everyone.</p>
+  </div>
+  <div class="section-divider"></div>
+
+  <div class="p-section">
+    <div class="section-num">04</div>
+    <h2>Data Breach Protocol</h2>
+    <p>Despite our best efforts, no security system is absolutely impenetrable. In the highly unlikely event of a data breach that affects your personal data, we commit to notifying you within <strong>72 hours</strong> of becoming aware of the breach, in strict accordance with the Nigeria Data Protection Act 2023.</p>
+  </div>
+
+  <div class="policy-footer">
+    <div class="policy-footer-brand">SHIELD <span class="accent">IQ</span></div>
+    <div class="policy-footer-note">© 2025 SHIELD IQ Technologies. Built in compliance with the Nigeria Data Protection Act 2023.</div>
+  </div>
+</div>
+</body>
+</html>
