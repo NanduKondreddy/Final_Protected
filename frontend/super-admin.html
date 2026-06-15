@@ -216,9 +216,11 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
   <div class="dashboard" id="dashboard">
 
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('threats')">🛡️ Threat Analytics</button>
-      <button class="tab-btn" onclick="switchTab('users')">👥 User Accounts</button>
-      <button class="tab-btn" onclick="switchTab('tickets')">✉️ Support Tickets</button>
+      <button id="btn-threats" class="tab-btn active" onclick="switchTab('threats')">🛡️ Threat Analytics</button>
+      <button id="btn-users" class="tab-btn" onclick="switchTab('users')">👥 User Accounts</button>
+      <button id="btn-partners" class="tab-btn" onclick="switchTab('partners')">🔑 Enterprise Keys</button>
+      <button id="btn-global-history" class="tab-btn" onclick="switchTab('global-history')">📄 Global Audit Trail</button>
+      <button id="btn-tickets" class="tab-btn" onclick="switchTab('tickets')">✉️ Support Tickets</button>
     </div>
 
     <!-- Threat Analytics Tab Content -->
@@ -317,6 +319,71 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
           <span>Joined Date</span><span>Name</span><span>Email</span><span>Current Plan</span><span>Actions</span>
         </div>
         <div id="usersListTable"></div>
+      </div>
+    </div>
+
+    <!-- Enterprise Keys Tab Content -->
+    <div id="partnersTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="section-title" style="margin:0">B2B Enterprise Partner Accounts & API Keys</div>
+        <button class="refresh-btn" onclick="loadPartners()">↻ Refresh</button>
+      </div>
+
+      <!-- Generate Key section -->
+      <div class="table-card" style="padding: 24px; margin-bottom: 24px; background: linear-gradient(145deg, #0d1f35, #0a1628);">
+        <div style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 16px;">Generate New API Key for B2B Partner</div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-size: 11px; color: #4a6080; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Partner / Company Name</label>
+            <input type="text" id="partnerName" placeholder="e.g. Acme Corp" style="width:100%; background:#060d18; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:10px 14px; font-size:13px; outline:none;">
+          </div>
+          <div style="width: 140px;">
+            <label style="display: block; font-size: 11px; color: #4a6080; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Daily Scan Limit</label>
+            <input type="number" id="partnerLimit" value="10000" style="width:100%; background:#060d18; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:10px 14px; font-size:13px; outline:none;">
+          </div>
+          <div style="width: 140px;">
+            <label style="display: block; font-size: 11px; color: #4a6080; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Tier</label>
+            <select id="partnerTier" style="width:100%; background:#060d18; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:10px 14px; font-size:13px; outline:none; height:38px; cursor:pointer;">
+              <option value="enterprise">Enterprise</option>
+              <option value="plus">Plus</option>
+              <option value="pro">Pro</option>
+            </select>
+          </div>
+          <button class="auth-btn" onclick="generatePartnerKey()" style="width: auto; padding: 10px 24px; height: 38px; border-radius: 8px; font-size: 13px;">Create API Key</button>
+        </div>
+
+        <!-- Secret key display box -->
+        <div id="newKeyDisplay" style="display: none; margin-top: 20px; padding: 16px; background: rgba(0, 212, 160, 0.05); border: 1px dashed #00D4AA; border-radius: 10px;">
+          <div style="font-size: 12px; color: #00D4AA; font-weight: 600; margin-bottom: 6px;">⚠️ API KEY GENERATED SUCCESSFULLY</div>
+          <div style="font-size: 11px; color: #7a94b0; margin-bottom: 12px;">Copy this secret key and store it securely. For security reasons, it will not be shown again.</div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="generatedRawKey" readonly style="flex: 1; background: #060d18; border: 1px solid #1a3050; color: #fff; font-family: monospace; font-size: 13px; padding: 10px; border-radius: 6px; outline: none;" onclick="this.select()">
+            <button class="btn-resolve" onclick="copyGeneratedKey()" style="height: 38px;">Copy Key</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partner Keys Table -->
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1.2fr 1fr 100px">
+          <span>Partner Name</span><span>Key ID</span><span>Tier</span><span>Status</span><span>Created At</span><span>Total Scans</span><span>Action</span>
+        </div>
+        <div id="partnersTable"></div>
+      </div>
+    </div>
+
+    <!-- Global Audit Trail Tab Content -->
+    <div id="global-historyTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="section-title" style="margin:0">Global Scan Audit Trail (All Customers)</div>
+        <button class="refresh-btn" onclick="loadGlobalHistory()">↻ Refresh</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 140px 1.5fr 100px 100px 100px 100px 100px">
+          <span>Timestamp</span><span>Source Key / App</span><span>Risk Score</span><span>Verdict</span><span>Language</span><span>Latency</span><span>Provider</span>
+        </div>
+        <div id="globalHistoryTable"></div>
       </div>
     </div>
 
@@ -530,18 +597,150 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   
+  document.getElementById(`btn-${tabId}`).classList.add('active');
+  
   if (tabId === 'threats') {
-    document.querySelector('button[onclick="switchTab(\'threats\')"]').classList.add('active');
     document.getElementById('threatsTab').classList.add('active');
   } else if (tabId === 'users') {
-    document.querySelector('button[onclick="switchTab(\'users\')"]').classList.add('active');
     document.getElementById('usersTab').classList.add('active');
     loadUsers();
+  } else if (tabId === 'partners') {
+    document.getElementById('partnersTab').classList.add('active');
+    loadPartners();
+  } else if (tabId === 'global-history') {
+    document.getElementById('global-historyTab').classList.add('active');
+    loadGlobalHistory();
   } else if (tabId === 'tickets') {
-    document.querySelector('button[onclick="switchTab(\'tickets\')"]').classList.add('active');
     document.getElementById('ticketsTab').classList.add('active');
     loadTickets();
   }
+}
+
+async function loadPartners() {
+  try {
+    const res = await fetch(`${API}/audit/partners?admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    
+    document.getElementById('partnersTable').innerHTML = data.length
+      ? data.map(p => {
+          const dt = p.created_at ? new Date(p.created_at) : null;
+          const str = dt 
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            : '—';
+          
+          const isActive = p.is_active;
+          const statusBadge = isActive 
+            ? '<span class="badge-plan plan-plus">Active</span>' 
+            : '<span class="badge-plan plan-free" style="color: #ff6b6b; background: rgba(255,107,107,0.1)">Revoked</span>';
+          
+          const actionButton = isActive 
+            ? `<button class="btn-resolve" onclick="deactivatePartner('${p.key_id}')" style="border-color: rgba(255,107,107,0.3); color: #ff6b6b;">Revoke</button>` 
+            : '<span style="color:#4a6080; font-size:11px; font-weight:500;">No actions</span>';
+
+          return `
+            <div class="table-row" style="grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1.2fr 1fr 100px; align-items:center;">
+              <span style="font-weight:600; color:#fff">${p.partner_name}</span>
+              <span style="font-family:monospace; color:#7a94b0; font-size:12px;">${p.key_id}</span>
+              <span style="text-transform:uppercase; font-size:11px; color:#00B4D8; font-weight:600;">${p.tier}</span>
+              <span>${statusBadge}</span>
+              <span style="color:#7a94b0; font-size:12px;">${str}</span>
+              <span style="font-weight:700; color:#fff;">${(p.total_scans || 0).toLocaleString()}</span>
+              <span>${actionButton}</span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No B2B partner keys registered yet</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function generatePartnerKey() {
+  const name = document.getElementById('partnerName').value.trim();
+  const limit = parseInt(document.getElementById('partnerLimit').value) || 10000;
+  const tier = document.getElementById('partnerTier').value;
+
+  if (!name) {
+    alert('Please enter a partner name.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/audit/partners/generate?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partner_name: name, tier: tier, daily_limit: limit })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('generatedRawKey').value = data.raw_key;
+      document.getElementById('newKeyDisplay').style.display = 'block';
+      document.getElementById('partnerName').value = '';
+      loadPartners();
+    } else {
+      alert('Failed to generate API key.');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error generating API key.');
+  }
+}
+
+function copyGeneratedKey() {
+  const input = document.getElementById('generatedRawKey');
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  alert('API Key copied to clipboard!');
+}
+
+async function deactivatePartner(keyId) {
+  if (!confirm(`Are you sure you want to deactivate and revoke this B2B partner credential? This action is permanent and cannot be undone.`)) {
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API}/audit/partners/revoke?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key_id: keyId })
+    });
+    
+    if (res.ok) {
+      alert('API key revoked successfully.');
+      loadPartners();
+    } else {
+      alert('Failed to revoke API key.');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error revoking API key.');
+  }
+}
+
+async function loadGlobalHistory() {
+  try {
+    const res = await fetch(`${API}/audit/global-history?limit=50&days=30&admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    const records = data.records || [];
+    
+    document.getElementById('globalHistoryTable').innerHTML = records.length
+      ? records.map(r => {
+          const dt = new Date(r.timestamp);
+          const str = dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' +
+                      dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+          const sourceLabel = r.api_key_id ? r.api_key_id : 'Web App (B2C)';
+          const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
+          return `
+            <div class="table-row" style="grid-template-columns: 140px 1.5fr 100px 100px 100px 100px 100px; align-items:center;">
+              <span style="color:#7a94b0; font-size:12px;">${str}</span>
+              <span style="font-weight:600; color:#fff">${sourceLabel}</span>
+              <span style="font-weight:700">${r.risk_score}</span>
+              <span><span class="band-pill pill-${r.risk_band}">${r.risk_band}</span></span>
+              <span style="color:#7a94b0; text-transform:capitalize;">${r.detected_language || 'en'}</span>
+              <span style="color:${latColor}; font-family:monospace;">${r.latency_ms}ms</span>
+              <span style="color:#7a94b0">${r.provider_used || 'gemini'}</span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No global scan logs found</div>';
+  } catch(e) { console.error(e); }
 }
 
 let allUsersList = [];
