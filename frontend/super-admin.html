@@ -793,12 +793,15 @@ function applyGlobalFilters() {
           locDisplay = '<span style="color:#4a6080">—</span>';
         } else if (cc === 'LOCAL') {
           locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Dev</span>';
-        } else {
-          // Generate flag emoji: each letter maps to a regional indicator symbol
+        } else if (/^[A-Z]{2}$/.test(cc.toUpperCase())) {
+          // Valid ISO 2-letter country code — generate flag emoji
           const flag = cc.toUpperCase().split('').map(c =>
             String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
           ).join('');
-          locDisplay = `<span style="font-size:13px;" title="${cc}">${flag}</span> <span style="color:#00B4D8;font-size:11px;font-weight:600;">${cc}</span>`;
+          locDisplay = `<span style="font-size:14px;">${flag}</span>&nbsp;<span style="color:#00B4D8;font-size:11px;font-weight:600;">${cc.toUpperCase()}</span>`;
+        } else {
+          // Raw IP or legacy data — just show dash
+          locDisplay = '<span style="color:#4a6080">—</span>';
         }
 
         return `
