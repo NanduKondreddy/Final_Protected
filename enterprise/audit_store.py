@@ -61,7 +61,7 @@ def write_audit(
 
 def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
     """Read audit records from the database, filtered by time and optionally by org."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     db = SessionLocal()
     try:
         query = db.query(db_models.AuditRecord).filter(db_models.AuditRecord.timestamp >= cutoff)
@@ -99,7 +99,7 @@ def get_user_history(
     days: int = 30
 ) -> dict:
     """Get scan history filtered by API key (for partner access)."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     db = SessionLocal()
     try:
         query = db.query(db_models.AuditRecord).filter(db_models.AuditRecord.timestamp >= cutoff)

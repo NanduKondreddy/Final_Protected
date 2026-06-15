@@ -61,7 +61,7 @@ def get_pattern_stats(days: int = 30) -> dict:
     Shows which fraud signals are most common, language breakdown,
     override rate, and accuracy trends.
     """
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     db = SessionLocal()
     try:
         records = db.query(db_models.PatternRecord).filter(db_models.PatternRecord.timestamp >= cutoff).all()

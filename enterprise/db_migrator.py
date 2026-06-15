@@ -17,8 +17,8 @@ def migrate_all():
 def migrate_audit_records():
     db = SessionLocal()
     try:
-        if db.query(db_models.AuditRecord).first() is not None:
-            return
+        # Get existing request_ids to avoid duplicates
+        existing_ids = {r[0] for r in db.query(db_models.AuditRecord.request_id).all()}
         
         audit_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "audit", "audit_log.jsonl")
         if not os.path.exists(audit_file):
@@ -32,15 +32,19 @@ def migrate_audit_records():
                     continue
                 try:
                     data = json.loads(line)
-                    # Support parsing timestamp
+                    req_id = data.get("request_id")
+                    if not req_id or req_id in existing_ids:
+                        continue
+                    
                     ts_str = data.get("timestamp")
                     if ts_str:
-                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                        # Make timezone-naive UTC to match PostgreSQL and SQLite naïve datetime expectations
+                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).replace(tzinfo=None)
                     else:
-                        ts = datetime.now(timezone.utc)
+                        ts = datetime.now(timezone.utc).replace(tzinfo=None)
                     
                     record = db_models.AuditRecord(
-                        request_id=data.get("request_id"),
+                        request_id=req_id,
                         timestamp=ts,
                         risk_score=data.get("risk_score"),
                         risk_band=data.get("risk_band"),
@@ -54,6 +58,7 @@ def migrate_audit_records():
                         org_id=data.get("org_id")
                     )
                     records.append(record)
+                    existing_ids.add(req_id)
                 except Exception as e:
                     logger.error("Error parsing audit log line: %s", str(e))
         
@@ -69,8 +74,8 @@ def migrate_audit_records():
 def migrate_pattern_records():
     db = SessionLocal()
     try:
-        if db.query(db_models.PatternRecord).first() is not None:
-            return
+        # Get existing request_ids to avoid duplicates
+        existing_ids = {r[0] for r in db.query(db_models.PatternRecord.request_id).all()}
         
         pattern_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "patterns", "pattern_log.jsonl")
         if not os.path.exists(pattern_file):
@@ -84,14 +89,18 @@ def migrate_pattern_records():
                     continue
                 try:
                     data = json.loads(line)
+                    req_id = data.get("request_id")
+                    if not req_id or req_id in existing_ids:
+                        continue
+                    
                     ts_str = data.get("timestamp")
                     if ts_str:
-                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).replace(tzinfo=None)
                     else:
-                        ts = datetime.now(timezone.utc)
+                        ts = datetime.now(timezone.utc).replace(tzinfo=None)
 
                     record = db_models.PatternRecord(
-                        request_id=data.get("request_id"),
+                        request_id=req_id,
                         timestamp=ts,
                         risk_band=data.get("risk_band"),
                         patterns=data.get("patterns", []),
@@ -101,6 +110,7 @@ def migrate_pattern_records():
                         api_key_id=data.get("api_key_id")
                     )
                     records.append(record)
+                    existing_ids.add(req_id)
                 except Exception as e:
                     logger.error("Error parsing pattern log line: %s", str(e))
         
@@ -116,8 +126,8 @@ def migrate_pattern_records():
 def migrate_user_activities():
     db = SessionLocal()
     try:
-        if db.query(db_models.UserActivity).first() is not None:
-            return
+        # Get existing activities to avoid duplicates
+        existing_keys = {(r.timestamp.isoformat() if r.timestamp else "", r.email, r.action) for r in db.query(db_models.UserActivity).all()}
         
         activity_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "audit", "user_activity.jsonl")
         if not os.path.exists(activity_file):
@@ -133,9 +143,13 @@ def migrate_user_activities():
                     data = json.loads(line)
                     ts_str = data.get("timestamp")
                     if ts_str:
-                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).replace(tzinfo=None)
                     else:
-                        ts = datetime.now(timezone.utc)
+                        ts = datetime.now(timezone.utc).replace(tzinfo=None)
+
+                    key = (ts.isoformat(), data.get("email"), data.get("action"))
+                    if key in existing_keys:
+                        continue
 
                     record = db_models.UserActivity(
                         user_id=data.get("user_id"),
@@ -145,6 +159,7 @@ def migrate_user_activities():
                         details=data.get("details", {})
                     )
                     records.append(record)
+                    existing_keys.add(key)
                 except Exception as e:
                     logger.error("Error parsing user activity line: %s", str(e))
         
@@ -177,9 +192,9 @@ def migrate_platform_metrics():
                     data = json.loads(line)
                     ts_str = data.get("timestamp")
                     if ts_str:
-                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).replace(tzinfo=None)
                     else:
-                        ts = datetime.now(timezone.utc)
+                        ts = datetime.now(timezone.utc).replace(tzinfo=None)
 
                     record = db_models.PlatformMetric(
                         endpoint=data.get("endpoint"),
