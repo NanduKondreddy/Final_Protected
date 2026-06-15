@@ -99,7 +99,8 @@ async def platform_metrics_middleware(request: Request, call_next):
         raise e
     finally:
         latency_ms = int((time.time() - start_time) * 1000)
-        client_ip = request.client.host if request.client else "unknown"
+        xff = request.headers.get("x-forwarded-for")
+        client_ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
         write_platform_metric(
             endpoint=path,
             method=request.method,

@@ -37,8 +37,7 @@ Desktop.ini
 *.suo
 *.user
 
-# ── Local test logs and temp keys ────────────────
+data_store/
+Dataset/
 dashboard_diff.txt
 diff_output.txt
-data_store/audit/
-data_store/keys/

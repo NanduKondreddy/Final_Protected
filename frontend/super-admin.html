@@ -284,8 +284,8 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
         <div>
           <div class="section-title" style="margin-top: 0;">Recent User Activities</div>
           <div class="table-card">
-            <div class="table-head" style="grid-template-columns:140px 1fr 100px">
-              <span>Time</span><span>User/Email</span><span>Action</span>
+            <div class="table-head" style="grid-template-columns: 120px 1fr 1.2fr 90px">
+              <span>Time</span><span>User/Email</span><span>IP / Location</span><span>Action</span>
             </div>
             <div id="activitiesTable"></div>
           </div>
@@ -476,10 +476,14 @@ async function loadActivities() {
           const dt  = new Date(a.timestamp);
           const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
                       dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          const locationVal = a.details?.location || 'Unknown Location';
+          const ipVal = a.details?.ip ? ` (${a.details.ip})` : '';
+          const fullLoc = `${locationVal}${ipVal}`;
           return `
-            <div class="table-row" style="grid-template-columns:140px 1fr 100px; font-size:12px;">
+            <div class="table-row" style="grid-template-columns: 120px 1fr 1.2fr 90px; font-size:12px;">
               <span style="color:#7a94b0">${str}</span>
               <span style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${a.email}">${a.email}</span>
+              <span style="color:#00B4D8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${fullLoc}">${fullLoc}</span>
               <span><span class="band-pill" style="background:rgba(0,212,160,0.1);color:#00D4AA;padding:2px 8px;font-size:10px;border-radius:6px;text-transform:uppercase;">${a.action}</span></span>
             </div>`;
         }).join('')

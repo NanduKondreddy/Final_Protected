@@ -12,19 +12,15 @@ This stores ONLY:
 NEVER stores message content.
 """
 
-import os
-import json
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from collections import Counter
 
+from database import SessionLocal
+import db_models
+
 logger = logging.getLogger(__name__)
-
-PATTERN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "patterns")
-os.makedirs(PATTERN_DIR, exist_ok=True)
-
-PATTERN_FILE = os.path.join(PATTERN_DIR, "pattern_log.jsonl")
 
 
 def write_pattern(
@@ -40,25 +36,23 @@ def write_pattern(
     Write a pattern intelligence record.
     Only stores the pattern signals — never message content.
     """
-    if not fired_patterns:
-        fired_patterns = []
-
-    record = {
-        "request_id":       request_id,
-        "timestamp":        datetime.now(timezone.utc).isoformat(),
-        "risk_band":        risk_band,
-        "patterns":         fired_patterns,
-        "fraud_type":       fraud_type,
-        "detected_language": detected_language,
-        "source":           source,
-        "api_key_id":       api_key_id,
-    }
-
+    db = SessionLocal()
     try:
-        with open(PATTERN_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        record = db_models.PatternRecord(
+            request_id=request_id,
+            risk_band=risk_band,
+            patterns=fired_patterns or [],
+            fraud_type=fraud_type,
+            detected_language=detected_language,
+            source=source,
+            api_key_id=api_key_id,
+        )
+        db.add(record)
+        db.commit()
     except Exception as e:
-        logger.error("Pattern write failed (non-fatal): %s", str(e))
+        logger.error("Pattern DB write failed (non-fatal): %s", str(e))
+    finally:
+        db.close()
 
 
 def get_pattern_stats(days: int = 30) -> dict:
@@ -67,28 +61,15 @@ def get_pattern_stats(days: int = 30) -> dict:
     Shows which fraud signals are most common, language breakdown,
     override rate, and accuracy trends.
     """
-    if not os.path.exists(PATTERN_FILE):
-        return _empty_stats()
-
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    records = []
-
+    db = SessionLocal()
     try:
-        with open(PATTERN_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                    ts = datetime.fromisoformat(rec["timestamp"])
-                    if ts >= cutoff:
-                        records.append(rec)
-                except (json.JSONDecodeError, KeyError):
-                    continue
+        records = db.query(db_models.PatternRecord).filter(db_models.PatternRecord.timestamp >= cutoff).all()
     except Exception as e:
-        logger.error("Pattern read failed: %s", str(e))
+        logger.error("Pattern DB read failed: %s", str(e))
         return _empty_stats()
+    finally:
+        db.close()
 
     if not records:
         return _empty_stats()
@@ -96,21 +77,21 @@ def get_pattern_stats(days: int = 30) -> dict:
     # Count patterns
     pattern_counter = Counter()
     for r in records:
-        for p in r.get("patterns", []):
+        for p in (r.patterns or []):
             pattern_counter[p] += 1
 
     # Count by band
-    by_band = Counter(r.get("risk_band", "SAFE") for r in records)
+    by_band = Counter(r.risk_band for r in records)
 
     # Count by language
-    by_language = Counter(r.get("detected_language", "en") for r in records)
+    by_language = Counter(r.detected_language for r in records)
 
     # Count by source
-    by_source = Counter(r.get("source", "unknown") for r in records)
+    by_source = Counter(r.source for r in records)
 
     # Count fraud types
     fraud_types = Counter(
-        r.get("fraud_type") for r in records if r.get("fraud_type")
+        r.fraud_type for r in records if r.fraud_type
     )
 
     top_patterns = [

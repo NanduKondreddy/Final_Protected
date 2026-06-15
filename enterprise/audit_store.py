@@ -10,19 +10,14 @@ Zero-Retention Compliance:
   - GDPR/privacy safe by design
 """
 
-import os
-import json
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+from database import SessionLocal
+import db_models
+
 logger = logging.getLogger(__name__)
-
-# Path for flat-file storage — swap for PostgreSQL in production
-AUDIT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "audit")
-os.makedirs(AUDIT_DIR, exist_ok=True)
-
-AUDIT_FILE = os.path.join(AUDIT_DIR, "audit_log.jsonl")
 
 
 def write_audit(
@@ -41,55 +36,60 @@ def write_audit(
     """
     Write a single audit record. This NEVER receives message content.
     """
-    record = {
-        "request_id":       request_id,
-        "timestamp":        datetime.now(timezone.utc).isoformat(),
-        "risk_score":       risk_score,
-        "risk_band":        risk_band,
-        "detected_language": detected_language,
-        "provider_used":    provider_used,
-        "latency_ms":       latency_ms,
-        "source":           source,
-        "was_overridden":   was_overridden,
-        "fraud_type":       fraud_type,
-        "api_key_id":       api_key_id,
-        "org_id":           org_id,
-    }
-
+    db = SessionLocal()
     try:
-        with open(AUDIT_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        record = db_models.AuditRecord(
+            request_id=request_id,
+            risk_score=risk_score,
+            risk_band=risk_band,
+            detected_language=detected_language,
+            provider_used=provider_used,
+            latency_ms=latency_ms,
+            source=source,
+            was_overridden=was_overridden,
+            fraud_type=fraud_type,
+            api_key_id=api_key_id,
+            org_id=org_id,
+        )
+        db.add(record)
+        db.commit()
     except Exception as e:
-        logger.error("Audit write failed (non-fatal): %s", str(e))
+        logger.error("Audit DB write failed: %s", str(e))
+    finally:
+        db.close()
 
 
 def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
-    """Read audit records from the JSONL file, filtered by time and optionally by org."""
-    if not os.path.exists(AUDIT_FILE):
-        return []
-
+    """Read audit records from the database, filtered by time and optionally by org."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    records = []
-
+    db = SessionLocal()
     try:
-        with open(AUDIT_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                    ts = datetime.fromisoformat(rec["timestamp"])
-                    if ts >= cutoff:
-                        if org_id and rec.get("org_id") != org_id:
-                            continue
-                        records.append(rec)
-                except (json.JSONDecodeError, KeyError):
-                    continue
+        query = db.query(db_models.AuditRecord).filter(db_models.AuditRecord.timestamp >= cutoff)
+        if org_id:
+            query = query.filter(db_models.AuditRecord.org_id == org_id)
+        records = query.all()
+        return [
+            {
+                "request_id": r.request_id,
+                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                "risk_score": r.risk_score,
+                "risk_band": r.risk_band,
+                "detected_language": r.detected_language,
+                "provider_used": r.provider_used,
+                "latency_ms": r.latency_ms,
+                "source": r.source,
+                "was_overridden": r.was_overridden,
+                "fraud_type": r.fraud_type,
+                "api_key_id": r.api_key_id,
+                "org_id": r.org_id,
+            }
+            for r in records
+        ]
     except Exception as e:
-        logger.error("Audit read failed: %s", str(e))
-
-    return records
+        logger.error("Audit DB read failed: %s", str(e))
+        return []
+    finally:
+        db.close()
 
 
 def get_user_history(
@@ -99,22 +99,43 @@ def get_user_history(
     days: int = 30
 ) -> dict:
     """Get scan history filtered by API key (for partner access)."""
-    all_records = _read_records(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    db = SessionLocal()
+    try:
+        query = db.query(db_models.AuditRecord).filter(db_models.AuditRecord.timestamp >= cutoff)
+        if api_key_id:
+            query = query.filter(db_models.AuditRecord.api_key_id == api_key_id)
 
-    if api_key_id:
-        all_records = [r for r in all_records if r.get("api_key_id") == api_key_id]
+        total = query.count()
+        records = query.order_by(db_models.AuditRecord.timestamp.desc()).offset(offset).limit(limit).all()
 
-    total = len(all_records)
-    # Sort newest first
-    all_records.sort(key=lambda r: r.get("timestamp", ""), reverse=True)
-    page = all_records[offset:offset + limit]
-
-    return {
-        "total": total,
-        "limit": limit,
-        "offset": offset,
-        "records": page
-    }
+        return {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "records": [
+                {
+                    "request_id": r.request_id,
+                    "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                    "risk_score": r.risk_score,
+                    "risk_band": r.risk_band,
+                    "detected_language": r.detected_language,
+                    "provider_used": r.provider_used,
+                    "latency_ms": r.latency_ms,
+                    "source": r.source,
+                    "was_overridden": r.was_overridden,
+                    "fraud_type": r.fraud_type,
+                    "api_key_id": r.api_key_id,
+                    "org_id": r.org_id,
+                }
+                for r in records
+            ]
+        }
+    except Exception as e:
+        logger.error("get_user_history failed: %s", str(e))
+        return {"total": 0, "limit": limit, "offset": offset, "records": []}
+    finally:
+        db.close()
 
 
 def get_admin_summary(days: int = 30, org_id: Optional[str] = None) -> dict:
@@ -164,9 +185,6 @@ def get_admin_summary(days: int = 30, org_id: Optional[str] = None) -> dict:
     }
 
 
-USER_ACTIVITY_FILE = os.path.join(AUDIT_DIR, "user_activity.jsonl")
-PLATFORM_METRICS_FILE = os.path.join(AUDIT_DIR, "platform_metrics.jsonl")
-
 def write_user_activity(
     user_id: Optional[int],
     email: str,
@@ -174,18 +192,21 @@ def write_user_activity(
     details: Optional[dict] = None
 ) -> None:
     """Record user activity (login, signup, logout, upgrade, etc.)."""
-    record = {
-        "user_id": user_id,
-        "email": email,
-        "action": action,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "details": details or {},
-    }
+    db = SessionLocal()
     try:
-        with open(USER_ACTIVITY_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        record = db_models.UserActivity(
+            user_id=user_id,
+            email=email,
+            action=action,
+            details=details or {},
+        )
+        db.add(record)
+        db.commit()
     except Exception as e:
-        logger.error("User activity write failed: %s", str(e))
+        logger.error("User activity DB write failed: %s", str(e))
+    finally:
+        db.close()
+
 
 def write_platform_metric(
     endpoint: str,
@@ -195,58 +216,98 @@ def write_platform_metric(
     client_ip: str
 ) -> None:
     """Record platform usage metrics (latency, status codes, endpoint hit)."""
-    record = {
-        "endpoint": endpoint,
-        "method": method,
-        "status_code": status_code,
-        "latency_ms": latency_ms,
-        "client_ip": client_ip,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    db = SessionLocal()
     try:
-        with open(PLATFORM_METRICS_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        record = db_models.PlatformMetric(
+            endpoint=endpoint,
+            method=method,
+            status_code=status_code,
+            latency_ms=latency_ms,
+            client_ip=client_ip,
+        )
+        db.add(record)
+        db.commit()
     except Exception as e:
-        logger.error("Platform metric write failed: %s", str(e))
+        logger.error("Platform metric DB write failed: %s", str(e))
+    finally:
+        db.close()
+
 
 def get_user_activities(limit: int = 50) -> list:
     """Retrieve recent user activities."""
-    if not os.path.exists(USER_ACTIVITY_FILE):
-        return []
-    records = []
+    db = SessionLocal()
     try:
-        with open(USER_ACTIVITY_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    records.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
+        records = db.query(db_models.UserActivity).order_by(db_models.UserActivity.timestamp.desc()).limit(limit).all()
+        return [
+            {
+                "user_id": r.user_id,
+                "email": r.email,
+                "action": r.action,
+                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                "details": r.details,
+            }
+            for r in records
+        ]
     except Exception as e:
         logger.error("Failed to read user activities: %s", str(e))
-    # Sort newest first
-    records.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-    return records[:limit]
+        return []
+    finally:
+        db.close()
+
 
 def get_platform_metrics(limit: int = 50) -> list:
     """Retrieve recent platform metrics."""
-    if not os.path.exists(PLATFORM_METRICS_FILE):
-        return []
-    records = []
+    db = SessionLocal()
     try:
-        with open(PLATFORM_METRICS_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    records.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
+        records = db.query(db_models.PlatformMetric).order_by(db_models.PlatformMetric.timestamp.desc()).limit(limit).all()
+        return [
+            {
+                "endpoint": r.endpoint,
+                "method": r.method,
+                "status_code": r.status_code,
+                "latency_ms": r.latency_ms,
+                "client_ip": r.client_ip,
+                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+            }
+            for r in records
+        ]
     except Exception as e:
         logger.error("Failed to read platform metrics: %s", str(e))
-    # Sort newest first
-    records.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-    return records[:limit]
+        return []
+    finally:
+        db.close()
+
+
+import httpx
+
+def resolve_and_write_user_activity(
+    user_id: Optional[int],
+    email: str,
+    action: str,
+    client_ip: str,
+    details: Optional[dict] = None
+) -> None:
+    """Resolve IP location and write user activity log in the background."""
+    details = details or {}
+    details["ip"] = client_ip
+
+    if client_ip not in ("127.0.0.1", "localhost", "unknown", ""):
+        try:
+            res = httpx.get(f"http://ip-api.com/json/{client_ip}", timeout=2.0)
+            if res.status_code == 200:
+                data = res.json()
+                if data.get("status") == "success":
+                    city = data.get("city", "")
+                    country = data.get("country", "")
+                    country_code = data.get("countryCode", "")
+                    parts = [p for p in [city, country or country_code] if p]
+                    if parts:
+                        details["location"] = ", ".join(parts)
+        except Exception as e:
+            logger.error("Failed to geolocate IP %s: %s", client_ip, str(e))
+
+    if "location" not in details:
+        details["location"] = "Localhost (Dev)" if client_ip in ("127.0.0.1", "localhost") else "Unknown Location"
+
+    write_user_activity(user_id, email, action, details)
+
