@@ -1,7 +1,7 @@
 # backend/routers/scan_router.py
 import uuid
 import logging
-from enterprise.audit_store import write_audit
+from enterprise.audit_store import write_audit, resolve_country_code
 from enterprise.pattern_store import write_pattern
 from enterprise.validation import scan_patterns
 
@@ -34,12 +34,13 @@ async def scan(
 
     image_bytes = None
     image_media_type = None
-    request_id = uuid.uuid4().hex[:16]
-    api_key_id = getattr(request.state, "api_key_id", None)
+    request_id   = uuid.uuid4().hex[:16]
+    api_key_id   = getattr(request.state, "api_key_id", None)
     partner_name = getattr(request.state, "partner_name", None)
-    tier = getattr(request.state, "tier", None)
-    org_id = getattr(request.state, "org_id", None)
-    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
+    tier         = getattr(request.state, "tier", None)
+    org_id       = getattr(request.state, "org_id", None)
+    _raw_ip      = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
+    location     = resolve_country_code(_raw_ip)   # e.g. "IN", "US", "NG", "LOCAL"
 
     if file:
         image_bytes = await file.read()
@@ -143,7 +144,7 @@ async def scan(
             source=source_name,
             api_key_id=api_key_id,
             org_id=org_id,
-            client_ip=client_ip,
+            client_ip=location,
         )
         write_pattern(
             request_id=request_id,
@@ -185,7 +186,8 @@ async def scan_json(
     partner_name = getattr(request.state, "partner_name", None)
     tier = getattr(request.state, "tier", None)
     org_id = getattr(request.state, "org_id", None)
-    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
+    _raw_ip      = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
+    location     = resolve_country_code(_raw_ip)   # e.g. "IN", "US", "NG", "LOCAL"
 
     # ── Web app quota (non-extension requests) ───────────────────────────────
     if not api_key_id:
@@ -279,7 +281,7 @@ async def scan_json(
             source=source_name,
             api_key_id=api_key_id,
             org_id=org_id,
-            client_ip=client_ip,
+            client_ip=location,
         )
         write_pattern(
             request_id=request_id,

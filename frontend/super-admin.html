@@ -786,16 +786,19 @@ function applyGlobalFilters() {
         const sourceLabel = r.api_key_id ? r.api_key_id : (SRC_LABELS[r.source] || r.source || 'Web App (B2C)');
         const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
 
-        // Location from client_ip (shown as IP if no geo-resolve available)
-        const ip = r.client_ip || null;
-        const isLocal = ip && (ip === '127.0.0.1' || ip === 'localhost' || ip === '::1');
+        // Country code from backend — generate flag emoji from ISO 2-letter code
+        const cc = r.client_ip || null;
         let locDisplay;
-        if (!ip) {
+        if (!cc) {
           locDisplay = '<span style="color:#4a6080">—</span>';
-        } else if (isLocal) {
-          locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Localhost</span>';
+        } else if (cc === 'LOCAL') {
+          locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Dev</span>';
         } else {
-          locDisplay = `<span style="color:#00B4D8;font-size:11px;font-family:monospace;" title="${ip}">📍 ${ip}</span>`;
+          // Generate flag emoji: each letter maps to a regional indicator symbol
+          const flag = cc.toUpperCase().split('').map(c =>
+            String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
+          ).join('');
+          locDisplay = `<span style="font-size:13px;" title="${cc}">${flag}</span> <span style="color:#00B4D8;font-size:11px;font-weight:600;">${cc}</span>`;
         }
 
         return `
@@ -807,7 +810,7 @@ function applyGlobalFilters() {
             <span style="color:#7a94b0;text-transform:capitalize;">${r.detected_language || 'en'}</span>
             <span style="color:${latColor};font-family:monospace;">${r.latency_ms}ms</span>
             <span style="color:#7a94b0">${r.provider_used || 'gemini'}</span>
-            <span>${locDisplay}</span>
+            <span style="display:flex;align-items:center;gap:4px;">${locDisplay}</span>
           </div>`;
       }).join('')
     : '<div class="empty">No records match the current filters</div>';

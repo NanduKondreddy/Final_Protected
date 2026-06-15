@@ -315,3 +315,26 @@ def resolve_and_write_user_activity(
 
     write_user_activity(user_id, email, action, details)
 
+
+def resolve_country_code(ip: str) -> str:
+    """
+    Resolve an IP address to a 2-letter ISO country code (e.g. 'IN', 'US', 'NG').
+    Returns 'LOCAL' for localhost, None on failure.
+    Used by scan endpoints to store human-readable location in audit records.
+    """
+    if not ip or ip in ("127.0.0.1", "::1", "localhost", "unknown", ""):
+        return "LOCAL"
+    try:
+        res = httpx.get(
+            f"http://ip-api.com/json/{ip}?fields=status,countryCode",
+            timeout=1.5
+        )
+        if res.status_code == 200:
+            data = res.json()
+            if data.get("status") == "success":
+                cc = data.get("countryCode", "")
+                if cc:
+                    return cc   # e.g. "IN", "US", "NG", "GB"
+    except Exception:
+        pass
+    return None
