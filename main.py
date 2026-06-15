@@ -20,6 +20,15 @@ from enterprise.api_key_manager import validate_key
 # Create all DB tables on startup if they don't exist
 db_models.Base.metadata.create_all(bind=engine)
 
+# Migrate flat-file JSONL data to database if the tables are empty
+try:
+    from enterprise.db_migrator import migrate_all
+    migrate_all()
+except Exception as e:
+    import logging
+    logging.getLogger(__name__).error("One-off db migrator failed: %s", str(e))
+
+
 from sqlalchemy import text
 with engine.connect() as conn:
     try:
