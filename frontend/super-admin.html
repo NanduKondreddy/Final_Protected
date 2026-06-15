@@ -372,14 +372,47 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
 
     <!-- Global Audit Trail Tab Content -->
     <div id="global-historyTab" class="tab-content">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div class="section-title" style="margin:0">Global Scan Audit Trail (All Customers)</div>
         <button class="refresh-btn" onclick="loadGlobalHistory()">↻ Refresh</button>
       </div>
 
+      <!-- Filter Bar -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Days</label>
+          <select id="filterDays" onchange="loadGlobalHistory()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Verdict</label>
+          <select id="filterVerdict" onchange="applyGlobalFilters()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="">All</option>
+            <option value="SAFE">Safe</option>
+            <option value="CAUTION">Caution</option>
+            <option value="HIGH_RISK">High Risk</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Source</label>
+          <select id="filterSource" onchange="applyGlobalFilters()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="">All Sources</option>
+            <option value="web_app">Web App</option>
+            <option value="extension">Extension</option>
+            <option value="api">API</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+        <div id="filterCount" style="font-size:12px;color:#4a6080;margin-left:auto;"></div>
+      </div>
+
       <div class="table-card">
-        <div class="table-head" style="grid-template-columns: 140px 1.5fr 100px 100px 100px 100px 100px">
-          <span>Timestamp</span><span>Source Key / App</span><span>Risk Score</span><span>Verdict</span><span>Language</span><span>Latency</span><span>Provider</span>
+        <div class="table-head" style="grid-template-columns: 130px 1.2fr 90px 90px 80px 80px 80px 110px">
+          <span>Timestamp</span><span>Source / Key</span><span>Risk Score</span><span>Verdict</span><span>Language</span><span>Latency</span><span>Provider</span><span>📍 Location</span>
         </div>
         <div id="globalHistoryTable"></div>
       </div>
@@ -718,32 +751,66 @@ async function deactivatePartner(keyId) {
   }
 }
 
+// ── Global History with filters ─────────────────────────────────────────────
+let _allGlobalRecords = [];
+
 async function loadGlobalHistory() {
   try {
-    const res = await fetch(`${API}/audit/global-history?limit=50&days=30&admin_key=${ADMIN_KEY}`);
+    const days = document.getElementById('filterDays')?.value || 30;
+    const res = await fetch(`${API}/audit/global-history?limit=500&days=${days}&admin_key=${ADMIN_KEY}`);
     const data = await res.json();
-    const records = data.records || [];
-    
-    document.getElementById('globalHistoryTable').innerHTML = records.length
-      ? records.map(r => {
-          const dt = new Date(r.timestamp);
-          const str = dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' +
-                      dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
-          const sourceLabel = r.api_key_id ? r.api_key_id : 'Web App (B2C)';
-          const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
-          return `
-            <div class="table-row" style="grid-template-columns: 140px 1.5fr 100px 100px 100px 100px 100px; align-items:center;">
-              <span style="color:#7a94b0; font-size:12px;">${str}</span>
-              <span style="font-weight:600; color:#fff">${sourceLabel}</span>
-              <span style="font-weight:700">${r.risk_score}</span>
-              <span><span class="band-pill pill-${r.risk_band}">${r.risk_band}</span></span>
-              <span style="color:#7a94b0; text-transform:capitalize;">${r.detected_language || 'en'}</span>
-              <span style="color:${latColor}; font-family:monospace;">${r.latency_ms}ms</span>
-              <span style="color:#7a94b0">${r.provider_used || 'gemini'}</span>
-            </div>`;
-        }).join('')
-      : '<div class="empty">No global scan logs found</div>';
+    _allGlobalRecords = data.records || [];
+    applyGlobalFilters();
   } catch(e) { console.error(e); }
+}
+
+function applyGlobalFilters() {
+  const verdict  = document.getElementById('filterVerdict')?.value || '';
+  const source   = document.getElementById('filterSource')?.value  || '';
+  const days     = document.getElementById('filterDays')?.value    || 30;
+
+  // Re-fetch if days changed (need different dataset)
+  // (handled by onchange calling loadGlobalHistory first for days)
+
+  let filtered = _allGlobalRecords;
+  if (verdict)  filtered = filtered.filter(r => r.risk_band === verdict);
+  if (source)   filtered = filtered.filter(r => r.source === source);
+
+  document.getElementById('filterCount').textContent = `Showing ${filtered.length} of ${_allGlobalRecords.length} records`;
+
+  document.getElementById('globalHistoryTable').innerHTML = filtered.length
+    ? filtered.map(r => {
+        const dt  = new Date(r.timestamp);
+        const str = dt.toLocaleDateString('en-GB', {month:'short', day:'numeric'}) + ' ' +
+                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+        const sourceLabel = r.api_key_id ? r.api_key_id : (SRC_LABELS[r.source] || r.source || 'Web App (B2C)');
+        const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
+
+        // Location from client_ip (shown as IP if no geo-resolve available)
+        const ip = r.client_ip || null;
+        const isLocal = ip && (ip === '127.0.0.1' || ip === 'localhost' || ip === '::1');
+        let locDisplay;
+        if (!ip) {
+          locDisplay = '<span style="color:#4a6080">—</span>';
+        } else if (isLocal) {
+          locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Localhost</span>';
+        } else {
+          locDisplay = `<span style="color:#00B4D8;font-size:11px;font-family:monospace;" title="${ip}">📍 ${ip}</span>`;
+        }
+
+        return `
+          <div class="table-row" style="grid-template-columns:130px 1.2fr 90px 90px 80px 80px 80px 110px; align-items:center;">
+            <span style="color:#7a94b0;font-size:12px">${str}</span>
+            <span style="font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sourceLabel}">${sourceLabel}</span>
+            <span style="font-weight:700">${r.risk_score}</span>
+            <span><span class="band-pill pill-${r.risk_band}">${r.risk_band === 'HIGH_RISK' ? 'High Risk' : r.risk_band}</span></span>
+            <span style="color:#7a94b0;text-transform:capitalize;">${r.detected_language || 'en'}</span>
+            <span style="color:${latColor};font-family:monospace;">${r.latency_ms}ms</span>
+            <span style="color:#7a94b0">${r.provider_used || 'gemini'}</span>
+            <span>${locDisplay}</span>
+          </div>`;
+      }).join('')
+    : '<div class="empty">No records match the current filters</div>';
 }
 
 let allUsersList = [];

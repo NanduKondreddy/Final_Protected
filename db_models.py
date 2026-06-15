@@ -71,6 +71,7 @@ class AuditRecord(Base):
     fraud_type        = Column(String, nullable=True)
     api_key_id        = Column(String, nullable=True)
     org_id            = Column(String, nullable=True)
+    client_ip         = Column(String, nullable=True)
 
 
 class UserActivity(Base):

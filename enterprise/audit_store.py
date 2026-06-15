@@ -32,6 +32,7 @@ def write_audit(
     fraud_type: Optional[str] = None,
     api_key_id: Optional[str] = None,
     org_id: Optional[str] = None,
+    client_ip: Optional[str] = None,
 ) -> None:
     """
     Write a single audit record. This NEVER receives message content.
@@ -50,6 +51,7 @@ def write_audit(
             fraud_type=fraud_type,
             api_key_id=api_key_id,
             org_id=org_id,
+            client_ip=client_ip,
         )
         db.add(record)
         db.commit()
@@ -82,6 +84,7 @@ def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
                 "fraud_type": r.fraud_type,
                 "api_key_id": r.api_key_id,
                 "org_id": r.org_id,
+                "client_ip": r.client_ip,
             }
             for r in records
         ]
@@ -127,6 +130,7 @@ def get_user_history(
                     "fraud_type": r.fraud_type,
                     "api_key_id": r.api_key_id,
                     "org_id": r.org_id,
+                    "client_ip": r.client_ip,
                 }
                 for r in records
             ]

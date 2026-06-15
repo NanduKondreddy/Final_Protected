@@ -39,6 +39,7 @@ async def scan(
     partner_name = getattr(request.state, "partner_name", None)
     tier = getattr(request.state, "tier", None)
     org_id = getattr(request.state, "org_id", None)
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
 
     if file:
         image_bytes = await file.read()
@@ -142,6 +143,7 @@ async def scan(
             source=source_name,
             api_key_id=api_key_id,
             org_id=org_id,
+            client_ip=client_ip,
         )
         write_pattern(
             request_id=request_id,
@@ -183,6 +185,7 @@ async def scan_json(
     partner_name = getattr(request.state, "partner_name", None)
     tier = getattr(request.state, "tier", None)
     org_id = getattr(request.state, "org_id", None)
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
 
     # ── Web app quota (non-extension requests) ───────────────────────────────
     if not api_key_id:
@@ -276,6 +279,7 @@ async def scan_json(
             source=source_name,
             api_key_id=api_key_id,
             org_id=org_id,
+            client_ip=client_ip,
         )
         write_pattern(
             request_id=request_id,
