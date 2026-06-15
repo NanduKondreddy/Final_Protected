@@ -84,7 +84,7 @@ def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
                 "fraud_type": r.fraud_type,
                 "api_key_id": r.api_key_id,
                 "org_id": r.org_id,
-                "client_ip": r.client_ip,
+                "client_ip": getattr(r, 'client_ip', None),
             }
             for r in records
         ]
@@ -130,7 +130,7 @@ def get_user_history(
                     "fraud_type": r.fraud_type,
                     "api_key_id": r.api_key_id,
                     "org_id": r.org_id,
-                    "client_ip": r.client_ip,
+                    "client_ip": getattr(r, 'client_ip', None),
                 }
                 for r in records
             ]

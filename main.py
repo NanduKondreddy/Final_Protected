@@ -30,36 +30,25 @@ except Exception as e:
 
 
 from sqlalchemy import text
-with engine.connect() as conn:
-    try:
-        conn.execute(text("ALTER TABLE users ADD COLUMN plan VARCHAR DEFAULT 'free'"))
-        conn.commit()
-    except Exception:
-        pass
 
-    # Ensure Paystack columns exist
-    for col in ["paystack_customer_code", "paystack_subscription_code", "subscription_status"]:
+def _safe_alter(sql: str):
+    """Run a single ALTER TABLE in its own connection so PostgreSQL tx aborts don't cascade."""
+    with engine.connect() as _c:
         try:
-            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} VARCHAR"))
-            conn.commit()
+            _c.execute(text(sql))
+            _c.commit()
         except Exception:
             pass
-    try:
-        conn.execute(text("ALTER TABLE users ADD COLUMN subscription_ends_at DATETIME"))
-        conn.commit()
-    except Exception:
-        pass
-    try:
-        conn.execute(text("ALTER TABLE users ADD COLUMN pending_plan VARCHAR"))
-        conn.commit()
-    except Exception:
-        pass
-    # Ensure audit_records.client_ip exists (added in v3.1)
-    try:
-        conn.execute(text("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR"))
-        conn.commit()
-    except Exception:
-        pass
+
+# Users table columns
+_safe_alter("ALTER TABLE users ADD COLUMN plan VARCHAR DEFAULT 'free'")
+for col in ["paystack_customer_code", "paystack_subscription_code", "subscription_status"]:
+    _safe_alter(f"ALTER TABLE users ADD COLUMN {col} VARCHAR")
+_safe_alter("ALTER TABLE users ADD COLUMN subscription_ends_at DATETIME")
+_safe_alter("ALTER TABLE users ADD COLUMN pending_plan VARCHAR")
+
+# audit_records: client_ip column (added v3.1) — MUST be isolated from users migrations
+_safe_alter("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR")
 
 
 app = FastAPI(
