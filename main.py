@@ -54,6 +54,12 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
+    # Ensure audit_records.client_ip exists (added in v3.1)
+    try:
+        conn.execute(text("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR"))
+        conn.commit()
+    except Exception:
+        pass
 
 
 app = FastAPI(
