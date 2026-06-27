@@ -7,13 +7,14 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300d4a0'/><stop offset='1' stop-color='%2300b98a'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23060810'>DT</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/global.css">
+<script src="/js/subscription-manage.js"></script>
 <style>
 .container{max-width:900px;margin:100px auto 60px;padding:0 24px}
 .dash-hello{font-size:28px;font-weight:800;margin-bottom:4px}
 .dash-hello .accent{color:var(--teal)}
 .dash-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;margin-bottom:16px}
-.dash-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
-@media(max-width:600px){.dash-cards{grid-template-columns:1fr 1fr}}
+.dash-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:768px){.dash-cards{grid-template-columns:1fr 1fr}}
 .dash-card{background:var(--card);border:1px solid var(--border);padding:20px;border-radius:var(--radius-md)}
 .dash-card-num{font-size:32px;font-weight:800;line-height:1;margin-bottom:6px}
 .dash-card-label{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
@@ -62,6 +63,14 @@
 .upgrade-dismiss{font-family:var(--font-mono);font-size:11px;color:#475569;cursor:pointer;text-decoration:underline;background:none;border:none}
 .lang-select{background:var(--card);border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;outline:none;letter-spacing:0.04em;margin-right:12px}
 .lang-select:focus{border-color:var(--teal)}
+@keyframes status-pulse-anim {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 212, 160, 0.5); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(0, 212, 160, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 212, 160, 0); }
+}
+.status-pulse.active {
+  animation: status-pulse-anim 2s infinite;
+}
 </style>
 </head>
 <body>
@@ -70,7 +79,6 @@
   <ul class="nav-links">
     <li><a href="/" id="navHome">Home</a></li>
     <li><a href="/scan" id="navScan">Scan</a></li>
-    <li><a href="/dashboard" class="active" id="navDashboard">Dashboard</a></li>
   </ul>
   <div class="nav-actions">
     <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
@@ -79,35 +87,93 @@
       <option value="fr">Français</option>
       <option value="hi">हिन्दी</option>
     </select>
-    <a class="btn-ghost" href="#" onclick="logout()" id="navLogout">Logout</a>
+    <div class="avatar-wrapper" id="avatarWrapper">
+      <div class="avatar-btn" id="avatarBtn" onclick="toggleAvatarDropdown(event)">U</div>
+      <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="dropdown-header">
+          <div class="dropdown-user-name" id="dropdownUserName">User Name</div>
+          <div class="dropdown-user-plan" id="dropdownUserPlan">Free Plan</div>
+        </div>
+        <a href="/dashboard" class="dropdown-item">📊 Dashboard</a>
+        <a href="/scan" class="dropdown-item">🛡️ Scan Message</a>
+        <a href="/plans" class="dropdown-item" id="dropdownUpgradeLink">🚀 Upgrade Plan</a>
+        <a href="#" class="dropdown-item" onclick="openSubscriptionModal();return false">⚙️ Manage Subscription</a>
+        <a href="#" class="dropdown-item logout-item" onclick="logout();return false" id="navLogout">🚪 Logout</a>
+      </div>
+    </div>
   </div>
   <button class="nav-hamburger" onclick="document.getElementById('mobileNav').classList.toggle('open');this.classList.toggle('open')"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-mobile" id="mobileNav">
-  <a href="/" id="mNavHome">Home</a><a href="/scan" id="mNavScan">Scan</a><a href="/dashboard" id="mNavDashboard">Dashboard</a><a href="#" onclick="logout()" id="mNavLogout">Logout</a>
+  <a href="/" id="mNavHome">Home</a>
+  <a href="/scan" id="mNavScan">Scan</a>
+  <a href="/plans" id="mNavPlans">Upgrade Plan</a>
+  <a href="#" onclick="logout()" id="mNavLogout">Logout</a>
 </div>
 
 <div class="container">
   <div class="dash-hello" id="dashHello">Welcome back, <span class="accent" id="userName">User</span> 👋</div>
   <div class="dash-sub" id="dashSub">Loading your scan history...</div>
 
+  <!-- Extension Integration Widget -->
+  <div class="extension-widget" id="extWidget" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;display:none;flex-direction:column;gap:16px;box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding-bottom:16px;">
+      <div style="font-weight:800;font-size:16px;color:var(--white);display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--teal);font-size:20px;">🛡️</span> ShieldIQ Chrome Extension
+      </div>
+      <div id="extStatus" style="font-family:var(--font-mono);font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
+        <span class="status-pulse" style="width:8px;height:8px;border-radius:50%;background:#ff4757;display:inline-block;"></span>
+        <span class="status-text" style="color:#ff4757;">Not detected in browser</span>
+      </div>
+    </div>
+    <div style="font-size:13px;line-height:1.6;color:var(--muted)">
+      Get automatic background protection for WhatsApp, Gmail, and social networks. Secure your conversations silently in real-time.
+    </div>
+    <div id="extActionButtons" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:4px;"></div>
+    <div id="setupInstructions" style="display:none;background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:8px;">
+      <h4 style="margin:0 0 12px 0;font-size:13px;font-family:var(--font-mono);color:var(--white);text-transform:uppercase;letter-spacing:0.05em;">Easy Setup Guide:</h4>
+      <ol style="margin:0;padding-left:20px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:10px;line-height:1.5;">
+        <li>Click <strong style="color:var(--white)">Download Chrome Extension</strong> above.</li>
+        <li>Extract the ZIP file to a folder.</li>
+        <li>Open <code style="color:var(--teal)">chrome://extensions</code> in your browser.</li>
+        <li>Enable <strong style="color:var(--white)">Developer mode</strong>.</li>
+        <li>Click <strong style="color:var(--white)">Load unpacked</strong> and select the folder.</li>
+        <li><strong>Done!</strong> Extension links to your subscription automatically.</li>
+      </ol>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:4px;border-top:1px dashed var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px;">
+      <div style="cursor:pointer;user-select:none;" onclick="const s=document.getElementById('manualTokenSection');s.style.display=s.style.display==='none'?'flex':'none'">
+        🔑 Can't log in automatically? <span style="text-decoration:underline;">Click to show manual authentication token.</span>
+      </div>
+      <div id="manualTokenSection" style="display:none;gap:8px;align-items:center;margin-top:4px;">
+        <input type="password" id="extTokenVal" readonly style="flex:1;background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--warm);padding:6px 10px;font-family:var(--font-mono);font-size:10px;" value="">
+        <button onclick="toggleTokenVisibility()" class="btn btn-outline btn-sm" style="padding:6px 10px;font-size:10px;cursor:pointer;">Show</button>
+        <button onclick="copyExtToken()" class="btn btn-primary btn-sm" style="padding:6px 10px;font-size:10px;cursor:pointer;background:var(--teal);color:var(--black)">Copy</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scan quota bar -->
   <div class="quota-bar-wrap" id="quotaBarWrap">
     <span class="quota-label" id="quotaLabel">Today's Scans</span>
     <div class="quota-track"><div class="quota-fill" id="quotaFill" style="width:100%"></div></div>
     <span class="quota-text ok" id="quotaText">3 / 3 left</span>
-    <a href="#" class="quota-upgrade" id="quotaUpgradeBtn" onclick="document.getElementById('upgradeOverlay').classList.add('on'); return false;" style="display:none">⚡ Upgrade</a>
+    <a href="/plans" class="quota-upgrade" id="quotaUpgradeBtn" style="display:none">🚀 Upgrade Plan</a>
   </div>
 
   <div class="dash-cards">
     <div class="dash-card"><div class="dash-card-num" id="totalScans" style="color:var(--white)">—</div><div class="dash-card-label" id="labelTotal">Total Scans</div></div>
     <div class="dash-card"><div class="dash-card-num" id="highRisk" style="color:#ff4757">—</div><div class="dash-card-label" id="labelHigh">High Risk Caught</div></div>
     <div class="dash-card"><div class="dash-card-num" id="safeCount" style="color:var(--teal)">—</div><div class="dash-card-label" id="labelSafe">Safe Messages</div></div>
+    <div class="dash-card"><div class="dash-card-num" id="scannerScore" style="color:var(--teal)">—</div><div class="dash-card-label" id="labelScore">Scanner Score</div></div>
   </div>
 
   <div class="history-header">
     <div class="history-label" id="histLabel">Scan History</div>
-    <a class="btn btn-primary btn-sm" href="/scan" id="newScanBtn">+ New Scan</a>
+    <div style="display:flex; gap: 8px;">
+      <button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportHistory()" style="font-family:var(--font-mono); font-size:11px; padding:6px 12px; display:none; align-items:center; cursor:pointer;">📥 Export History</button>
+      <a class="btn btn-primary btn-sm" href="/scan" id="newScanBtn">+ New Scan</a>
+    </div>
   </div>
 
   <div class="scan-list" id="scanList">
@@ -141,6 +207,60 @@
   </div>
 </div>
 
+<!-- Detailed Scan Modal -->
+<div class="upgrade-overlay" id="detailOverlay">
+  <div class="upgrade-modal" style="text-align:left; max-width:600px; padding:30px; width: 90%; max-height: 90vh; overflow-y: auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
+      <h3 id="modalTitle" style="margin:0; font-size:18px; color:var(--white); font-weight:800;">🛡️ Scan Analysis Detail</h3>
+      <button onclick="closeDetailModal()" style="background:none; border:none; color:var(--muted); font-size:24px; cursor:pointer; padding:4px; line-height:1;">&times;</button>
+    </div>
+    
+    <div style="display:flex; gap:16px; margin-bottom:20px; align-items:center; flex-wrap: wrap;">
+      <div style="flex:1; min-width: 120px;">
+        <div id="lblRisk" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase;">Risk Level</div>
+        <div id="detailRiskLevel" style="font-size:20px; font-weight:800; margin-top:4px;">-</div>
+      </div>
+      <div style="text-align:center; padding:10px 16px; border-radius:12px; background:rgba(0,0,0,0.2); border:1px solid var(--border);">
+        <div id="lblScore" style="font-family:var(--font-mono); font-size:9px; color:var(--muted); text-transform:uppercase;">Risk Score</div>
+        <div style="font-size:24px; font-weight:900; color:var(--white); margin-top:2px;"><span id="detailRiskScore">-</span><span style="font-size:12px; color:var(--muted); font-weight:400;">/100</span></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div id="lblAction" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:6px;">Verdict Action</div>
+      <div id="detailActionBadge" style="display:inline-flex; align-items:center; padding:6px 12px; border-radius:6px; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">-</div>
+    </div>
+
+    <div style="margin-bottom:16px; padding:12px; background:var(--darker); border-radius:8px; border:1px solid var(--border);">
+      <div id="lblMsg" style="font-family:var(--font-mono); font-size:9px; color:var(--muted); text-transform:uppercase; margin-bottom:6px;">Analyzed Message</div>
+      <div id="detailMessage" style="font-size:13px; color:var(--warm); white-space:pre-wrap; word-break:break-all;">-</div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div id="lblSummary" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:6px;">AI Summary</div>
+      <div id="detailSummary" style="font-size:14px; color:var(--white); line-height:1.6; font-weight:600;">-</div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div id="lblReasons" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:6px;">Detection Signals & Reasons</div>
+      <ul id="detailReasons" style="margin:0; padding-left:20px; font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:6px;">
+        <!-- Reasons go here -->
+      </ul>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div id="lblSteps" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:6px;">Recommended Next Steps</div>
+      <div id="detailWhatToDo" style="font-size:13px; color:var(--teal); line-height:1.5; padding:10px 14px; border-radius:8px; background:rgba(0, 212, 160, 0.05); border:1px dashed rgba(0, 212, 160, 0.2);">
+        -
+      </div>
+    </div>
+
+    <div style="text-align:right; border-top:1px solid var(--border); padding-top:16px;">
+      <button id="detailCloseBtn" onclick="closeDetailModal()" class="btn btn-outline btn-sm" style="cursor:pointer; font-family:var(--font-mono); font-size:11px; padding:6px 12px;">Close</button>
+    </div>
+  </div>
+</div>
+
 <footer class="footer">
   <div class="footer-inner">
     <div><div class="footer-brand">SHIELD <span class="accent">IQ</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
@@ -161,55 +281,129 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '';
+const API   = '';
 const token = localStorage.getItem('dovtek_token');
+document.body.setAttribute('data-shieldiq-token-bridge', token || '');
+document.body.setAttribute('data-shieldiq-user-bridge', localStorage.getItem('dovtek_user') || '');
+let currentScans = [];
 if (!token) { window.location.href = '/'; }
 
-// ── Translations ──────────────────────────────────────────────────────────
-const DASH_T = {
-  en: { welcome:"Welcome back,", sub:"{n} total scans · Your data is private", quotaLabel:"Today's Scans", quotaLeft:"{n} / 3 left", quotaEmpty:"Limit reached", upgradeBtn:"⚡ Upgrade", total:"Total Scans", high:"High Risk Caught", safe:"Safe Messages", hist:"Scan History", newScan:"+ New Scan", emptyText:"No scans yet. Try scanning your first message!", emptyScan:"Scan a Message", navHome:"Home", navScan:"Scan", navDash:"Dashboard", logout:"Logout", loading:"Loading scans...", loadFail:"Failed to load:", upgTitle:"Daily limit reached", upgSub:"You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.", upgDismiss:"Maybe later — I'll wait until tomorrow" },
-  es: { welcome:"Bienvenido de nuevo,", sub:"{n} escaneos totales · Tus datos son privados", quotaLabel:"Escaneos de hoy", quotaLeft:"{n} / 3 restantes", quotaEmpty:"Límite alcanzado", upgradeBtn:"⚡ Mejorar", total:"Escaneos Totales", high:"Alto Riesgo Detectado", safe:"Mensajes Seguros", hist:"Historial de Escaneos", newScan:"+ Nuevo Escaneo", emptyText:"Aún no hay escaneos. ¡Escanea tu primer mensaje!", emptyScan:"Escanear Mensaje", navHome:"Inicio", navScan:"Escanear", navDash:"Panel", logout:"Cerrar Sesión", loading:"Cargando escaneos...", loadFail:"Error al cargar:", upgTitle:"Límite diario alcanzado", upgSub:"Has usado los 3 escaneos gratuitos de hoy. Mejora tu plan para seguir escaneando.", upgDismiss:"Quizás más tarde — esperaré hasta mañana" },
-  fr: { welcome:"Bon retour,", sub:"{n} scans au total · Vos données sont privées", quotaLabel:"Scans d'aujourd'hui", quotaLeft:"{n} / 3 restants", quotaEmpty:"Limite atteinte", upgradeBtn:"⚡ Améliorer", total:"Scans Totaux", high:"Risques Élevés", safe:"Messages Sûrs", hist:"Historique", newScan:"+ Nouveau Scan", emptyText:"Pas encore de scans. Scannez votre premier message!", emptyScan:"Scanner un Message", navHome:"Accueil", navScan:"Scanner", navDash:"Tableau de Bord", logout:"Déconnexion", loading:"Chargement...", loadFail:"Échec du chargement:", upgTitle:"Limite quotidienne atteinte", upgSub:"Vous avez utilisé vos 3 scans gratuits d'aujourd'hui. Passez à un plan supérieur.", upgDismiss:"Peut-être plus tard" },
-  hi: { welcome:"वापसी पर स्वागत,", sub:"{n} कुल स्कैन · आपका डेटा निजी है", quotaLabel:"आज के स्कैन", quotaLeft:"{n} / 3 शेष", quotaEmpty:"सीमा समाप्त", upgradeBtn:"⚡ अपग्रेड करें", total:"कुल स्कैन", high:"उच्च जोखिम पकड़े", safe:"सुरक्षित संदेश", hist:"स्कैन इतिहास", newScan:"+ नया स्कैन", emptyText:"अभी तक कोई स्कैन नहीं। अपना पहला संदेश स्कैन करें!", emptyScan:"संदेश स्कैन करें", navHome:"होम", navScan:"स्कैन", navDash:"डैशबोर्ड", logout:"लॉगआउट", loading:"स्कैन लोड हो रहे हैं...", loadFail:"लोड विफल:", upgTitle:"दैनिक सीमा समाप्त", upgSub:"आपने आज के 3 मुफ़्त स्कैन उपयोग कर लिए हैं। अधिक स्कैन के लिए अपग्रेड करें।", upgDismiss:"शायद बाद में — कल तक इंतज़ार करूंगा" }
-};
+const userObj  = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+const userPlan = userObj.plan || 'free';
+const isPro    = userPlan === 'pro' || userPlan === 'plus';
 
-const lang = localStorage.getItem('dovtek_lang') || 'en';
-const T = DASH_T[lang] || DASH_T.en;
-document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-// Initialize language dropdown
-const langSel = document.getElementById('langSelect');
-if(langSel) langSel.value = lang;
-
-function changeLang(l) {
-  localStorage.setItem('dovtek_lang', l);
-  window.location.reload();
+// ── Upgrade banner (Paystack callback) ───────────────────────────────────
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('upgraded') === 'true') {
+  const plan = urlParams.get('plan') || 'pro';
+  const ref  = sessionStorage.getItem('paystack_ref');
+  if (ref) {
+    sessionStorage.removeItem('paystack_ref');
+    sessionStorage.removeItem('paystack_plan');
+    fetch('/api/billing/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ reference: ref, plan })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        localStorage.setItem('dovtek_user', JSON.stringify({ ...userObj, plan: data.plan }));
+        showUpgradeBanner(data.plan);
+        setTimeout(() => location.reload(), 1500);
+      }
+    })
+    .catch(() => showUpgradeBanner(plan));
+  } else {
+    showUpgradeBanner(plan);
+  }
+  history.replaceState({}, '', '/dashboard');
 }
 
-// Apply translations
-document.getElementById('navHome').textContent = T.navHome;
-document.getElementById('navScan').textContent = T.navScan;
-document.getElementById('navDashboard').textContent = T.navDash;
-document.getElementById('navLogout').textContent = T.logout;
-document.getElementById('mNavHome').textContent = T.navHome;
-document.getElementById('mNavScan').textContent = T.navScan;
-document.getElementById('mNavDashboard').textContent = T.navDash;
-document.getElementById('mNavLogout').textContent = T.logout;
-document.getElementById('quotaLabel').textContent = T.quotaLabel;
+function showUpgradeBanner(plan) {
+  const label  = plan === 'plus' ? 'Shield Plus' : 'ShieldIQ Pro';
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    background:linear-gradient(135deg,#0d9488,#0f766e);
+    border-radius:12px;padding:16px 20px;margin-bottom:24px;
+    display:flex;align-items:center;justify-content:space-between;`;
+  banner.innerHTML = `
+    <div>
+      <div style="font-weight:800;color:#fff;font-size:15px;">🎉 Welcome to ${label}!</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px;">
+        Your plan is active. All Pro features are unlocked.
+      </div>
+    </div>
+    <button onclick="this.parentElement.remove()"
+      style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:20px;line-height:1;">×</button>`;
+  document.querySelector('.container').prepend(banner);
+}
+
+function toggleAvatarDropdown(event) {
+  event.stopPropagation();
+  const dropdown = document.getElementById('avatarDropdown');
+  if (dropdown) dropdown.classList.toggle('show');
+}
+window.addEventListener('click', () => {
+  const dropdown = document.getElementById('avatarDropdown');
+  if (dropdown) dropdown.classList.remove('show');
+});
+
+// ── Translations ──────────────────────────────────────────────────────────
+
+const DASH_T = {
+  en: { welcome:"Welcome back,", sub:"{n} total scans · Your data is private", quotaLabel:"Today's Scans", quotaLeft:"{n} / 3 left", quotaEmpty:"Limit reached", upgradeBtn:"🚀 Upgrade", total:"Total Scans", high:"High Risk Caught", safe:"Safe Messages", hist:"Scan History", newScan:"+ New Scan", emptyText:"No scans yet. Try scanning your first message!", emptyScan:"Scan a Message", navHome:"Home", navScan:"Scan", navDash:"Dashboard", logout:"Logout", loading:"Loading scans...", loadFail:"Failed to load:", upgTitle:"Daily limit reached", upgSub:"You've used all 3 free scans for today. Upgrade to keep scanning — unlimited scans, priority AI, and full history.", upgDismiss:"Maybe later — I'll wait until tomorrow", scoreLabel:"Scanner Score", detailTitle: "Scan Analysis Detail", detailRisk: "Risk Level", detailScore: "Risk Score", detailAction: "Verdict Action", detailMsg: "Analyzed Message", detailSummary: "AI Summary", detailReasons: "Detection Signals & Reasons", detailSteps: "Recommended Next Steps", detailClose: "Close" },
+  es: { welcome:"Bienvenido de nuevo,", sub:"{n} escaneos totales · Tus datos son privados", quotaLabel:"Escaneos de hoy", quotaLeft:"{n} / 3 restantes", quotaEmpty:"Límite alcanzado", upgradeBtn:"🚀 Mejorar", total:"Escaneos Totales", high:"Alto Riesgo Detectado", safe:"Mensajes Seguros", hist:"Historial de Escaneos", newScan:"+ Nuevo Escaneo", emptyText:"Aún no hay escaneos. ¡Escanea tu primer mensaje!", emptyScan:"Escanear Mensaje", navHome:"Inicio", navScan:"Escanear", navDash:"Panel", logout:"Cerrar Sesión", loading:"Cargando escaneos...", loadFail:"Error al cargar:", upgTitle:"Límite diario alcanzado", upgSub:"Has usado los 3 escaneos gratuitos de hoy. Mejora tu plan para seguir escaneando.", upgDismiss:"Quizás más tarde — esperaré hasta mañana", scoreLabel:"Puntuación de Escaneo", detailTitle: "Detalle del Análisis de Escaneo", detailRisk: "Nivel de Riesgo", detailScore: "Puntuación de Riesgo", detailAction: "Acción de Veredicto", detailMsg: "Mensaje Analizado", detailSummary: "Resumen de IA", detailReasons: "Señales de Detección y Razones", detailSteps: "Pasos Siguientes Recomendados", detailClose: "Cerrar" },
+  fr: { welcome:"Bon retour,", sub:"{n} scans au total · Vos données sont privées", quotaLabel:"Scans d'aujourd'hui", quotaLeft:"{n} / 3 restants", quotaEmpty:"Limite atteinte", upgradeBtn:"🚀 Améliorer", total:"Scans Totaux", high:"Risques Élevés", safe:"Messages Sûrs", hist:"Historique", newScan:"+ Nouveau Scan", emptyText:"Pas encore de scans. Scannez votre premier message!", emptyScan:"Scanner un Message", navHome:"Accueil", navScan:"Scanner", navDash:"Tableau de Bord", logout:"Déconnexion", loading:"Chargement...", loadFail:"Échec du chargement:", upgTitle:"Limite quotidienne atteinte", upgSub:"Vous avez utilisé vos 3 scans gratuits d'aujourd'hui. Passez à un plan supérieur.", upgDismiss:"Peut-être plus tard", scoreLabel:"Score du Scanner", detailTitle: "Détail de l'Analyse du Scan", detailRisk: "Niveau de Risque", detailScore: "Score de Risque", detailAction: "Action de Verdict", detailMsg: "Message Analysé", detailSummary: "Résumé de l'IA", detailReasons: "Signaux de Detections & Raisons", detailSteps: "Étapes Suivantes Recommandées", detailClose: "Fermer" },
+  hi: { welcome:"वापसी पर स्वागत,", sub:"{n} कुल स्कैन · आपका डेटा निजी है", quotaLabel:"आज के स्कैन", quotaLeft:"{n} / 3 शेष", quotaEmpty:"सीमा समाप्त", upgradeBtn:"🚀 अपग्रेड करें", total:"कुल स्कैन", high:"उच्च जोखिम पकड़े", safe:"सुरक्षित संदेश", hist:"स्कैन इतिहास", newScan:"+ नया स्कैन", emptyText:"अभी तक कोई स्कैन नहीं। अपना पहला संदेश स्कैन करें!", emptyScan:"संदेश स्कैन करें", navHome:"होम", navScan:"स्कैन", navDash:"डैशबोर्ड", logout:"लॉगआउट", loading:"स्कैन लोड हो रहे हैं...", loadFail:"लोड विफल:", upgTitle:"दैनिक सीमा समाप्त", upgSub:"आपने आज के 3 मुफ़्त स्कैन उपयोग कर लिए हैं। अधिक स्कैन के लिए अपग्रेड करें।", upgDismiss:"शायद बाद में — कल तक इंतज़ार करूंगा", scoreLabel:"स्कैनर स्कोर", detailTitle: "स्कैन विश्लेषण विवरण", detailRisk: "जोखिम स्तर", detailScore: "जोखिम स्कोर", detailAction: "फैसला कार्रवाई", detailMsg: "विश्लेषण किया गया संदेश", detailSummary: "AI सारांश", detailReasons: "संसूचन संकेत और कारण", detailSteps: "अनुशंसित अगले कदम", detailClose: "बंद करें" }
+};
+const lang = localStorage.getItem('dovtek_lang') || 'en';
+const T    = DASH_T[lang] || DASH_T.en;
+document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+const langSel = document.getElementById('langSelect');
+if (langSel) langSel.value = lang;
+
+function changeLang(l) { localStorage.setItem('dovtek_lang', l); location.reload(); }
+
+document.getElementById('navHome').textContent        = T.navHome;
+document.getElementById('navScan').textContent        = T.navScan;
+const navDashEl = document.getElementById('navDashboard');
+if (navDashEl) navDashEl.textContent = T.navDash;
+document.getElementById('navLogout').textContent      = T.logout;
+document.getElementById('mNavHome').textContent       = T.navHome;
+document.getElementById('mNavScan').textContent       = T.navScan;
+const mNavDashEl = document.getElementById('mNavDashboard');
+if (mNavDashEl) mNavDashEl.textContent = T.navDash;
+document.getElementById('mNavLogout').textContent     = T.logout;
+document.getElementById('quotaLabel').textContent     = T.quotaLabel;
 document.getElementById('quotaUpgradeBtn').textContent = T.upgradeBtn;
-document.getElementById('labelTotal').textContent = T.total;
-document.getElementById('labelHigh').textContent = T.high;
-document.getElementById('labelSafe').textContent = T.safe;
-document.getElementById('histLabel').textContent = T.hist;
-document.getElementById('newScanBtn').textContent = T.newScan;
-document.getElementById('emptyText').textContent = T.emptyText;
-document.getElementById('emptyScanBtn').textContent = T.emptyScan;
-document.getElementById('loadingState').textContent = T.loading;
-document.getElementById('upgTitle').textContent = T.upgTitle;
-document.getElementById('upgSub').textContent = T.upgSub;
-document.getElementById('upgDismiss').textContent = T.upgDismiss;
+document.getElementById('labelTotal').textContent     = T.total;
+document.getElementById('labelHigh').textContent      = T.high;
+document.getElementById('labelSafe').textContent      = T.safe;
+document.getElementById('histLabel').textContent      = T.hist;
+document.getElementById('newScanBtn').textContent     = T.newScan;
+document.getElementById('emptyText').textContent      = T.emptyText;
+document.getElementById('emptyScanBtn').textContent   = T.emptyScan;
+document.getElementById('loadingState').textContent   = T.loading;
+document.getElementById('upgTitle').textContent       = T.upgTitle;
+document.getElementById('upgSub').textContent         = T.upgSub;
+document.getElementById('upgDismiss').textContent     = T.upgDismiss;
 
 // ── Scan Quota ────────────────────────────────────────────────────────────
+
+// Apply translations for the Scanner Score and Detailed Results modal
+document.getElementById('labelScore').textContent = T.scoreLabel;
+document.getElementById('modalTitle').textContent = T.detailTitle;
+document.getElementById('lblRisk').textContent = T.detailRisk;
+document.getElementById('lblScore').textContent = T.detailScore;
+document.getElementById('lblAction').textContent = T.detailAction;
+document.getElementById('lblMsg').textContent = T.detailMsg;
+document.getElementById('lblSummary').textContent = T.detailSummary;
+document.getElementById('lblReasons').textContent = T.detailReasons;
+document.getElementById('lblSteps').textContent = T.detailSteps;
+document.getElementById('detailCloseBtn').textContent = T.detailClose;
+
 const TODAY = new Date().toISOString().slice(0, 10);
 const SCAN_KEY = 'dovtek_scan_user_' + TODAY;
 const USER_LIMIT = 3;
@@ -217,37 +411,113 @@ const USER_LIMIT = 3;
 function getScansUsed() { return parseInt(localStorage.getItem(SCAN_KEY) || '0', 10); }
 function getRemaining() { return Math.max(0, USER_LIMIT - getScansUsed()); }
 
-function renderQuota() {
-  const used = getScansUsed();
-  const rem = getRemaining();
-  const pct = Math.round((rem / USER_LIMIT) * 100);
-
-  const fill = document.getElementById('quotaFill');
-  const text = document.getElementById('quotaText');
+function renderQuota(plan) {
+  const wrap       = document.getElementById('quotaBarWrap');
+  const fill       = document.getElementById('quotaFill');
+  const text       = document.getElementById('quotaText');
   const upgradeBtn = document.getElementById('quotaUpgradeBtn');
 
-  fill.style.width = pct + '%';
-  fill.className = 'quota-fill' + (rem === 0 ? ' empty' : rem === 1 ? ' warn' : '');
-  text.className = 'quota-text' + (rem === 0 ? ' empty' : rem === 1 ? ' warn' : ' ok');
+  if (plan && plan !== 'free') {
+    wrap.style.background  = 'linear-gradient(135deg,rgba(13,148,136,0.15),rgba(15,118,110,0.1))';
+    wrap.style.borderColor = 'rgba(0,212,160,0.3)';
 
-  if (rem === 0) {
-    text.textContent = T.quotaEmpty;
-    upgradeBtn.style.display = 'inline-block';
-  } else {
-    text.textContent = T.quotaLeft.replace('{n}', rem);
-    upgradeBtn.style.display = 'none';
+    let upgradeHtml = '';
+    if (plan === 'pro') {
+      upgradeHtml = `<a href="/plans" class="quota-upgrade" id="quotaUpgradeBtn" style="display:inline-block; margin-left:12px;">🚀 Upgrade to Plus</a>`;
+    }
+
+    wrap.innerHTML = `
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--teal);
+                   letter-spacing:0.08em;text-transform:uppercase;">⚡ ${plan === 'plus' ? 'Shield Plus' : 'Pro'}</span>
+      <span style="font-family:var(--font-mono);font-size:13px;font-weight:800;
+                   color:#fff;margin-left:8px;">∞ Unlimited Scans</span>
+      ${upgradeHtml}
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);
+                   margin-left:auto;">No daily limit</span>`;
+    return;
   }
+
+  const rem = getRemaining();
+  const pct = Math.round((rem / USER_LIMIT) * 100);
+  fill.style.width  = pct + '%';
+  fill.className    = 'quota-fill' + (rem === 0 ? ' empty' : rem === 1 ? ' warn' : '');
+  text.className    = 'quota-text' + (rem === 0 ? ' empty' : rem === 1 ? ' warn' : ' ok');
+  text.textContent  = rem === 0 ? T.quotaEmpty : T.quotaLeft.replace('{n}', rem);
+  upgradeBtn.style.display = 'inline-block';
+}
+
+// ── Upgrade modal — disable owned plans ──────────────────────────────────
+const PLAN_RANK = { free: 0, pro: 1, plus: 2 };
+if (PLAN_RANK[userPlan] >= 1) {
+  const proLink = document.querySelector('.upgrade-plan.pro');
+  if (proLink) {
+    proLink.style.opacity = '0.4';
+    proLink.style.pointerEvents = 'none';
+    proLink.querySelector('.upgrade-plan-name').innerHTML =
+      'SHIELD IQ Pro <span style="font-size:10px;color:#94a3b8;font-weight:400">— Current plan</span>';
+  }
+}
+if (PLAN_RANK[userPlan] >= 2) {
+  const plusLink = document.querySelector('.upgrade-plan.plus');
+  if (plusLink) {
+    plusLink.style.opacity = '0.4';
+    plusLink.style.pointerEvents = 'none';
+  }
+  document.getElementById('upgTitle').textContent = "You're fully protected";
+  document.getElementById('upgSub').textContent   =
+    "You're on Shield Plus — our highest tier. You have full access to everything.";
 }
 
 // ── Toast & Auth ──────────────────────────────────────────────────────────
-function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 function logout() {
   localStorage.removeItem('dovtek_token');
   localStorage.removeItem('dovtek_user');
   Object.keys(localStorage).forEach(k => {
     if (k.startsWith('dovtek_scan_')) localStorage.removeItem(k);
   });
-  window.location.href='/';
+  location.href = '/';
+}
+
+function toggleTokenVisibility() {
+  const input = document.getElementById('extTokenVal');
+  input.type  = input.type === 'password' ? 'text' : 'password';
+}
+function copyExtToken() {
+  const val = document.getElementById('extTokenVal').value;
+  if (!val) return;
+  navigator.clipboard.writeText(val);
+  showToast('Copied token to clipboard!');
+}
+
+// ── CSV Export ────────────────────────────────────────────────────────────
+let _allScans = [];
+function exportHistory() {
+  if (!isPro) { document.getElementById('upgradeOverlay').classList.add('on'); return; }
+  if (!_allScans.length) { showToast('No scans to export'); return; }
+
+  const headers = ['Date', 'Risk Level', 'Score', 'Summary', 'Action'];
+  const rows    = _allScans.map(s => [
+    new Date(s.scanned_at).toLocaleString(),
+    s.risk_level,
+    s.risk_score,
+    '"' + (s.summary || '').replace(/"/g, '""') + '"',
+    '"' + (s.what_to_do || '').replace(/"/g, '""') + '"',
+  ]);
+
+  const csv  = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `shieldiq-history-${TODAY}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── Dashboard Load ────────────────────────────────────────────────────────
@@ -257,53 +527,437 @@ async function loadDashboard() {
     const userResp = await fetch(API + '/auth/me', { headers });
     if (!userResp.ok) { logout(); return; }
     const user = await userResp.json();
+
+    // Sync plan from server
+    if (user.plan && (user.plan !== userPlan || user.pending_plan !== userObj.pending_plan)) {
+      const updated = { ...userObj, plan: user.plan, pending_plan: user.pending_plan, subscription_ends_at: user.subscription_ends_at };
+      localStorage.setItem('dovtek_user', JSON.stringify(updated));
+      location.reload();
+      return;
+    }
+
     document.getElementById('userName').textContent = user.full_name || user.email.split('@')[0];
 
-    const histResp = await fetch(API + '/scans/history?page_size=50', { headers });
+    const initials = (user.full_name || user.email || 'U').charAt(0).toUpperCase();
+    const displayName = user.full_name || user.email.split('@')[0];
+    const planLabel = user.plan === 'plus' ? 'Shield Plus' : user.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
+    
+    document.getElementById('avatarBtn').textContent = initials;
+    document.getElementById('dropdownUserName').textContent = displayName;
+    document.getElementById('dropdownUserPlan').textContent = planLabel;
+    if (user.plan === 'plus') {
+      const upgLink = document.getElementById('dropdownUpgradeLink');
+      if (upgLink) upgLink.style.display = 'none';
+    }
+
+    // Pro badge
+    if (isPro) {
+      const hello = document.getElementById('dashHello');
+      const badge = document.createElement('span');
+      badge.style.cssText = `
+        font-size:11px;font-family:var(--font-mono);font-weight:700;
+        background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;
+        padding:3px 10px;border-radius:10px;margin-left:10px;
+        vertical-align:middle;letter-spacing:0.06em;`;
+      badge.textContent = user.plan === 'plus' ? '⚡ SHIELD PLUS' : '⚡ PRO';
+      hello.appendChild(badge);
+    }
+
+    // Extension widget — Plus only
+    const extWidget = document.getElementById('extWidget');
+    if (extWidget) {
+      const hasExtension = user.plan === 'pro' || user.plan === 'plus';
+      extWidget.style.display = hasExtension ? 'flex' : 'none';
+      if (hasExtension) {
+        document.getElementById('extTokenVal').value = token || '';
+      }
+    }
+
+    // Show export button for Pro
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn && isPro) exportBtn.style.display = 'inline-flex';
+
+    const histResp = await fetch(API + '/scans/history?page_size=100', { headers });
     if (!histResp.ok) throw new Error('Failed to load history');
     const hist = await histResp.json();
 
-    document.getElementById('loadingState').style.display = 'none';
-    const scans = hist.scans || [];
+    document.getElementById('loadingState').style.display = 'none';_allScans = hist.scans || [];
+    const scans = _allScans; // alias for their code
+    currentScans = scans;
+
     document.getElementById('totalScans').textContent = hist.total;
-    document.getElementById('highRisk').textContent = scans.filter(s => s.risk_level === 'HIGH').length;
-    document.getElementById('safeCount').textContent = scans.filter(s => s.risk_level === 'LOW').length;
-    document.getElementById('dashSub').textContent = T.sub.replace('{n}', hist.total);
+    document.getElementById('highRisk').textContent   = scans.filter(s => s.risk_level === 'HIGH').length;
+    document.getElementById('safeCount').textContent  = scans.filter(s => s.risk_level === 'LOW').length;
+    document.getElementById('dashSub').textContent    = T.sub.replace('{n}', hist.total);
 
-    const todayCount = scans.filter(s => s.scanned_at && s.scanned_at.slice(0, 10) === TODAY).length;
+    // Scanner score (theirs — good feature)
+    const scoreEl = document.getElementById('scannerScore');
+    if (scoreEl && scans.length > 0) {
+      const avgScore = Math.round(scans.reduce((a, s) => a + (100 - s.risk_score), 0) / scans.length);
+      scoreEl.textContent = avgScore;
+      scoreEl.style.color = avgScore >= 80 ? 'var(--teal)' : avgScore >= 50 ? '#ffa502' : '#ff4757';
+    }
+
+    const todayCount = scans.filter(s => s.scanned_at && s.scanned_at.slice(0,10) === TODAY).length;
     localStorage.setItem(SCAN_KEY, todayCount);
-    renderQuota();
+    renderQuota(user.plan);
 
-    if (scans.length === 0) {
+    if (_allScans.length === 0) {
       document.getElementById('emptyState').style.display = 'block';
       return;
     }
 
     const list = document.getElementById('scanList');
     list.innerHTML = '';
-    scans.forEach(s => {
-      const cls = s.risk_level === 'HIGH' ? 'h' : s.risk_level === 'MEDIUM' ? 'm' : 'l';
-      const date = new Date(s.scanned_at).toLocaleDateString(lang === 'ar' ? 'ar' : lang === 'zh' ? 'zh-CN' : 'en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    // Use visibleScans (your Pro slice logic) but their rendering
+    const visibleScans = isPro ? _allScans : _allScans.slice(0, 5);
+    const hiddenCount  = _allScans.length - visibleScans.length;
+
+    visibleScans.forEach((s, idx) => {
+      const cls  = s.risk_level === 'HIGH' ? 'h' : s.risk_level === 'MEDIUM' ? 'm' : 'l';
+      const date = new Date(s.scanned_at).toLocaleDateString(
+        lang === 'ar' ? 'ar' : lang === 'zh' ? 'zh-CN' : 'en-US',
+        { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }
+      );
       list.innerHTML += `
-        <div class="scan-row">
+        <div class="scan-row" style="cursor:pointer;" onclick="showScanDetail(${idx})">
           <div class="sdot ${cls}"></div>
           <div class="scan-info">
             <div class="scan-band ${cls}">${s.risk_level} Risk</div>
-            <div class="scan-msg">${s.summary || s.message.substring(0, 80)}</div>
+            <div class="scan-msg">${s.summary || (s.message || '').substring(0, 80)}</div>
             <div class="scan-meta">${date}</div>
           </div>
           <div class="scan-score ${cls}">${s.risk_score}</div>
         </div>`;
     });
+
+    // Locked row for free users
+    if (!isPro && hiddenCount > 0) {
+      const lockRow = document.createElement('div');
+      lockRow.style.cssText = `
+        display:flex;align-items:center;justify-content:space-between;
+        padding:18px 20px;margin-top:4px;
+        background:rgba(0,0,0,0.3);border:1px dashed rgba(255,255,255,0.08);
+        border-radius:var(--radius-sm);`;
+      lockRow.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🔒</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;">
+              ${hiddenCount} older scan${hiddenCount === 1 ? '' : 's'} hidden
+            </div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">
+              Full history available on Pro
+            </div>
+          </div>
+        </div>
+        <a href="/checkout?plan=pro"
+          style="font-family:var(--font-mono);font-size:11px;font-weight:700;
+                 color:#000;background:var(--teal);padding:7px 14px;
+                 border-radius:6px;text-decoration:none;white-space:nowrap;">
+          Unlock History →
+        </a>`;
+      list.appendChild(lockRow);
+    }
+
   } catch(e) {
     document.getElementById('loadingState').textContent = T.loadFail + ' ' + e.message;
     showToast(e.message);
   }
 }
 
-renderQuota();
+// Dashboard script initialization is called at the end of this script block
+function showScanDetail(idx) {
+  const s = currentScans[idx];
+  if (!s) return;
+  
+  const rlEl = document.getElementById('detailRiskLevel');
+  rlEl.textContent = s.risk_level + ' Risk';
+  if (s.risk_level === 'HIGH') {
+    rlEl.style.color = '#ff4757';
+  } else if (s.risk_level === 'MEDIUM') {
+    rlEl.style.color = '#ffa502';
+  } else {
+    rlEl.style.color = 'var(--teal)';
+  }
+
+  document.getElementById('detailRiskScore').textContent = s.risk_score;
+
+  const badge = document.getElementById('detailActionBadge');
+  badge.textContent = s.action || 'TRUST';
+  if (s.action === 'BLOCK') {
+    badge.style.background = 'rgba(255, 71, 87, 0.15)';
+    badge.style.color = '#ff4757';
+    badge.style.border = '1px solid rgba(255, 71, 87, 0.3)';
+  } else if (s.action === 'CAUTION') {
+    badge.style.background = 'rgba(255, 165, 2, 0.15)';
+    badge.style.color = '#ffa502';
+    badge.style.border = '1px solid rgba(255, 165, 2, 0.3)';
+  } else {
+    badge.style.background = 'rgba(0, 212, 160, 0.15)';
+    badge.style.color = 'var(--teal)';
+    badge.style.border = '1px solid rgba(0, 212, 160, 0.3)';
+  }
+
+  document.getElementById('detailMessage').textContent = s.message || '';
+  document.getElementById('detailSummary').textContent = s.summary || 'No summary available.';
+
+  const reasonsList = document.getElementById('detailReasons');
+  reasonsList.innerHTML = '';
+  if (s.reasons && s.reasons.length > 0) {
+    s.reasons.forEach(r => {
+      const li = document.createElement('li');
+      li.textContent = r;
+      reasonsList.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.textContent = 'No threat signals detected.';
+    reasonsList.appendChild(li);
+  }
+
+  document.getElementById('detailWhatToDo').textContent = s.what_to_do || 'No specific actions recommended.';
+  document.getElementById('detailOverlay').classList.add('on');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailOverlay').classList.remove('on');
+}
+
+// Token is populated asynchronously in loadDashboard() after verifying subscription tier
+
+function toggleTokenVisibility() {
+  const input = document.getElementById('extTokenVal');
+  if (input.type === 'password') {
+    input.type = 'text';
+  } else {
+    input.type = 'password';
+  }
+}
+
+function copyExtToken() {
+  const input = document.getElementById('extTokenVal');
+  if (!input.value) return;
+  navigator.clipboard.writeText(input.value);
+  showToast('Copied token to clipboard!');
+}
+
+function downloadExtensionZip() {
+  const headers = { 'Authorization': 'Bearer ' + token };
+  fetch(API + '/auth/download/extension', { headers })
+    .then(response => {
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Upgrade required: Extension download is only available on Shield Plus and Enterprise plans.');
+        }
+        throw new Error('Failed to download extension package.');
+      }
+      return response.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'shieldiq-extension.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showToast('Downloading shieldiq-extension.zip!');
+    })
+    .catch(err => {
+      showToast(err.message);
+    });
+}
+
+function toggleInstructions() {
+  const panel = document.getElementById('setupInstructions');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+// Geolocation + Price Detection
+const CURRENCY_MAP = {
+  'IN': '₹', 'US': '$', 'GB': '£', 'NG': '₦', 'EU': '€', 'DE': '€', 'FR': '€', 'IT': '€', 'ES': '€',
+  'JP': '¥', 'CN': '¥', 'KR': '₩', 'BR': 'R$', 'ZA': 'R', 'AE': 'AED', 'SA': 'SAR', 'AU': 'A$',
+  'CA': 'C$', 'MX': 'MX$', 'RU': '₽', 'TR': '₺', 'EG': 'E£', 'KE': 'KSh', 'GH': 'GH₵', 'PH': '₱',
+  'ID': 'Rp', 'MY': 'RM', 'TH': '฿', 'VN': '₫', 'BD': '৳', 'PK': '₨', 'LK': 'Rs', 'NP': '₨'
+};
+
+function guessCountryByTimezone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+      if (tz.includes('Lagos')) return 'NG';
+      if (tz.includes('London')) return 'GB';
+      if (tz.includes('Johannesburg')) return 'ZA';
+      if (tz.includes('Nairobi')) return 'KE';
+      if (tz.includes('Accra')) return 'GH';
+    }
+    const offset = new Date().getTimezoneOffset();
+    if (offset === -330) return 'IN';
+    if (offset === -60) return 'NG';
+  } catch (e) {}
+  return 'US';
+}
+
+async function detectLocation() {
+  const cached = localStorage.getItem('dovtek_geo');
+  if (cached) {
+    try { const d = JSON.parse(cached); if (Date.now() - d.ts < 3600000) { applyGeo(d); return; } } catch (e) { }
+  }
+  try {
+    const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    const geo = { country: d.country_name, code: d.country_code, ts: Date.now() };
+    localStorage.setItem('dovtek_geo', JSON.stringify(geo));
+    applyGeo(geo);
+  } catch (e) {
+    try {
+      const r2 = await fetch('https://api.country.is', { signal: AbortSignal.timeout(4000) });
+      const d2 = await r2.json();
+      const geo = { country: d2.country || 'Unknown', code: d2.country || 'US', ts: Date.now() };
+      localStorage.setItem('dovtek_geo', JSON.stringify(geo));
+      applyGeo(geo);
+    } catch (e2) {
+      const fallbackCode = guessCountryByTimezone();
+      const fallbackNames = { 'IN': 'India', 'NG': 'Nigeria', 'US': 'United States' };
+      applyGeo({ country: fallbackNames[fallbackCode] || 'your region', code: fallbackCode });
+    }
+  }
+}
+
+function applyGeo(geo) {
+  const code = geo.code || 'US';
+  const currency = CURRENCY_MAP[code] || '$';
+
+  const rates = { 'IN': 83, 'NG': 1400, 'GB': 0.79, 'EU': 0.92, 'DE': 0.92, 'FR': 0.92, 'IT': 0.92, 'ES': 0.92, 'ZA': 18.5, 'BR': 5.1, 'AU': 1.5, 'CA': 1.37, 'AE': 3.67, 'KE': 130, 'GH': 14 };
+  const rate = rates[code] || 1;
+
+  let pricePlus = 9.99 * rate;
+  let pricePro = 3.99 * rate;
+
+  if (rate > 10) {
+    pricePlus = Math.round(pricePlus);
+    pricePro = Math.round(pricePro);
+  } else {
+    pricePlus = pricePlus.toFixed(2);
+    pricePro = pricePro.toFixed(2);
+  }
+
+  const elPro = document.getElementById('upgPricePro');
+  const elPlus = document.getElementById('upgPricePlus');
+  if (elPro) elPro.textContent = currency + pricePro + ' / mo';
+  if (elPlus) elPlus.textContent = currency + pricePlus + ' / mo';
+}
+
+function checkExtensionStatus() {
+  const badge = document.getElementById('extStatus');
+  if (!badge) return;
+  const pulse = badge.querySelector('.status-pulse');
+  const txt = badge.querySelector('.status-text');
+  
+  const isInstalled = document.body.hasAttribute('data-shieldiq-extension-installed');
+  const isActive = document.body.hasAttribute('data-shieldiq-extension-active');
+  
+  if (isInstalled) {
+    if (isActive) {
+      pulse.style.background = 'var(--teal)';
+      pulse.classList.add('active');
+      txt.style.color = 'var(--teal)';
+      txt.textContent = 'Active & Connected';
+    } else {
+      pulse.style.background = '#f59e0b';
+      pulse.classList.add('active');
+      txt.style.color = '#f59e0b';
+      txt.textContent = 'Connected (Awaiting Activation)';
+    }
+  } else {
+    pulse.style.background = '#ff4757';
+    pulse.classList.remove('active');
+    txt.style.color = '#ff4757';
+    txt.textContent = 'Not detected in browser';
+  }
+
+  renderExtensionControls();
+}
+
+function renderExtensionControls() {
+  const container = document.getElementById('extActionButtons');
+  if (!container) return;
+
+  const isInstalled = document.body.hasAttribute('data-shieldiq-extension-installed');
+  const isActive = document.body.hasAttribute('data-shieldiq-extension-active');
+
+  let html = '';
+
+  if (!isInstalled) {
+    html = `
+      <button onclick="downloadExtensionZip()" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:var(--black);font-weight:700;padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-family:inherit;font-size:13px;">
+        📥 Download Chrome Extension
+      </button>
+      <button onclick="toggleInstructions()" class="btn btn-outline" style="padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;color:var(--white);background:none;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+        Setup Instructions
+      </button>
+    `;
+  } else if (!isActive) {
+    html = `
+      <button onclick="requestExtensionActivation()" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:#f59e0b;color:var(--black);font-weight:700;padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-family:inherit;font-size:13px;">
+        🚀 Activate Protection
+      </button>
+      <button onclick="downloadExtensionZip()" class="btn btn-outline" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;color:var(--white);background:none;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+        📥 Re-download Extension
+      </button>
+      <button onclick="toggleInstructions()" class="btn btn-outline" style="padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;color:var(--white);background:none;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+        Setup Instructions
+      </button>
+    `;
+  } else {
+    html = `
+      <button onclick="pauseExtensionProtection()" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:#ef4444;color:var(--white);font-weight:700;padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-family:inherit;font-size:13px;">
+        ⏸️ Pause Protection
+      </button>
+      <span style="color:var(--teal);font-size:12px;font-family:var(--font-mono);font-weight:600;margin-left:8px;">✓ Real-time protection is running</span>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function requestExtensionActivation() {
+  if (userPlan === 'pro') {
+    document.getElementById('upgTitle').textContent = "Shield Plus Feature";
+    document.getElementById('upgSub').textContent   = "Real-time background scanning (WhatsApp, Gmail, SMS) is exclusive to Shield Plus. Upgrade to Shield Plus to activate automatic background protection.";
+    document.getElementById('upgradeOverlay').classList.add('on');
+    return;
+  }
+  const confirmed = confirm("Activate ShieldIQ Automatic Protection?\n\nThis will grant the extension permission to secure your incoming messages on WhatsApp, Gmail, and social websites.");
+  if (confirmed) {
+    document.body.setAttribute('data-shieldiq-extension-active', 'true');
+    showToast("Real-time scan protection activated!");
+    checkExtensionStatus();
+  }
+}
+
+function pauseExtensionProtection() {
+  const confirmed = confirm("Are you sure you want to pause real-time protection?\n\nYour chats and emails will not be checked for fraud alerts until you enable it again.");
+  if (confirmed) {
+    document.body.setAttribute('data-shieldiq-want-paused', 'true');
+    document.body.removeAttribute('data-shieldiq-extension-active');
+    showToast("Real-time scan protection paused.");
+    checkExtensionStatus();
+  }
+}
+
+// Start checking extension status
+setInterval(checkExtensionStatus, 1500);
+
+renderQuota(userPlan);  // yours — passes plan
 loadDashboard();
-window.addEventListener('scroll', () => { document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20); });
+detectLocation();       // theirs
+window.addEventListener('scroll', () => {
+  document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20);
+});
 </script>
 </body>
 </html>

@@ -212,17 +212,38 @@ textarea.form-control {
 </div>
 
 <script>
-function handleContactSubmit(e) {
+async function handleContactSubmit(e) {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'Sending...';
     
-    // Simulate sending
-    setTimeout(() => {
-        document.getElementById('contactForm').style.display = 'none';
-        document.getElementById('successMsg').style.display = 'block';
-    }, 1000);
+    try {
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const subject = document.getElementById('subject').value;
+        const message = document.getElementById('message').value;
+
+        const res = await fetch('/audit/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, subject, message })
+        });
+        
+        if (res.ok) {
+            document.getElementById('contactForm').style.display = 'none';
+            document.getElementById('successMsg').style.display = 'block';
+        } else {
+            alert('Failed to send message. Please try again.');
+            btn.disabled = false;
+            btn.textContent = 'Send Message';
+        }
+    } catch (err) {
+        console.error(err);
+        alert('An error occurred. Please try again later.');
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+    }
 }
 </script>
 </body>

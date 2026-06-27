@@ -13,6 +13,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/css/global.css">
+  <script src="/js/subscription-manage.js"></script>
   <style>
     .hero {
       min-height: 100vh;
@@ -578,7 +579,7 @@
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
       <li><a href="#features">Features</a></li>
-      <li><a href="/scan">Try Scanner</a></li>
+      <li><a href="/scan">Scanner</a></li>
     </ul>
     <div class="nav-actions">
       <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
@@ -597,7 +598,7 @@
   <div class="nav-mobile" id="mobileNav">
     <a href="#how" onclick="closeNav()">How It Works</a>
     <a href="#features" onclick="closeNav()">Features</a>
-    <a href="/scan" onclick="closeNav()">Try Scanner</a>
+    <a href="/scan" onclick="closeNav()">Scanner</a>
     <div id="mobileAuthNav" style="display:contents">
       <a href="#" onclick="closeNav();openModal('login');return false">Log In</a>
       <a href="#" onclick="closeNav();openModal('signup');return false" style="color:var(--teal)">Signup →</a>
@@ -728,73 +729,7 @@
     </div>
   </section>
 
-  <div class="divider"></div>
 
-  <!-- PRICING -->
-  <section class="section reveal" id="pricing">
-    <div class="tag">Pricing</div>
-    <h2 class="section-title">Protection that scales<br>with your needs.</h2>
-    <div class="features-grid" style="margin-top:40px">
-
-      <!-- 1. FREE TIER -->
-      <div class="feat" style="border-color:var(--border);">
-        <div class="feat-title" style="font-size:24px; color:var(--white);">Free Web Scanner</div>
-        <div
-          style="font-family:var(--font-mono); color:var(--muted); font-size:12px; margin-bottom:20px; letter-spacing:0.05em">
-          Always Free</div>
-        <p class="feat-text" style="margin-bottom:20px;">Manual protection when you need a second opinion.</p>
-        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--warm);">
-          <li style="margin-bottom:8px;">✓ 3 free manual scans per day</li>
-          <li style="margin-bottom:8px;">✓ Paste WhatsApp, SMS, or Emails</li>
-          <li style="margin-bottom:8px;">✓ Upload Screenshots & Documents</li>
-          <li style="margin-bottom:8px;">✓ Basic Scan History</li>
-        </ul>
-        <a class="btn btn-outline" style="width:100%" href="/scan">Try Free Now</a>
-      </div>
-
-      <!-- 2. PRO TIER -->
-      <div class="feat" style="border-color:var(--border);">
-        <div class="feat-title" style="font-size:24px; color:var(--white);">SHIELD IQ Pro</div>
-        <div
-          style="font-family:var(--font-mono); color:var(--muted); font-size:12px; margin-bottom:20px; letter-spacing:0.05em">
-          <span id="dynamicPricePro">$3.99</span> / month</div>
-        <p class="feat-text" style="margin-bottom:20px;">Unlimited manual protection without installing an app.</p>
-        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--warm);">
-          <li style="margin-bottom:8px;">✓ <strong style="color:var(--white)">Unlimited</strong> manual scans</li>
-          <li style="margin-bottom:8px;">✓ Priority AI Processing</li>
-          <li style="margin-bottom:8px;">✓ Advanced PDF & Document scanning</li>
-          <li style="margin-bottom:8px;">✓ Full Scan History & Export</li>
-        </ul>
-        <a class="btn btn-outline" style="width:100%" href="#" onclick="openModal('signup');return false">Upgrade to
-          Pro</a>
-      </div>
-
-      <div class="feat"
-        style="background:var(--card-hover); border-color:var(--teal); position:relative; overflow:hidden;">
-        <div
-          style="position:absolute; top:12px; right:12px; background:var(--teal); color:var(--black); font-size:10px; font-weight:800; padding:4px 10px; border-radius:12px; letter-spacing:0.05em; text-transform:uppercase;">
-          Recommended</div>
-        <div class="feat-title" style="font-size:24px; color:var(--teal);">Shield Plus</div>
-        <div
-          style="font-family:var(--font-mono); color:var(--teal); font-size:12px; margin-bottom:20px; letter-spacing:0.05em">
-          <span id="dynamicPrice">$9.99</span> / month</div>
-        <p class="feat-text" style="margin-bottom:20px;">Install directly on your devices for invisible, automatic
-          protection.</p>
-        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--white);">
-          <li style="margin-bottom:8px;"><strong style="color:var(--teal)">✓ Auto-Scans in Background:</strong> Monitors
-            WhatsApp, SMS, Email & Social DMs instantly.</li>
-          <li style="margin-bottom:8px;"><strong style="color:var(--teal)">✓ Silent when Safe:</strong> Never interrupts
-            your normal conversations.</li>
-          <li style="margin-bottom:8px;"><strong style="color:var(--teal)">✓ Loud when it Matters:</strong> Immediate
-            full-screen warning if fraud is detected before you click.</li>
-          <li style="margin-bottom:8px;">✓ Unlimited AI Document Scanning</li>
-        </ul>
-        <a class="btn btn-primary" style="width:100%" href="#" onclick="openModal('signup');return false">Subscribe
-          Now</a>
-      </div>
-
-    </div>
-  </section>
 
   <!-- CTA -->
   <section class="section cta-section reveal">
@@ -942,7 +877,7 @@
         localStorage.setItem('dovtek_token', d.token);
         localStorage.setItem('dovtek_user', JSON.stringify(d.user));
         showToast(`Welcome back, ${d.user.full_name}!`); closeModal('login');
-        setTimeout(() => location.href = '/scan', 800);
+        setTimeout(() => location.reload(), 800);
       } catch (e) { showToast(e.message) }
     }
 
@@ -959,9 +894,25 @@
         localStorage.setItem('dovtek_token', d.token);
         localStorage.setItem('dovtek_user', JSON.stringify(d.user));
         showToast('Account created!'); closeModal('signup');
-        setTimeout(() => location.href = '/scan', 800);
+        setTimeout(() => location.reload(), 800);
       } catch (e) { showToast(e.message) }
     }
+
+    // Attach Enter key event listeners for modal form inputs
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginEmail = document.getElementById('loginEmail');
+      const loginPass = document.getElementById('loginPass');
+      if (loginEmail) loginEmail.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+      if (loginPass) loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+      const signupName = document.getElementById('signupName');
+      const signupEmail = document.getElementById('signupEmail');
+      const signupPass = document.getElementById('signupPass');
+      if (signupName) signupName.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+      if (signupEmail) signupEmail.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+      if (signupPass) signupPass.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+    });
+
     // ── Geolocation + Currency Detection ──
     const CURRENCY_MAP = {
       'IN': '₹', 'US': '$', 'GB': '£', 'NG': '₦', 'EU': '€', 'DE': '€', 'FR': '€', 'IT': '€', 'ES': '€',
@@ -976,6 +927,24 @@
       'PH': '🇵🇭', 'ID': '🇮🇩', 'MY': '🇲🇾', 'TH': '🇹🇭', 'VN': '🇻🇳', 'BD': '🇧🇩', 'PK': '🇵🇰',
       'ES': '🇪🇸', 'IT': '🇮🇹', 'NL': '🇳🇱', 'SE': '🇸🇪', 'PL': '🇵🇱', 'LK': '🇱🇰', 'NP': '🇳🇵'
     };
+
+    function guessCountryByTimezone() {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) {
+          if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+          if (tz.includes('Lagos')) return 'NG';
+          if (tz.includes('London')) return 'GB';
+          if (tz.includes('Johannesburg')) return 'ZA';
+          if (tz.includes('Nairobi')) return 'KE';
+          if (tz.includes('Accra')) return 'GH';
+        }
+        const offset = new Date().getTimezoneOffset();
+        if (offset === -330) return 'IN';
+        if (offset === -60) return 'NG';
+      } catch (e) {}
+      return 'US';
+    }
 
     async function detectLocation() {
       const cached = localStorage.getItem('dovtek_geo');
@@ -996,7 +965,9 @@
           localStorage.setItem('dovtek_geo', JSON.stringify(geo));
           applyGeo(geo);
         } catch (e2) {
-          applyGeo({ country: 'your region', code: 'US' });
+          const fallbackCode = guessCountryByTimezone();
+          const fallbackNames = { 'IN': 'India', 'NG': 'Nigeria', 'US': 'United States' };
+          applyGeo({ country: fallbackNames[fallbackCode] || 'your region', code: fallbackCode });
         }
       }
     }
@@ -1042,7 +1013,7 @@
         heroSub: "Paste suspicious messages from WhatsApp, SMS, Gmail, and social apps for instant fraud analysis. Real-time cross-app protection is available with Shield Plus.",
         ctaTryFree: "🛡️ Try Free — No Card Needed", ctaHowItWorks: "See How It Works",
         trust1: "3 free scans daily", trust2: "No message stored — ever", trust3: "Under 2 seconds", trust4: "Available worldwide",
-        navHow: "How It Works", navFeatures: "Features", navScanner: "Try Scanner",
+        navHow: "How It Works", navFeatures: "Features", navScanner: "Scanner",
         probTag: "The Problem", probTitle: "The message looked real.<br>That was the point.",
         probSub: "Fraud messages today are <em>indistinguishable</em> from real ones. Phishing attacks surged <strong>1,265%</strong> since AI became widely available. The targets are ordinary people.",
         howTag: "How It Works", howTitle: "Paste. Scan. Know.",
@@ -1063,7 +1034,7 @@
         heroSub: "SHIELD IQ analiza mensajes de WhatsApp, SMS, Gmail y cualquier app — al instante. <strong>Silencioso cuando es seguro. Sonoro quando importa.</strong>",
         ctaTryFree: "🛡️ Prueba Gratis — Sin Tarjeta", ctaHowItWorks: "Ver Cómo Funciona",
         trust1: "3 escaneos gratis al día", trust2: "Ningún mensaje guardado", trust3: "Menos de 2 segundos", trust4: "Disponible mundialmente",
-        navHow: "Cómo Funciona", navFeatures: "Características", navScanner: "Probar Escáner",
+        navHow: "Cómo Funciona", navFeatures: "Características", navScanner: "Escáner",
         probTag: "El Problema", probTitle: "El mensaje parecía real.<br>Ese era el objetivo.",
         probSub: "Los mensajes de fraude hoy son <em>indistinguibles</em> de los reales. Los ataques de phishing aumentaron <strong>1.265%</strong> desde que la IA se generalizó. Los objetivos son personas comunes.",
         howTag: "Cómo Funciona", howTitle: "Pega. Escanea. Sabe.",
@@ -1084,7 +1055,7 @@
         heroSub: "SHIELD IQ analyse les messages WhatsApp, SMS, Gmail et toute application — instantanément. <strong>Silencieux quand c'est sûr. Bruyant quand ça compte.</strong>",
         ctaTryFree: "🛡️ Essai Gratuit — Sans Carte", ctaHowItWorks: "Voir Comment Ça Marche",
         trust1: "3 scans gratuits par jour", trust2: "Aucun message stocké", trust3: "Moins de 2 secondes", trust4: "Disponible partout",
-        navHow: "Comment Ça Marche", navFeatures: "Fonctionnalités", navScanner: "Essayer le Scanner",
+        navHow: "Comment Ça Marche", navFeatures: "Fonctionnalités", navScanner: "Scanner",
         probTag: "Le Problème", probTitle: "Le message semblait réel.<br>C'était le but.",
         probSub: "Les messages frauduleux d'aujourd'hui sont <em>impossibles à distinguer</em> des vrais. Les attaques de phishing ont augmenté de <strong>1 265 %</strong>.",
         howTag: "Comment Ça Marche", howTitle: "Collez. Scannez. Sachez.",
@@ -1105,7 +1076,7 @@
         heroSub: "SHIELD IQ WhatsApp, SMS, Gmail और हर ऐप के संदेशों को तुरंत स्कैन करता है। <strong>सुरक्षित होने पर शांत। मायने रखने पर ज़ोरदार।</strong>",
         ctaTryFree: "🛡️ मुफ़्त आज़माएं — कोई कार्ड नहीं", ctaHowItWorks: "कैसे काम करता है देखें",
         trust1: "रोज़ 3 मुफ़्त स्कैन", trust2: "कोई संदेश संग्रहीत नहीं", trust3: "2 सेकंड से कम", trust4: "दुनियाभर में उपलब्ध",
-        navHow: "यह कैसे काम करता है", navFeatures: "विशेषताएं", navScanner: "स्कैनर आज़माएं",
+        navHow: "यह कैसे काम करता है", navFeatures: "विशेषताएं", navScanner: "स्कैनर",
         probTag: "समस्या", probTitle: "संदेश असली लग रहा था।<br>यही तो मकसद था।",
         probSub: "आज के धोखाधड़ी संदेश असली से <em>अलग नहीं दिखते</em>। AI के आने से फ़िशिंग हमले <strong>1,265%</strong> बढ़ गए।",
         howTag: "यह कैसे काम करता है", howTitle: "पेस्ट करें। स्कैन करें। जानें।",
@@ -1126,7 +1097,7 @@
         heroSub: "SHIELD IQ escaneia mensagens do WhatsApp, SMS, Gmail e qualquer app — instantaneamente. <strong>Silencioso quando seguro. Alto quando importa.</strong>",
         ctaTryFree: "🛡️ Experimente Grátis — Sem Cartão", ctaHowItWorks: "Ver Como Funciona",
         trust1: "3 scans grátis por dia", trust2: "Nenhuma mensagem armazenada", trust3: "Menos de 2 segundos", trust4: "Disponível mundialmente",
-        navHow: "Como Funciona", navFeatures: "Recursos", navScanner: "Experimentar Scanner",
+        navHow: "Como Funciona", navFeatures: "Recursos", navScanner: "Scanner",
         probTag: "O Problema", probTitle: "A mensagem parecia real.<br>Era esse o objetivo.",
         probSub: "As mensagens de fraude hoje são <em>indistinguíveis</em> das reais. Ataques de phishing aumentaram <strong>1.265%</strong>.",
         howTag: "Como Funciona", howTitle: "Cole. Escaneie. Saiba.",
@@ -1147,7 +1118,7 @@
         heroSub: "SHIELD IQ يفحص الرسائل عبر واتساب وSMS وجيميل وكل تطبيق — فورياً. <strong>صامت عند الأمان. صاخب عند الأهمية.</strong>",
         ctaTryFree: "🛡️ جرب مجاناً — بدون بطاقة", ctaHowItWorks: "اعرف كيف يعمل",
         trust1: "3 فحوصات مجانية يومياً", trust2: "لا تُحفظ الرسائل", trust3: "أقل من ثانيتين", trust4: "متاح عالمياً",
-        navHow: "كيف يعمل", navFeatures: "الميزات", navScanner: "جرب الماسح",
+        navHow: "كيف يعمل", navFeatures: "الميزات", navScanner: "الماسح",
         probTag: "المشكلة", probTitle: "الرسالة بدت حقيقية.<br>كان ذلك هو الهدف.",
         probSub: "رسائل الاحتيال اليوم <em>لا يمكن تمييزها</em> عن الحقيقية. ارتفعت هجمات التصيد <strong>1,265%</strong> منذ انتشار الذكاء الاصطناعي.",
         howTag: "كيف يعمل", howTitle: "الصق. افحص. اعرف.",
@@ -1168,7 +1139,7 @@
         heroSub: "SHIELD IQ即时扫描WhatsApp、短信、Gmail及所有应用的消息。<strong>安全时静默，重要时警报。</strong>",
         ctaTryFree: "🛡️ 免费试用 — 无需信用卡", ctaHowItWorks: "了解工作原理",
         trust1: "每天3次免费扫描", trust2: "从不存储消息", trust3: "不到2秒", trust4: "全球可用",
-        navHow: "工作原理", navFeatures: "功能特点", navScanner: "试用扫描器",
+        navHow: "工作原理", navFeatures: "功能特点", navScanner: "扫描器",
         probTag: "问题所在", probTitle: "那条消息看起来是真的。<br>这正是目的。",
         probSub: "如今的欺诈消息与真实消息<em>无法区分</em>。自AI普及以来，网络钓鱼攻击激增<strong>1,265%</strong>。",
         howTag: "工作原理", howTitle: "粘贴。扫描。了解。",
@@ -1268,22 +1239,57 @@
       }
     })();
 
+    function toggleAvatarDropdown(event) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('avatarDropdown');
+      if (dropdown) dropdown.classList.toggle('show');
+    }
+    window.addEventListener('click', () => {
+      const dropdown = document.getElementById('avatarDropdown');
+      if (dropdown) dropdown.classList.remove('show');
+    });
+
     function updateNavAuth() {
       const token = localStorage.getItem('dovtek_token');
+      document.body.setAttribute('data-shieldiq-token-bridge', token || '');
+      document.body.setAttribute('data-shieldiq-user-bridge', localStorage.getItem('dovtek_user') || '');
       if (token) {
+        let userObj = {};
+        try {
+          userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
+        } catch(e) {}
+        const initials = (userObj.full_name || userObj.email || 'U').charAt(0).toUpperCase();
+        const displayName = userObj.full_name || userObj.email?.split('@')[0] || 'User';
+        const planLabel = userObj.plan === 'plus' ? 'Shield Plus' : userObj.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
+        const upgradeStyle = userObj.plan === 'plus' ? 'style="display:none;"' : '';
+
         const desktopAuth = document.getElementById('desktopAuthNav');
         if (desktopAuth) {
           desktopAuth.innerHTML = `
-        <a class="btn-ghost" href="/dashboard">Dashboard</a>
-        <a class="btn btn-primary btn-sm" href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="background:var(--dark);border:1px solid var(--border);color:var(--white);">Logout</a>
-      `;
+            <div class="avatar-wrapper" id="avatarWrapper">
+              <div class="avatar-btn" id="avatarBtn" onclick="toggleAvatarDropdown(event)">${initials}</div>
+              <div class="avatar-dropdown" id="avatarDropdown">
+                <div class="dropdown-header">
+                  <div class="dropdown-user-name">${displayName}</div>
+                  <div class="dropdown-user-plan">${planLabel}</div>
+                </div>
+                <a href="/dashboard" class="dropdown-item">📊 Dashboard</a>
+                <a href="/scan" class="dropdown-item">🛡️ Scan Message</a>
+                <a href="/plans" class="dropdown-item" id="dropdownUpgradeLink" ${upgradeStyle}>🚀 Upgrade Plan</a>
+                <a href="#" class="dropdown-item" onclick="openSubscriptionModal();return false">⚙️ Manage Subscription</a>
+                <a href="#" class="dropdown-item logout-item" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false">🚪 Logout</a>
+              </div>
+            </div>
+          `;
         }
         const mobileAuth = document.getElementById('mobileAuthNav');
         if (mobileAuth) {
           mobileAuth.innerHTML = `
-        <a href="/dashboard">Dashboard</a>
-        <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="color:#ef4444">Logout</a>
-      `;
+            <a href="/dashboard">Dashboard</a>
+            <a href="/scan">Scanner</a>
+            <a href="/plans" ${upgradeStyle}>Upgrade Plan</a>
+            <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="color:#ef4444">Logout</a>
+          `;
         }
 
         // Adapt Hero CTA
@@ -1291,6 +1297,11 @@
         if (heroBtn) {
           heroBtn.textContent = '🛡️ Go to Dashboard';
           heroBtn.href = '/dashboard';
+        }
+        const heroOutlineBtn = document.querySelector('.hero-cta .btn-outline');
+        if (heroOutlineBtn) {
+          heroOutlineBtn.textContent = '🚀 View Plans';
+          heroOutlineBtn.href = '/plans';
         }
 
         // Adapt Bottom CTA

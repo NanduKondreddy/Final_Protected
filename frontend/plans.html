@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShieldIQ — Plans & Pricing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/global.css">
+  <script src="/js/subscription-manage.js"></script>
+  <style>
+    .plans-container {
+      max-width: 1200px;
+      margin: 100px auto 80px;
+      padding: 0 24px;
+    }
+    .plans-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .plans-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      color: var(--white);
+    }
+    .plans-subtitle {
+      font-size: 16px;
+      color: var(--warm);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+    .feat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      border-radius: var(--radius-md);
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .feat:hover {
+      border-color: rgba(0, 212, 160, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 212, 160, 0.05);
+    }
+    .feat-title {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    .feat-text {
+      font-size: 13px;
+      color: var(--warm);
+      line-height: 1.8;
+    }
+    .loc-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--warm);
+      background: rgba(0, 212, 160, 0.06);
+      border-bottom: 1px solid var(--border);
+      position: fixed;
+      top: 68px;
+      left: 0;
+      right: 0;
+      z-index: 999;
+    }
+    .loc-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--teal);
+      color: var(--black);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+    }
+    .loc-banner .loc-currency {
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .back-dash {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--teal);
+      text-decoration: none;
+      font-size: 14px;
+      font-family: var(--font-mono);
+      margin-bottom: 24px;
+    }
+    .back-dash:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>SHIELD <span class="accent">IQ</span></a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/scan">Scanner</a></li>
+    </ul>
+    <div class="nav-actions">
+      <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <div class="avatar-wrapper" id="avatarWrapper">
+        <div class="avatar-btn" id="avatarBtn" onclick="toggleAvatarDropdown(event)">U</div>
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="dropdown-header">
+            <div class="dropdown-user-name" id="dropdownUserName">User Name</div>
+            <div class="dropdown-user-plan" id="dropdownUserPlan">Free Plan</div>
+          </div>
+          <a href="/dashboard" class="dropdown-item">📊 Dashboard</a>
+          <a href="/scan" class="dropdown-item">🛡️ Scan Message</a>
+          <a href="/plans" class="dropdown-item" id="dropdownUpgradeLink">🚀 Upgrade Plan</a>
+          <a href="#" class="dropdown-item" onclick="openSubscriptionModal();return false">⚙️ Manage Subscription</a>
+          <a href="#" class="dropdown-item logout-item" onclick="logout();return false" id="navLogout">🚪 Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- LOCATION BANNER -->
+  <div class="loc-banner" id="locBanner" style="display:none;">
+    <span class="loc-badge" id="locBadge">US</span>
+    <span id="locDetectedText">Detected: <strong id="locCountry">United States</strong></span>
+    <span>·</span>
+    <span id="locCurrencyText">Prices shown in <span class="loc-currency" id="locCurrency">$</span></span>
+  </div>
+
+  <div class="plans-container">
+    <a href="/dashboard" class="back-dash" id="backDash">← Back to Dashboard</a>
+    
+    <div class="plans-header">
+      <div class="plans-title" id="plansTitle">Protection that scales with your needs</div>
+      <div class="plans-subtitle" id="plansSubtitle">Upgrade to Shield Plus for automatic protection in WhatsApp and Gmail, or choose the plan that best fits your workflow.</div>
+    </div>
+
+    <div class="features-grid">
+      <!-- 1. FREE TIER -->
+      <div class="feat">
+        <div class="feat-title" style="font-size:24px; color:var(--white);" id="freeTitle">Free Web Scanner</div>
+        <div style="font-family:var(--font-mono); color:var(--muted); font-size:12px; margin-bottom:20px; letter-spacing:0.05em" id="freeSub">Always Free</div>
+        <p class="feat-text" style="margin-bottom:20px; flex-grow:1;" id="freeDesc">Manual protection when you need a second opinion.</p>
+        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--warm); line-height:2.0;" id="freeBullets">
+          <li>✓ 3 free manual scans per day</li>
+          <li>✓ Paste WhatsApp, SMS, or Emails</li>
+          <li>✓ Upload Screenshots & Documents</li>
+          <li>✓ Basic Scan History</li>
+        </ul>
+        <a class="btn btn-outline" style="width:100%; text-align:center;" href="/scan" id="freeBtn">Try Free Now</a>
+      </div>
+
+      <!-- 2. PRO TIER -->
+      <div class="feat">
+        <div class="feat-title" style="font-size:24px; color:var(--white);" id="proTitle">SHIELD IQ Pro</div>
+        <div style="font-family:var(--font-mono); color:var(--muted); font-size:12px; margin-bottom:20px; letter-spacing:0.05em"><span id="dynamicPricePro">$3.99</span> <span id="proSub">/ month</span></div>
+        <p class="feat-text" style="margin-bottom:20px; flex-grow:1;" id="proDesc">Unlimited manual protection without installing an app.</p>
+        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--warm); line-height:2.0;" id="proBullets">
+          <li>✓ Unlimited manual scans</li>
+          <li>✓ Priority AI Processing</li>
+          <li>✓ Advanced PDF & Document scanning</li>
+          <li>✓ Full Scan History & Export</li>
+        </ul>
+        <a class="btn btn-outline" style="width:100%; text-align:center;" id="proBtn" href="/checkout?plan=pro">Upgrade to Pro</a>
+      </div>
+
+      <!-- 3. PLUS TIER (RECOMMENDED) -->
+      <div class="feat" style="background:var(--card-hover); border-color:var(--teal); position:relative; overflow:hidden;">
+        <div style="position:absolute; top:12px; right:12px; background:var(--teal); color:var(--black); font-size:10px; font-weight:800; padding:4px 10px; border-radius:12px; letter-spacing:0.05em; text-transform:uppercase;" id="plusBadge">Recommended</div>
+        <div class="feat-title" style="font-size:24px; color:var(--teal);" id="plusTitle">Shield Plus</div>
+        <div style="font-family:var(--font-mono); color:var(--teal); font-size:12px; margin-bottom:20px; letter-spacing:0.05em"><span id="dynamicPrice">$9.99</span> <span id="plusSub">/ month</span></div>
+        <p class="feat-text" style="margin-bottom:20px; flex-grow:1;" id="plusDesc">Install directly on your devices for invisible, automatic protection.</p>
+        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--white); line-height:2.0;" id="plusBullets">
+          <li><strong style="color:var(--teal)">✓ Auto-Scans in Background:</strong> WhatsApp, Gmail & socials.</li>
+          <li><strong style="color:var(--teal)">✓ Silent when Safe:</strong> Never interrupts your normal use.</li>
+          <li><strong style="color:var(--teal)">✓ Loud when it Matters:</strong> Alerts you before you click.</li>
+          <li>✓ Unlimited AI Document Scanning</li>
+        </ul>
+        <a class="btn btn-primary" style="width:100%; text-align:center;" id="plusBtn" href="/checkout?plan=plus">Subscribe Now</a>
+      </div>
+
+      <!-- 4. ENTERPRISE TIER -->
+      <div class="feat">
+        <div class="feat-title" style="font-size:24px; color:var(--white);" id="entTitle">Enterprise</div>
+        <div style="font-family:var(--font-mono); color:var(--muted); font-size:12px; margin-bottom:20px; letter-spacing:0.05em" id="entSub">Custom Pricing</div>
+        <p class="feat-text" style="margin-bottom:20px; flex-grow:1;" id="entDesc">For platforms and businesses needing direct API access and executive reporting.</p>
+        <ul style="list-style:none; padding:0; margin:0 0 24px 0; font-size:13px; color:var(--warm); line-height:2.0;" id="entBullets">
+          <li>✓ B2B API Key Access</li>
+          <li>✓ Real-time Webhook Alerts</li>
+          <li>✓ Zero-Persistence Audit Trail</li>
+          <li>✓ Executive Admin Dashboard</li>
+        </ul>
+        <a class="btn btn-outline" style="width:100%; text-align:center;" href="/contact" id="entBtn">Contact Sales</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div><div class="footer-brand">SHIELD <span class="accent">IQ</span></div><div class="footer-tag">AI Fraud Detection · Global</div></div>
+      <div class="footer-bottom"><div class="footer-note">🔒 Privacy-first · No message content ever stored</div><div class="footer-note">© 2026 SHIELD IQ Technologies</div></div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = window.location.origin;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function logout() {
+      localStorage.removeItem('dovtek_token');
+      localStorage.removeItem('dovtek_user');
+      location.href = '/';
+    }
+
+    function toggleAvatarDropdown(event) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('avatarDropdown');
+      if (dropdown) dropdown.classList.toggle('show');
+    }
+    window.addEventListener('click', () => {
+      const dropdown = document.getElementById('avatarDropdown');
+      if (dropdown) dropdown.classList.remove('show');
+    });
+
+    // Geolocation + Price Detection
+    const CURRENCY_MAP = {
+      'IN': '₹', 'US': '$', 'GB': '£', 'NG': '₦', 'EU': '€', 'DE': '€', 'FR': '€', 'IT': '€', 'ES': '€',
+      'JP': '¥', 'CN': '¥', 'KR': '₩', 'BR': 'R$', 'ZA': 'R', 'AE': 'AED', 'SA': 'SAR', 'AU': 'A$',
+      'CA': 'C$', 'MX': 'MX$', 'RU': '₽', 'TR': '₺', 'EG': 'E£', 'KE': 'KSh', 'GH': 'GH₵', 'PH': '₱',
+      'ID': 'Rp', 'MY': 'RM', 'TH': '฿', 'VN': '₫', 'BD': '৳', 'PK': '₨', 'LK': 'Rs', 'NP': '₨'
+    };
+
+    function guessCountryByTimezone() {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) {
+          if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+          if (tz.includes('Lagos')) return 'NG';
+          if (tz.includes('London')) return 'GB';
+          if (tz.includes('Johannesburg')) return 'ZA';
+          if (tz.includes('Nairobi')) return 'KE';
+          if (tz.includes('Accra')) return 'GH';
+        }
+        const offset = new Date().getTimezoneOffset();
+        if (offset === -330) return 'IN';
+        if (offset === -60) return 'NG';
+      } catch (e) {}
+      return 'US';
+    }
+
+    async function detectLocation() {
+      const cached = localStorage.getItem('dovtek_geo');
+      if (cached) {
+        try { const d = JSON.parse(cached); if (Date.now() - d.ts < 3600000) { applyGeo(d); return; } } catch (e) { }
+      }
+      try {
+        const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+        const d = await r.json();
+        const geo = { country: d.country_name, code: d.country_code, ts: Date.now() };
+        localStorage.setItem('dovtek_geo', JSON.stringify(geo));
+        applyGeo(geo);
+      } catch (e) {
+        try {
+          const r2 = await fetch('https://api.country.is', { signal: AbortSignal.timeout(4000) });
+          const d2 = await r2.json();
+          const geo = { country: d2.country || 'Unknown', code: d2.country || 'US', ts: Date.now() };
+          localStorage.setItem('dovtek_geo', JSON.stringify(geo));
+          applyGeo(geo);
+        } catch (e2) {
+          const fallbackCode = guessCountryByTimezone();
+          const fallbackNames = { 'IN': 'India', 'NG': 'Nigeria', 'US': 'United States' };
+          applyGeo({ country: fallbackNames[fallbackCode] || 'your region', code: fallbackCode });
+        }
+      }
+    }
+
+    function applyGeo(geo) {
+      const code = geo.code || 'US';
+      const currency = CURRENCY_MAP[code] || '$';
+      document.getElementById('locBadge').textContent = code;
+      document.getElementById('locCountry').textContent = geo.country || 'Unknown';
+      document.getElementById('locCurrency').textContent = currency;
+
+      const rates = { 'IN': 83, 'NG': 1400, 'GB': 0.79, 'EU': 0.92, 'DE': 0.92, 'FR': 0.92, 'IT': 0.92, 'ES': 0.92, 'ZA': 18.5, 'BR': 5.1, 'AU': 1.5, 'CA': 1.37, 'AE': 3.67, 'KE': 130, 'GH': 14 };
+      const rate = rates[code] || 1;
+
+      let pricePlus = 9.99 * rate;
+      let pricePro = 3.99 * rate;
+
+      if (rate > 10) {
+        pricePlus = Math.round(pricePlus);
+        pricePro = Math.round(pricePro);
+      } else {
+        pricePlus = pricePlus.toFixed(2);
+        pricePro = pricePro.toFixed(2);
+      }
+
+      document.getElementById('dynamicPrice').textContent = currency + pricePlus;
+      document.getElementById('dynamicPricePro').textContent = currency + pricePro;
+    }
+
+    // Language switcher
+    function changeLang(lang) {
+      localStorage.setItem('dovtek_lang', lang);
+      location.reload();
+    }
+
+    // ── Translations for plans.html ──────────────────────────────────────────
+    const PLANS_T = {
+      en: {
+        backDash: "← Back to Dashboard",
+        detected: "Detected: ",
+        shownIn: "Prices shown in ",
+        title: "Protection that scales with your needs",
+        subtitle: "Upgrade to Shield Plus for automatic protection in WhatsApp and Gmail, or choose the plan that best fits your workflow.",
+        freeTitle: "Free Web Scanner",
+        freeSub: "Always Free",
+        freeDesc: "Manual protection when you need a second opinion.",
+        freeBullets: [
+          "✓ 3 free manual scans per day",
+          "✓ Paste WhatsApp, SMS, or Emails",
+          "✓ Upload Screenshots & Documents",
+          "✓ Basic Scan History"
+        ],
+        freeBtn: "Try Free Now",
+        proTitle: "SHIELD IQ Pro",
+        proSub: "/ month",
+        proDesc: "Unlimited manual protection without installing an app.",
+        proBullets: [
+          "✓ Unlimited manual scans",
+          "✓ Priority AI Processing",
+          "✓ Advanced PDF & Document scanning",
+          "✓ Full Scan History & Export"
+        ],
+        proBtn: "Upgrade to Pro",
+        plusBadge: "Recommended",
+        plusTitle: "Shield Plus",
+        plusSub: "/ month",
+        plusDesc: "Install directly on your devices for invisible, automatic protection.",
+        plusBullets: [
+          "✓ Auto-Scans in Background: WhatsApp, Gmail & socials.",
+          "✓ Silent when Safe: Never interrupts your normal use.",
+          "✓ Loud when it Matters: Alerts you before you click.",
+          "✓ Unlimited AI Document Scanning"
+        ],
+        plusBtn: "Subscribe Now",
+        entTitle: "Enterprise",
+        entSub: "Custom Pricing",
+        entDesc: "For platforms and businesses needing direct API access and executive reporting.",
+        entBullets: [
+          "✓ B2B API Key Access",
+          "✓ Real-time Webhook Alerts",
+          "✓ Zero-Persistence Audit Trail",
+          "✓ Executive Admin Dashboard"
+        ],
+        entBtn: "Contact Sales",
+        active: "Active Plan",
+        logout: "Logout"
+      },
+      es: {
+        backDash: "← Volver al Panel",
+        detected: "Detectado: ",
+        shownIn: "Precios mostrados en ",
+        title: "Protección que se adapta a tus necesidades",
+        subtitle: "Mejora a Shield Plus para obtener protección automática en WhatsApp y Gmail, o elige el plan que mejor se adapte a tu flujo de trabajo.",
+        freeTitle: "Escáner Web Gratuito",
+        freeSub: "Siempre Gratis",
+        freeDesc: "Protección manual cuando necesitas una segunda opinión.",
+        freeBullets: [
+          "✓ 3 escaneos manuales gratis al día",
+          "✓ Pega WhatsApp, SMS o correos electrónicos",
+          "✓ Sube capturas de pantalla y documentos",
+          "✓ Historial de escaneo básico"
+        ],
+        freeBtn: "Probar Gratis Ahora",
+        proTitle: "SHIELD IQ Pro",
+        proSub: "/ mes",
+        proDesc: "Protección manual ilimitada sin necesidad de instalar una aplicación.",
+        proBullets: [
+          "✓ Escaneos manuales ilimitados",
+          "✓ Procesamiento prioritario de IA",
+          "✓ Escaneo avanzado de PDF y documentos",
+          "✓ Historial completo de escaneos y exportación"
+        ],
+        proBtn: "Mejorar a Pro",
+        plusBadge: "Recomendado",
+        plusTitle: "Shield Plus",
+        plusSub: "/ mes",
+        plusDesc: "Instálalo directamente en tus dispositivos para una protección automática e invisible.",
+        plusBullets: [
+          "✓ Auto-escaneo en segundo plano: WhatsApp, Gmail y redes sociales.",
+          "✓ Silencioso cuando es seguro: Nunca interrumpe tu uso normal.",
+          "✓ Sonoro cuando importa: Te alerta antes de hacer clic.",
+          "✓ Escaneo ilimitado de documentos con IA"
+        ],
+        plusBtn: "Suscribirse Ahora",
+        entTitle: "Enterprise",
+        entSub: "Precios Personalizados",
+        entDesc: "Para plataformas y empresas que necesitan acceso directo a la API y reportes ejecutivos.",
+        entBullets: [
+          "✓ Acceso a claves de API B2B",
+          "✓ Alertas de webhook en tiempo real",
+          "✓ Registro de auditoría sin persistencia",
+          "✓ Panel de administración ejecutiva"
+        ],
+        entBtn: "Contactar a Ventas",
+        active: "Plan Activo",
+        logout: "Cerrar Sesión"
+      },
+      fr: {
+        backDash: "← Retour au Tableau de Bord",
+        detected: "Détecté : ",
+        shownIn: "Prix affichés en ",
+        title: "Une protection adaptée à vos besoins",
+        subtitle: "Passez à Shield Plus pour une protection automatique dans WhatsApp et Gmail, ou choisissez le plan qui convient le mieux à votre workflow.",
+        freeTitle: "Scanner Web Gratuit",
+        freeSub: "Toujours Gratuit",
+        freeDesc: "Protection manuelle lorsque vous avez besoin d'un deuxième avis.",
+        freeBullets: [
+          "✓ 3 scans manuels gratuits par jour",
+          "✓ Collez WhatsApp, SMS ou e-mails",
+          "✓ Téléchargez des captures d'écran & documents",
+          "✓ Historique de scan de base"
+        ],
+        freeBtn: "Essayer Gratuitement",
+        proTitle: "SHIELD IQ Pro",
+        proSub: "/ mois",
+        proDesc: "Protection manuelle illimitée sans installer d'application.",
+        proBullets: [
+          "✓ Scans manuels illimités",
+          "✓ Traitement IA prioritaire",
+          "✓ Scan avancé de PDF & documents",
+          "✓ Historique complet des scans & exportation"
+        ],
+        proBtn: "Passer à Pro",
+        plusBadge: "Recommandé",
+        plusTitle: "Shield Plus",
+        plusSub: "/ mois",
+        plusDesc: "Installez directement sur vos appareils pour une protection invisible et automatique.",
+        plusBullets: [
+          "✓ Auto-scan en arrière-plan : WhatsApp, Gmail & réseaux sociaux.",
+          "✓ Silencieux quand c'est sûr : N'interrompt jamais votre utilisation.",
+          "✓ Bruyant quand ça compte : Vous alerte avant de cliquer.",
+          "✓ Scan de documents IA illimité"
+        ],
+        plusBtn: "S'abonner Maintenant",
+        entTitle: "Enterprise",
+        entSub: "Tarifs Personnalisés",
+        entDesc: "Pour les plateformes et entreprises nécessitant un accès direct à l'API et des rapports exécutifs.",
+        entBullets: [
+          "✓ Accès par clé API B2B",
+          "✓ Alertes Webhook en temps réel",
+          "✓ Piste d'audit sans persistance",
+          "✓ Tableau de bord d'administration"
+        ],
+        entBtn: "Contacter les Ventes",
+        active: "Plan Actif",
+        logout: "Déconnexion"
+      },
+      hi: {
+        backDash: "← डैशबोर्ड पर वापस जाएं",
+        detected: "पता चला: ",
+        shownIn: "कीमतें प्रदर्शित की गई हैं ",
+        title: "आपकी आवश्यकताओं के अनुसार सुरक्षा",
+        subtitle: "WhatsApp और Gmail में स्वचालित सुरक्षा के लिए Shield Plus पर अपग्रेड करें, या वह योजना चुनें जो आपके कार्यप्रवाह के लिए सबसे उपयुक्त हो।",
+        freeTitle: "मुफ़्त वेब स्कैनर",
+        freeSub: "हमेशा मुफ़्त",
+        freeDesc: "जब आपको दूसरी राय की आवश्यकता हो तो मैन्युअल सुरक्षा।",
+        freeBullets: [
+          "✓ प्रतिदिन 3 मुफ़्त मैन्युअल स्कैन",
+          "✓ WhatsApp, SMS या ईमेल पेस्ट करें",
+          "✓ स्क्रीनशॉट और दस्तावेज़ अपलोड करें",
+          "✓ मूल स्कैन इतिहास"
+        ],
+        freeBtn: "अभी मुफ़्त आज़माएं",
+        proTitle: "SHIELD IQ Pro",
+        proSub: "/ माह",
+        proDesc: "ऐप इंस्टॉल किए बिना असीमित मैन्युअल सुरक्षा।",
+        proBullets: [
+          "✓ असीमित मैन्युअल स्कैन",
+          "✓ प्राथमिकता AI प्रोसेसिंग",
+          "✓ उन्नत PDF और दस्तावेज़ स्कैनिंग",
+          "✓ पूर्ण स्कैन इतिहास और निर्यात"
+        ],
+        proBtn: "Pro पर अपग्रेड करें",
+        plusBadge: "अनुशंसित",
+        plusTitle: "Shield Plus",
+        plusSub: "/ माह",
+        plusDesc: "अदृश्य, स्वचालित सुरक्षा के लिए सीधे अपने उपकरणों पर इंस्टॉल करें।",
+        plusBullets: [
+          "✓ पृष्ठभूमि में ऑटो-स्कैन: WhatsApp, Gmail और सोशल मीडिया।",
+          "✓ सुरक्षित होने पर शांत: आपके सामान्य उपयोग को कभी बाधित नहीं करता।",
+          "✓ मायने रखने पर ज़ोरदार: आपके क्लिक करने से पहले आपको चेतावनी देता है।",
+          "✓ असीमित AI दस्तावेज़ स्कैनिंग"
+        ],
+        plusBtn: "अभी सदस्यता लें",
+        entTitle: "Enterprise",
+        entSub: "कस्टम मूल्य निर्धारण",
+        entDesc: "उन प्लेटफार्मों और व्यवसायों के लिए जिन्हें सीधे API एक्सेस और कार्यकारी रिपोर्टिंग की आवश्यकता है।",
+        entBullets: [
+          "✓ B2B API कुंजी एक्सेस",
+          "✓ वास्तविक समय वेबहुक अलर्ट",
+          "✓ शून्य-स्थिरता ऑडिट ट्रेल",
+          "✓ कार्यकारी व्यवस्थापक डैशबोर्ड"
+        ],
+        entBtn: "बिक्री से संपर्क करें",
+        active: "सक्रिय योजना",
+        logout: "लॉगआउट"
+      }
+    };
+
+    function applyLanguage(lang) {
+      const t = PLANS_T[lang] || PLANS_T.en;
+      document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      
+      const backDash = document.getElementById('backDash');
+      if (backDash) backDash.textContent = t.backDash;
+
+      const locDetected = document.getElementById('locDetectedText');
+      if (locDetected) {
+        locDetected.innerHTML = `${t.detected}<strong id="locCountry">${document.getElementById('locCountry').textContent}</strong>`;
+      }
+      const locCurrencyText = document.getElementById('locCurrencyText');
+      if (locCurrencyText) {
+        locCurrencyText.innerHTML = `${t.shownIn}<span class="loc-currency" id="locCurrency">${document.getElementById('locCurrency').textContent}</span>`;
+      }
+
+      const plansTitle = document.getElementById('plansTitle');
+      if (plansTitle) plansTitle.textContent = t.title;
+
+      const plansSubtitle = document.getElementById('plansSubtitle');
+      if (plansSubtitle) plansSubtitle.textContent = t.subtitle;
+
+      // Free Card
+      const freeTitle = document.getElementById('freeTitle');
+      if (freeTitle) freeTitle.textContent = t.freeTitle;
+      const freeSub = document.getElementById('freeSub');
+      if (freeSub) freeSub.textContent = t.freeSub;
+      const freeDesc = document.getElementById('freeDesc');
+      if (freeDesc) freeDesc.textContent = t.freeDesc;
+      const freeBtn = document.getElementById('freeBtn');
+      if (freeBtn && freeBtn.textContent !== t.active && !freeBtn.hasAttribute('data-active')) freeBtn.textContent = t.freeBtn;
+
+      const freeBullets = document.getElementById('freeBullets');
+      if (freeBullets && t.freeBullets) {
+        freeBullets.innerHTML = t.freeBullets.map(b => `<li>${b}</li>`).join('');
+      }
+
+      // Pro Card
+      const proTitle = document.getElementById('proTitle');
+      if (proTitle) proTitle.textContent = t.proTitle;
+      const proSub = document.getElementById('proSub');
+      if (proSub) proSub.textContent = t.proSub;
+      const proDesc = document.getElementById('proDesc');
+      if (proDesc) proDesc.textContent = t.proDesc;
+      const proBtn = document.getElementById('proBtn');
+      if (proBtn && proBtn.textContent !== t.active && !proBtn.hasAttribute('data-active')) proBtn.textContent = t.proBtn;
+
+      const proBullets = document.getElementById('proBullets');
+      if (proBullets && t.proBullets) {
+        proBullets.innerHTML = t.proBullets.map(b => `<li>${b}</li>`).join('');
+      }
+
+      // Plus Card
+      const plusBadge = document.getElementById('plusBadge');
+      if (plusBadge) plusBadge.textContent = t.plusBadge;
+      const plusTitle = document.getElementById('plusTitle');
+      if (plusTitle) plusTitle.textContent = t.plusTitle;
+      const plusSub = document.getElementById('plusSub');
+      if (plusSub) plusSub.textContent = t.plusSub;
+      const plusDesc = document.getElementById('plusDesc');
+      if (plusDesc) plusDesc.textContent = t.plusDesc;
+      const plusBtn = document.getElementById('plusBtn');
+      if (plusBtn && plusBtn.textContent !== t.active && !plusBtn.hasAttribute('data-active')) plusBtn.textContent = t.plusBtn;
+
+      const plusBullets = document.getElementById('plusBullets');
+      if (plusBullets && t.plusBullets) {
+        if (lang === 'en') {
+          plusBullets.innerHTML = `
+            <li><strong style="color:var(--teal)">✓ Auto-Scans in Background:</strong> WhatsApp, Gmail & socials.</li>
+            <li><strong style="color:var(--teal)">✓ Silent when Safe:</strong> Never interrupts your normal use.</li>
+            <li><strong style="color:var(--teal)">✓ Loud when it Matters:</strong> Alerts you before you click.</li>
+            <li>✓ Unlimited AI Document Scanning</li>
+          `;
+        } else if (lang === 'es') {
+          plusBullets.innerHTML = `
+            <li><strong style="color:var(--teal)">✓ Auto-escaneo en segundo plano:</strong> WhatsApp, Gmail y redes sociales.</li>
+            <li><strong style="color:var(--teal)">✓ Silencioso cuando es seguro:</strong> Nunca interrumpe tu uso normal.</li>
+            <li><strong style="color:var(--teal)">✓ Sonoro cuando importa:</strong> Te alerta antes de hacer clic.</li>
+            <li>✓ Escaneo ilimitado de documentos con IA</li>
+          `;
+        } else if (lang === 'fr') {
+          plusBullets.innerHTML = `
+            <li><strong style="color:var(--teal)">✓ Auto-scan en arrière-plan :</strong> WhatsApp, Gmail & réseaux sociaux.</li>
+            <li><strong style="color:var(--teal)">✓ Silencieux quand c'est sûr :</strong> N'interrompt jamais votre utilisation.</li>
+            <li><strong style="color:var(--teal)">✓ Bruyant quand ça compte :</strong> Vous alerte avant de cliquer.</li>
+            <li>✓ Scan de documents IA illimité</li>
+          `;
+        } else if (lang === 'hi') {
+          plusBullets.innerHTML = `
+            <li><strong style="color:var(--teal)">✓ पृष्ठभूमि में ऑटो-स्कैन:</strong> WhatsApp, Gmail और सोशल मीडिया।</li>
+            <li><strong style="color:var(--teal)">✓ सुरक्षित होने पर शांत:</strong> आपके सामान्य उपयोग को कभी बाधित नहीं करता।</li>
+            <li><strong style="color:var(--teal)">✓ मायने रखने पर ज़ोरदार:</strong> आपके क्लिक करने से पहले आपको चेतावनी देता है।</li>
+            <li>✓ असीमित AI दस्तावेज़ स्कैनिंग</li>
+          `;
+        } else {
+          plusBullets.innerHTML = t.plusBullets.map(b => `<li>${b}</li>`).join('');
+        }
+      }
+
+      // Enterprise Card
+      const entTitle = document.getElementById('entTitle');
+      if (entTitle) entTitle.textContent = t.entTitle;
+      const entSub = document.getElementById('entSub');
+      if (entSub) entSub.textContent = t.entSub;
+      const entDesc = document.getElementById('entDesc');
+      if (entDesc) entDesc.textContent = t.entDesc;
+      const entBtn = document.getElementById('entBtn');
+      if (entBtn) entBtn.textContent = t.entBtn;
+
+      const entBullets = document.getElementById('entBullets');
+      if (entBullets && t.entBullets) {
+        entBullets.innerHTML = t.entBullets.map(b => `<li>${b}</li>`).join('');
+      }
+
+      const navLogout = document.getElementById('navLogout');
+      if (navLogout) navLogout.textContent = t.logout;
+    }
+
+    // Initialize Page State
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem('dovtek_token');
+      const userStr = localStorage.getItem('dovtek_user');
+      document.body.setAttribute('data-shieldiq-token-bridge', token || '');
+      document.body.setAttribute('data-shieldiq-user-bridge', userStr || '');
+      if (!token) {
+        location.href = '/';
+        return;
+      }
+
+      const savedLang = localStorage.getItem('dovtek_lang') || 'en';
+      const langSel = document.getElementById('langSelect');
+      if (langSel) langSel.value = savedLang;
+
+      // Detect location and apply geo prices first
+      detectLocation().then(() => {
+        // Apply translations after geo loaded to preserve country & currency labels
+        applyLanguage(savedLang);
+
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const initials = (user.full_name || user.email || 'U').charAt(0).toUpperCase();
+          const displayName = user.full_name || user.email.split('@')[0];
+          const planLabel = user.plan === 'plus' ? 'Shield Plus' : user.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
+          
+          const avatarBtn = document.getElementById('avatarBtn');
+          if (avatarBtn) avatarBtn.textContent = initials;
+          const dropdownUserName = document.getElementById('dropdownUserName');
+          if (dropdownUserName) dropdownUserName.textContent = displayName;
+          const dropdownUserPlan = document.getElementById('dropdownUserPlan');
+          if (dropdownUserPlan) dropdownUserPlan.textContent = planLabel;
+          if (user.plan === 'plus') {
+            const upgLink = document.getElementById('dropdownUpgradeLink');
+            if (upgLink) upgLink.style.display = 'none';
+          }
+
+          const plan = user.plan || 'free';
+          const feats = document.querySelectorAll('.feat');
+          const t = PLANS_T[savedLang] || PLANS_T.en;
+          
+          if (plan === 'free' && feats[0]) {
+            const btn = feats[0].querySelector('.btn');
+            btn.textContent = t.active;
+            btn.style.background = 'rgba(0, 212, 160, 0.2)';
+            btn.style.color = 'var(--teal)';
+            btn.style.borderColor = 'var(--teal)';
+            btn.style.pointerEvents = 'none';
+            btn.removeAttribute('href');
+            btn.setAttribute('data-active', 'true');
+          } else if (plan === 'pro' && feats[1]) {
+            const btn = feats[1].querySelector('.btn');
+            btn.textContent = t.active;
+            btn.style.background = 'rgba(0, 212, 160, 0.2)';
+            btn.style.color = 'var(--teal)';
+            btn.style.borderColor = 'var(--teal)';
+            btn.style.pointerEvents = 'none';
+            btn.removeAttribute('href');
+            btn.setAttribute('data-active', 'true');
+          } else if (plan === 'plus' && feats[2]) {
+            const btn = feats[2].querySelector('.btn');
+            btn.textContent = t.active;
+            btn.style.background = 'rgba(0, 212, 160, 0.2)';
+            btn.style.color = 'var(--teal)';
+            btn.style.borderColor = 'var(--teal)';
+            btn.style.pointerEvents = 'none';
+            btn.removeAttribute('href');
+            btn.setAttribute('data-active', 'true');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -8,187 +8,408 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/global.css">
 <style>
-.container{max-width:800px;margin:100px auto 60px;padding:0 24px}
-.checkout-header { text-align:center; margin-bottom: 40px; }
-.checkout-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
-.checkout-header p { color: var(--warm); font-size: 15px; }
+.container { max-width: 520px; margin: 120px auto 60px; padding: 0 24px; }
 
-.checkout-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; }
-@media(max-width: 768px) { .checkout-grid { grid-template-columns: 1fr; } }
+.checkout-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+}
 
-.order-summary { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; height: fit-content; }
-.order-summary h2 { font-size: 18px; margin-bottom: 24px; font-weight: 700; }
-.plan-details { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-.plan-name { font-weight: 700; font-size: 18px; color: var(--teal); }
-.plan-price { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
-.total-row { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 20px; }
+.plan-icon { font-size: 56px; margin-bottom: 20px; }
 
-.payment-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; position: relative; overflow: hidden; }
-.payment-form h2 { font-size: 18px; margin-bottom: 24px; font-weight: 700; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-.form-group input { width: 100%; padding: 12px 16px; background: var(--darker); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
-.form-group input:focus { border-color: var(--teal); }
-.row { display: flex; gap: 16px; }
-.row .form-group { flex: 1; }
+.plan-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.plan-badge.pro  { background: var(--white); color: var(--black); }
+.plan-badge.plus { background: var(--teal);  color: var(--black); }
 
-.pay-btn { width: 100%; padding: 16px; background: var(--gradient-primary); color: var(--black); border: none; border-radius: var(--radius-sm); font-family: var(--font-heading); font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,212,160,0.25); margin-top: 24px; display: flex; justify-content: center; align-items: center; }
-.pay-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,212,160,0.35); }
+.plan-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.plan-price {
+  font-family: var(--font-mono);
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.plan-period {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.usd-note {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  text-align: left;
+}
+.feature-list li {
+  font-size: 13px;
+  color: var(--warm);
+  padding: 7px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feature-list li .icon { color: var(--teal); font-size: 15px; flex-shrink: 0; }
+.feature-list li.locked { color: var(--muted); }
+
+.pay-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--gradient-primary);
+  color: var(--black);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,212,160,0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.pay-btn:hover    { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,212,160,0.35); }
 .pay-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
 
-.secure-badge { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--muted); }
-.secure-badge svg { width: 14px; height: 14px; color: var(--teal); }
+.secure-note {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
 
-.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.2); border-top-color: var(--black); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
-
-/* Success overlay */
-.success-overlay { position: absolute; inset: 0; background: var(--card); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 32px; }
-.success-overlay.active { opacity: 1; pointer-events: auto; }
-.success-icon { width: 64px; height: 64px; background: rgba(0,212,160,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--teal); font-size: 32px; margin-bottom: 24px; }
-.success-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-.success-text { color: var(--warm); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: var(--black);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
 </style>
 </head>
 <body>
+
 <nav class="nav">
-  <a class="nav-brand" href="/"><span class="nav-brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3" fill="currentColor"></circle></svg></span>SHIELD <span class="accent">IQ</span></a>
+  <a class="nav-brand" href="/">
+    <span class="nav-brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <circle cx="12" cy="11" r="3" fill="currentColor"></circle>
+      </svg>
+    </span>
+    SHIELD <span class="accent">IQ</span>
+  </a>
   <div class="nav-actions">
     <a class="btn-ghost" href="/dashboard">Cancel</a>
   </div>
 </nav>
 
 <div class="container">
-  <div class="checkout-header">
-    <h1>Complete your upgrade</h1>
-    <p>Secure checkout for your ShieldIQ subscription.</p>
-  </div>
+  <div class="checkout-card" id="checkoutCard">
 
-  <div class="checkout-grid">
-    <!-- Payment Form -->
-    <div class="payment-form">
-      <h2>Payment Details</h2>
-      <div class="form-group">
-        <label>Name on Card</label>
-        <input type="text" placeholder="Jane Doe" id="cardName">
-      </div>
-      <div class="form-group">
-        <label>Card Number</label>
-        <input type="text" placeholder="4111 1111 1111 1111" id="cardNumber" maxlength="19">
-      </div>
-      <div class="row">
-        <div class="form-group">
-          <label>Expiry</label>
-          <input type="text" placeholder="MM/YY" id="cardExp" maxlength="5">
-        </div>
-        <div class="form-group">
-          <label>CVV</label>
-          <input type="text" placeholder="123" id="cardCvv" maxlength="4">
-        </div>
-      </div>
-      <button class="pay-btn" id="payBtn" onclick="processPayment()">Subscribe Now</button>
-      <div class="secure-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        Payments are secure and encrypted
-      </div>
+    <div class="plan-icon" id="planIcon">🛡️</div>
+    <div class="plan-badge" id="planBadge">Pro</div>
+    <div class="plan-name"  id="planName">ShieldIQ Pro</div>
+    <div class="plan-price" id="planPrice">—</div>
+    <div class="plan-period">per month · cancel anytime</div>
+    <div class="usd-note"   id="usdNote"></div>
 
-      <div class="success-overlay" id="successOverlay">
-        <div class="success-icon">✓</div>
-        <div class="success-title">Payment Successful!</div>
-        <div class="success-text">Your account has been upgraded. Redirecting you to the dashboard...</div>
-      </div>
+    <ul class="feature-list" id="featureList"></ul>
+
+    <button class="pay-btn" id="payBtn" onclick="startCheckout()">
+      Continue to Payment
+    </button>
+
+    <div class="secure-note">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      Secured by Paystack · Accepts cards, bank transfer & USSD
     </div>
 
-    <!-- Order Summary -->
-    <div class="order-summary">
-      <h2>Order Summary</h2>
-      <div class="plan-details">
-        <div>
-          <div class="plan-name" id="planName">SHIELD IQ Pro</div>
-          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Billed monthly</div>
-        </div>
-        <div class="plan-price" id="planPrice">$3.99</div>
-      </div>
-      <div class="total-row">
-        <span>Total today</span>
-        <span id="planTotal" style="color:var(--teal)">$3.99</span>
-      </div>
-    </div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-// Format card number with spaces
-document.getElementById('cardNumber').addEventListener('input', function (e) {
-  this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
-});
+// ── Auth guard ─────────────────────────────────────────────────────────────
+const token   = localStorage.getItem('dovtek_token');
+const userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
 
-// Format expiry MM/YY
-document.getElementById('cardExp').addEventListener('input', function (e) {
-  this.value = this.value.replace(/\D/g, '');
-  if (this.value.length > 2) {
-    this.value = this.value.slice(0, 2) + '/' + this.value.slice(2);
-  }
-});
-
-// Setup plan details based on URL param
-const urlParams = new URLSearchParams(window.location.search);
-const plan = urlParams.get('plan') || 'pro';
-
-const CURRENCY_MAP={
-  'IN':'₹','US':'$','GB':'£','NG':'₦','EU':'€','DE':'€','FR':'€','IT':'€','ES':'€',
-  'JP':'¥','CN':'¥','KR':'₩','BR':'R$','ZA':'R','AE':'AED','SA':'SAR','AU':'A$',
-  'CA':'C$','MX':'MX$','RU':'₽','TR':'₺','EG':'E£','KE':'KSh','GH':'GH₵','PH':'₱',
-  'ID':'Rp','MY':'RM','TH':'฿','VN':'₫','BD':'৳','PK':'₨','LK':'Rs','NP':'₨'
-};
-
-function applyDynamicPricing() {
-  const cached=localStorage.getItem('dovtek_geo');
-  let code = 'US';
-  let currency = '$';
-  if(cached){
-    try{const d=JSON.parse(cached); code = d.code || 'US';}catch(e){}
-  }
-  currency = CURRENCY_MAP[code] || '$';
-  
-  const rates = {'IN':83, 'NG':1400, 'GB':0.79, 'EU':0.92, 'DE':0.92, 'FR':0.92, 'IT':0.92, 'ES':0.92, 'ZA':18.5, 'BR':5.1, 'AU':1.5, 'CA':1.37, 'AE':3.67, 'KE':130, 'GH':14};
-  const rate = rates[code] || 1;
-  
-  let price = plan === 'plus' ? 9.99 : 3.99;
-  let finalPrice = price * rate;
-  
-  if(rate > 10) {
-    finalPrice = Math.round(finalPrice);
-  } else {
-    finalPrice = finalPrice.toFixed(2);
-  }
-  
-  const priceStr = currency + finalPrice;
-  document.getElementById('planPrice').textContent = priceStr;
-  document.getElementById('planTotal').textContent = priceStr;
-  
-  if(plan === 'plus') {
-    document.getElementById('planName').textContent = '🛡️ Shield Plus';
-    document.getElementById('planName').style.color = 'var(--teal)';
-  } else {
-    document.getElementById('planName').textContent = 'SHIELD IQ Pro';
-    document.getElementById('planName').style.color = 'var(--white)';
-  }
+if (!token) {
+  const p = new URLSearchParams(location.search).get('plan') || 'pro';
+  sessionStorage.setItem('post_auth_redirect', `/checkout?plan=${p}`);
+  location.href = '/?signup=1';
 }
 
-applyDynamicPricing();
+// ── Plan config ────────────────────────────────────────────────────────────
+const urlParams   = new URLSearchParams(location.search);
+const planKey     = urlParams.get('plan') === 'plus' ? 'plus' : 'pro';
+const currentPlan = userObj.plan || 'free';
+const PLAN_RANK   = { free: 0, pro: 1, plus: 2 };
 
-function processPayment() {
+const PLANS = {
+  pro: {
+    icon: '🛡️',
+    badge: 'PRO',
+    badgeClass: 'pro',
+    name: 'ShieldIQ Pro',
+    usd: 3.99,
+    features: [
+      { text: 'Unlimited manual scans',           locked: false },
+      { text: 'Confidence score breakdown',        locked: false },
+      { text: 'Advanced PDF & Document scanning',  locked: false },
+      { text: 'Full Scan History & Export',        locked: false },
+      { text: 'Chrome Extension access',           locked: false },
+      { text: 'Auto-background scanning',          locked: true  },
+      { text: 'Full-screen fraud alerts',          locked: true  },
+    ]
+  },
+  plus: {
+    icon: '⚡',
+    badge: 'SHIELD PLUS',
+    badgeClass: 'plus',
+    name: 'Shield Plus',
+    usd: 9.99,
+    features: [
+      { text: 'Everything in Pro',                         locked: false },
+      { text: 'Auto-Scans WhatsApp, SMS, Email & DMs',     locked: false },
+      { text: 'Silent when Safe',                          locked: false },
+      { text: 'Full-screen fraud alerts before you click', locked: false },
+      { text: 'Unlimited AI Document Scanning',            locked: false },
+      { text: 'Chrome Extension access',                   locked: false },
+    ]
+  }
+};
+
+// ── Currency ───────────────────────────────────────────────────────────────
+const CURRENCY_MAP = {
+  'NG':'₦','GH':'GH₵','KE':'KSh','ZA':'R','IN':'₹',
+  'GB':'£','DE':'€','FR':'€','IT':'€','ES':'€',
+  'AU':'A$','CA':'C$','AE':'AED','BR':'R$','US':'$',
+};
+const RATES = {
+  'NG':1400,'GH':14,'KE':130,'ZA':18.5,'IN':83,
+  'GB':0.79,'DE':0.92,'FR':0.92,'IT':0.92,'ES':0.92,
+  'AU':1.5,'CA':1.37,'AE':3.67,'BR':5.1,
+};
+
+function guessCountryByTimezone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
+      if (tz.includes('Lagos')) return 'NG';
+      if (tz.includes('London')) return 'GB';
+      if (tz.includes('Johannesburg')) return 'ZA';
+      if (tz.includes('Nairobi')) return 'KE';
+      if (tz.includes('Accra')) return 'GH';
+    }
+    const offset = new Date().getTimezoneOffset();
+    if (offset === -330) return 'IN';
+    if (offset === -60) return 'NG';
+  } catch (e) {}
+  return 'US';
+}
+
+const geo         = JSON.parse(localStorage.getItem('dovtek_geo') || '{}');
+let countryCode   = geo.code;
+if (!countryCode) {
+  countryCode = guessCountryByTimezone();
+}
+const currency    = CURRENCY_MAP[countryCode] || '$';
+const rate        = RATES[countryCode] || 1;
+const plan        = PLANS[planKey];
+const localAmt    = plan.usd * rate;
+const displayAmt  = currency + (rate > 10
+  ? Math.round(localAmt).toLocaleString()
+  : localAmt.toFixed(2));
+
+// ── Block repurchase ───────────────────────────────────────────────────────
+if (PLAN_RANK[currentPlan] >= PLAN_RANK[planKey] && currentPlan !== 'free') {
+  document.getElementById('checkoutCard').innerHTML = `
+    <div style="padding:20px 0;">
+      <div style="font-size:56px;margin-bottom:20px;">⚡</div>
+      <div style="font-size:22px;font-weight:800;color:var(--white);margin-bottom:12px;">
+        You're already on ${currentPlan === 'plus' ? 'Shield Plus' : 'ShieldIQ Pro'}
+      </div>
+      <p style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:28px;">
+        ${currentPlan === 'plus'
+          ? "You're on our highest plan — you have everything ShieldIQ offers."
+          : "You already have this plan active. Upgrade to Shield Plus for auto-background scanning."}
+      </p>
+      ${currentPlan === 'pro' ? `
+        <a href="/checkout?plan=plus"
+          style="display:inline-block;padding:14px 28px;background:var(--teal);
+                 color:#000;font-weight:700;border-radius:8px;text-decoration:none;
+                 font-size:14px;margin-bottom:16px;">
+          Upgrade to Shield Plus →
+        </a><br>` : ''}
+      <a href="/dashboard"
+        style="font-family:var(--font-mono);font-size:12px;color:var(--muted);
+               text-decoration:underline;">← Back to Dashboard</a>
+    </div>`;
+  // Stop rest of script from running
+  throw new Error('already_subscribed');
+}
+
+// ── Render plan ────────────────────────────────────────────────────────────
+document.getElementById('planIcon').textContent        = plan.icon;
+document.getElementById('planBadge').textContent       = plan.badge;
+document.getElementById('planBadge').className         = `plan-badge ${plan.badgeClass}`;
+document.getElementById('planName').textContent        = plan.name;
+document.getElementById('planPrice').textContent       = displayAmt;
+document.getElementById('payBtn').textContent          = `Continue to Payment →`;
+
+if (countryCode !== 'US' && rate !== 1) {
+  document.getElementById('usdNote').textContent = `≈ $${plan.usd} USD · Paystack converts automatically`;
+}
+
+const list = document.getElementById('featureList');
+plan.features.forEach(f => {
+  const li = document.createElement('li');
+  li.className = f.locked ? 'locked' : '';
+  li.innerHTML = f.locked
+    ? `<span class="icon">🔒</span>${f.text} <em style="font-size:11px;color:var(--muted);margin-left:4px;">(Shield Plus only)</em>`
+    : `<span class="icon">✓</span>${f.text}`;
+  list.appendChild(li);
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── Checkout ───────────────────────────────────────────────────────────────
+async function startCheckout() {
   const btn = document.getElementById('payBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Processing...';
-  
-  // Fake processing delay
-  setTimeout(() => {
-    document.getElementById('successOverlay').classList.add('active');
+  btn.innerHTML = '<span class="spinner"></span> Connecting to Paystack...';
+
+  try {
+    const res = await fetch('/api/billing/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ plan: planKey, country_code: countryCode })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const detail = data.detail || {};
+      if (detail.error === 'already_subscribed') {
+        showToast(detail.message);
+        btn.disabled = false;
+        btn.textContent = 'Continue to Payment →';
+        return;
+      }
+      throw new Error(detail.message || 'Could not initialise payment');
+    }
+
+    // ── DUMMY MODE ──────────────────────────────────────────────────────
+    if (data.mode === 'dummy') {
+      btn.innerHTML = '<span class="spinner"></span> Processing...';
+
+      setTimeout(async () => {
+        try {
+          const activateRes = await fetch('/api/billing/activate-dummy', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ plan: planKey })
+          });
+
+          if (!activateRes.ok) throw new Error('Activation failed');
+          const activateData = await activateRes.json();
+
+          const updated = { ...userObj, plan: activateData.plan };
+          localStorage.setItem('dovtek_user', JSON.stringify(updated));
+
+          btn.innerHTML = '✓ Plan Activated!';
+          btn.style.background = 'linear-gradient(135deg,#0d9488,#0f766e)';
+          btn.style.color = '#fff';
+
+          setTimeout(() => {
+            location.href = `/dashboard?upgraded=true&plan=${planKey}`;
+          }, 1200);
+
+        } catch(err) {
+          btn.disabled = false;
+          btn.textContent = 'Continue to Payment →';
+          showToast(err.message || 'Activation failed — please try again');
+        }
+      }, 1500);
+
+      return;
+    }
+
+    // ── LIVE PAYSTACK ───────────────────────────────────────────────────
+    // Store reference for verification on callback
+    sessionStorage.setItem('paystack_ref',  data.reference);
+    sessionStorage.setItem('paystack_plan', planKey);
+
+    btn.innerHTML = '<span class="spinner"></span> Redirecting to Paystack...';
+
+    // Small delay so user sees the message before redirect
     setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 2500);
-  }, 1500);
+      location.href = data.authorization_url;
+    }, 600);
+
+  } catch(err) {
+    if (err.message === 'already_subscribed') return;
+    btn.disabled = false;
+    btn.textContent = 'Continue to Payment →';
+    showToast(err.message || 'Something went wrong — please try again');
+  }
 }
 </script>
 </body>

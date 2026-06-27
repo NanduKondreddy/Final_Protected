@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldIQ — Super Admin Suite</title>
+<meta name="description" content="ShieldIQ Super Admin Suite — manage registered users, billing plans, and support tickets.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:100vh}
+
+.app{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+
+/* Header */
+.header{display:flex;align-items:center;gap:14px;margin-bottom:40px}
+.brand{font-size:20px;font-weight:700;color:#fff}
+.brand span{background:linear-gradient(135deg,#00D4AA,#00B4D8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.admin-badge{background:linear-gradient(135deg,#c23616,#e74c3c);border-radius:8px;padding:4px 14px;font-size:11px;font-weight:600;color:#fff;margin-left:auto;letter-spacing:.03em}
+.back-link{color:#4a6080;font-size:13px;text-decoration:none;transition:color .2s}
+.back-link:hover{color:#00D4AA}
+
+/* Auth gate */
+.auth-gate{max-width:400px;margin:100px auto;background:linear-gradient(145deg,#0d1f35,#0a1628);border:1px solid #1a3050;border-radius:16px;padding:36px;text-align:center}
+.auth-gate .shield-icon{width:56px;height:56px;margin:0 auto 20px;background:linear-gradient(135deg,#00D4AA20,#00B4D820);border-radius:14px;display:flex;align-items:center;justify-content:center}
+.auth-title{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px}
+.auth-subtitle{font-size:13px;color:#4a6080;margin-bottom:24px}
+.auth-input{width:100%;background:#060d18;border:1.5px solid #1a3050;border-radius:10px;color:#c8d6e5;font-family:'Inter',sans-serif;font-size:14px;padding:14px 16px;margin-bottom:16px;outline:none;transition:border-color .2s}
+.auth-input:focus{border-color:#00D4AA55}
+.auth-btn{width:100%;background:linear-gradient(135deg,#00D4AA,#00B4D8);border:none;border-radius:10px;color:#060d18;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;padding:14px;cursor:pointer;transition:opacity .2s,transform .1s}
+.auth-btn:hover{opacity:.9}
+.auth-btn:active{transform:scale(.98)}
+.auth-error{color:#ff6b6b;font-size:12px;margin-bottom:12px;display:none}
+
+/* Dashboard */
+.dashboard{display:none;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.section-title{font-size:11px;font-weight:700;color:#4a6080;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;margin-top:32px}
+
+/* Stat cards */
+.cards-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
+@media(max-width:800px){.cards-row{grid-template-columns:repeat(2,1fr)}}
+.card{background:linear-gradient(145deg,#0d1f35,#0a1628);border:1px solid #1a3050;border-radius:14px;padding:22px;position:relative;overflow:hidden;transition:border-color .2s}
+.card:hover{border-color:#1a3a5a}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.card:nth-child(1)::after{background:linear-gradient(90deg,#c8d6e5,#9ab0c8)}
+.card:nth-child(2)::after{background:linear-gradient(90deg,#ff6b6b,#ff8e8e)}
+.card:nth-child(3)::after{background:linear-gradient(90deg,#DD8A00,#E6A817)}
+.card:nth-child(4)::after{background:linear-gradient(90deg,#00D4AA,#00B4D8)}
+.card-num{font-size:30px;font-weight:800;margin-bottom:4px}
+.card-label{font-size:11px;color:#4a6080;text-transform:uppercase;letter-spacing:.06em}
+.teal{color:#00D4AA}.amber{color:#DD8A00}.red{color:#ff6b6b}.white{color:#e8f0f8}
+
+/* Two-col layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:8px}
+@media(max-width:800px){.two-col{grid-template-columns:1fr}}
+
+/* Tables and chart cards */
+.table-card{background:linear-gradient(145deg,#0a1628,#081320);border:1px solid #1a3050;border-radius:14px;overflow:hidden;transition:border-color .2s}
+.table-card:hover{border-color:#1a3a5a}
+.table-head{display:grid;padding:12px 20px;background:#0d1f35;border-bottom:1px solid #1a3050;font-size:10px;font-weight:600;color:#4a6080;text-transform:uppercase;letter-spacing:.08em}
+.table-row{display:grid;padding:14px 20px;border-bottom:1px solid #0d1929;font-size:13px;align-items:center;transition:background .15s}
+.table-row:hover{background:#0d1f3540}
+.table-row:last-child{border-bottom:none}
+
+.band-pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.pill-SAFE{background:#00D4AA18;color:#00D4AA}
+.pill-CAUTION{background:#DD8A0018;color:#DD8A00}
+.pill-HIGH_RISK{background:#ff6b6b18;color:#ff6b6b}
+
+/* Bar charts */
+.bar-chart{padding:18px 20px}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:12px}
+.bar-label{width:100px;color:#7a94b0;flex-shrink:0;text-align:right;font-weight:500}
+.bar-track{flex:1;height:18px;background:#060d18;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.bar-val{width:45px;color:#4a6080;font-size:11px;font-weight:600}
+
+/* Action buttons */
+.actions{display:flex;gap:10px;align-items:center}
+.refresh-btn,.report-btn{background:transparent;border:1px solid #1a3050;border-radius:8px;color:#4a6080;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;cursor:pointer;transition:all .2s}
+.refresh-btn:hover{color:#00D4AA;border-color:#00D4AA}
+.report-btn{color:#DD8A00;border-color:#DD8A0040}
+.report-btn:hover{border-color:#DD8A00;background:#DD8A0010}
+
+/* Empty state */
+.empty{padding:28px;text-align:center;color:#4a6080;font-size:13px}
+
+/* Live badge */
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#00D4AA;font-weight:500}
+.live-dot{width:7px;height:7px;background:#00D4AA;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Tabs styling */
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #1a3050;
+  padding-bottom: 12px;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: #7a94b0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 18px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.tab-btn:hover {
+  color: #00D4AA;
+  background: rgba(0, 212, 160, 0.05);
+}
+.tab-btn.active {
+  color: #060d18;
+  background: linear-gradient(135deg, #00D4AA, #00B4D8);
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+/* User Management styles */
+.user-plan-select {
+  background: #060d18;
+  border: 1.5px solid #1a3050;
+  border-radius: 6px;
+  color: #c8d6e5;
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+.user-plan-select:focus {
+  border-color: #00D4AA;
+}
+.badge-plan {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.plan-free { background: rgba(200, 214, 229, 0.1); color: #c8d6e5; }
+.plan-pro { background: rgba(0, 180, 216, 0.15); color: #00B4D8; }
+.plan-plus { background: rgba(0, 212, 160, 0.15); color: #00D4AA; }
+
+/* Support Ticket styles */
+.ticket-msg {
+  font-size: 12px;
+  color: #7a94b0;
+  padding: 8px 12px;
+  background: rgba(6, 13, 24, 0.5);
+  border-radius: 6px;
+  margin-top: 6px;
+  border: 1px dashed #1a3050;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.btn-resolve {
+  background: transparent;
+  border: 1px solid rgba(0, 212, 160, 0.3);
+  color: #00D4AA;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-resolve:hover {
+  background: #00D4AA;
+  color: #060d18;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+      <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00D4AA"/><stop offset="100%" stop-color="#00B4D8"/></linearGradient></defs>
+      <path d="M16 2L4 7.5V16C4 23.18 9.64 29.9 16 31C22.36 29.9 28 23.18 28 16V7.5L16 2Z" fill="url(#sg)" fill-opacity="0.12" stroke="url(#sg)" stroke-width="1.5"/>
+      <path d="M11 16L14.5 19.5L21 13" stroke="url(#sg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="brand">Shield<span>IQ</span></span>
+    <span class="admin-badge">Super Admin Suite</span>
+    <a href="/" class="back-link">← Back to Home</a>
+  </header>
+
+  <!-- Auth gate -->
+  <div class="auth-gate" id="authGate">
+    <div class="shield-icon">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+        <path d="M16 2L4 7.5V16C4 23.18 9.64 29.9 16 31C22.36 29.9 28 23.18 28 16V7.5L16 2Z" fill="#e74c3c" fill-opacity="0.2" stroke="#e74c3c" stroke-width="1.5"/>
+        <path d="M11 16L14.5 19.5L21 13" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="auth-title">Super Admin Access</div>
+    <div class="auth-subtitle">Enter your secret key to access the platform operations suite</div>
+    <div class="auth-error" id="authError">Invalid admin key. Please try again.</div>
+    <input class="auth-input" type="password" id="adminKey" placeholder="Super Admin secret key"
+      onkeydown="if(event.key==='Enter')unlock()"/>
+    <button class="auth-btn" onclick="unlock()" style="background:linear-gradient(135deg, #e74c3c, #c0392b); color: #fff;">Access Suite</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+
+    <div class="tabs">
+      <button id="btn-threats" class="tab-btn active" onclick="switchTab('threats')">🛡️ Threat Analytics</button>
+      <button id="btn-users" class="tab-btn" onclick="switchTab('users')">👥 User Accounts</button>
+      <button id="btn-partners" class="tab-btn" onclick="switchTab('partners')">🔑 Enterprise Keys</button>
+      <button id="btn-global-history" class="tab-btn" onclick="switchTab('global-history')">📄 Global Audit Trail</button>
+      <button id="btn-tickets" class="tab-btn" onclick="switchTab('tickets')">✉️ Support Tickets</button>
+    </div>
+
+    <!-- Threat Analytics Tab Content -->
+    <div id="threatsTab" class="tab-content active">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Threat Range</label>
+          <select id="threatDays" onchange="loadAll()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90" selected>Last 90 days</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+        <span class="live-badge"><span class="live-dot"></span> Live</span>
+      </div>
+      <div class="actions" style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
+        <button class="report-btn" onclick="downloadReport()">📊 Download Report</button>
+        <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+      </div>
+
+      <!-- Top stats -->
+      <div class="cards-row" style="margin-top:14px">
+        <div class="card"><div class="card-num white" id="sTotal">—</div><div class="card-label">Total scans</div></div>
+        <div class="card"><div class="card-num red" id="sHigh">—</div><div class="card-label">High risk</div></div>
+        <div class="card"><div class="card-num amber" id="sOverride">—</div><div class="card-label">Overridden</div></div>
+        <div class="card"><div class="card-num teal" id="sLatency">—</div><div class="card-label">Avg latency</div></div>
+      </div>
+
+      <!-- By band + By source -->
+      <div class="two-col">
+        <div>
+          <div class="section-title">Verdicts by band</div>
+          <div class="table-card"><div class="bar-chart" id="bandChart"></div></div>
+        </div>
+        <div>
+          <div class="section-title">Scans by source</div>
+          <div class="table-card"><div class="bar-chart" id="sourceChart"></div></div>
+        </div>
+      </div>
+
+      <!-- Language breakdown -->
+      <div class="section-title">Accuracy by language</div>
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <span>Language</span><span>Scans</span><span>High risk %</span><span>Override rate</span>
+        </div>
+        <div id="langTable"></div>
+      </div>
+
+      <!-- Top fraud patterns -->
+      <div class="section-title">Top fraud patterns detected</div>
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns:2fr 1fr">
+          <span>Pattern</span><span>Count</span>
+        </div>
+        <div id="patternTable"></div>
+      </div>
+
+      <!-- Recent high-risk -->
+      <div class="section-title">Recent high-risk scans</div>
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns:1fr 80px 80px 100px 80px">
+          <span>Time</span><span>Band</span><span>Score</span><span>Source</span><span>Language</span>
+        </div>
+        <div id="recentTable"></div>
+      </div>
+
+      <!-- Audit Trail & Platform Logs -->
+      <div style="margin-top: 32px;">
+        <div class="section-title" style="margin-top: 0;">Recent User Activities</div>
+        <div class="table-card">
+          <div class="table-head" style="grid-template-columns:140px 1.5fr 120px 140px">
+            <span>Time</span><span>User/Email</span><span>Action</span><span>📍 Location</span>
+          </div>
+          <div id="activitiesTable"></div>
+        </div>
+      </div>
+      <div style="margin-top: 24px;">
+        <div class="section-title" style="margin-top: 0;">Platform Metrics & Traffic</div>
+        <div class="table-card">
+          <div class="table-head" style="grid-template-columns:1fr 60px 60px 70px">
+            <span>Endpoint</span><span>Method</span><span>Status</span><span>Latency</span>
+          </div>
+          <div id="metricsTable"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Accounts Tab Content -->
+    <div id="usersTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="section-title" style="margin:0">Registered User Accounts</div>
+        <div style="display:flex;gap:10px;">
+          <input type="text" id="userSearch" placeholder="Search by email..." oninput="filterUsers()" style="background:#0a1628; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:6px 14px; font-size:13px; outline:none; width: 220px;">
+          <button class="refresh-btn" onclick="loadUsers()">↻ Refresh</button>
+        </div>
+      </div>
+      
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr">
+          <span>Joined Date</span><span>Name</span><span>Email</span><span>Current Plan</span><span>Actions</span>
+        </div>
+        <div id="usersListTable"></div>
+      </div>
+    </div>
+
+    <!-- Enterprise Keys Tab Content -->
+    <div id="partnersTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="section-title" style="margin:0">B2B Enterprise Partner Accounts & API Keys</div>
+        <button class="refresh-btn" onclick="loadPartners()">↻ Refresh</button>
+      </div>
+
+      <!-- Generate Key section -->
+      <div class="table-card" style="padding: 24px; margin-bottom: 24px; background: linear-gradient(145deg, #0d1f35, #0a1628);">
+        <div style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 16px;">Generate New API Key for B2B Partner</div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-size: 11px; color: #4a6080; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Partner / Company Name</label>
+            <input type="text" id="partnerName" placeholder="e.g. Acme Corp" style="width:100%; background:#060d18; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:10px 14px; font-size:13px; outline:none;">
+          </div>
+          <div style="width: 140px;">
+            <label style="display: block; font-size: 11px; color: #4a6080; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Daily Scan Limit</label>
+            <input type="number" id="partnerLimit" value="10000" style="width:100%; background:#060d18; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:10px 14px; font-size:13px; outline:none;">
+          </div>
+          <div style="width: 140px;">
+            <label style="display: block; font-size: 11px; color: #4a6080; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Tier</label>
+            <select id="partnerTier" style="width:100%; background:#060d18; border:1px solid #1a3050; border-radius:8px; color:#fff; padding:10px 14px; font-size:13px; outline:none; height:38px; cursor:pointer;">
+              <option value="enterprise">Enterprise</option>
+              <option value="plus">Plus</option>
+              <option value="pro">Pro</option>
+            </select>
+          </div>
+          <button class="auth-btn" onclick="generatePartnerKey()" style="width: auto; padding: 10px 24px; height: 38px; border-radius: 8px; font-size: 13px;">Create API Key</button>
+        </div>
+
+        <!-- Secret key display box -->
+        <div id="newKeyDisplay" style="display: none; margin-top: 20px; padding: 16px; background: rgba(0, 212, 160, 0.05); border: 1px dashed #00D4AA; border-radius: 10px;">
+          <div style="font-size: 12px; color: #00D4AA; font-weight: 600; margin-bottom: 6px;">⚠️ API KEY GENERATED SUCCESSFULLY</div>
+          <div style="font-size: 11px; color: #7a94b0; margin-bottom: 12px;">Copy this secret key and store it securely. For security reasons, it will not be shown again.</div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="generatedRawKey" readonly style="flex: 1; background: #060d18; border: 1px solid #1a3050; color: #fff; font-family: monospace; font-size: 13px; padding: 10px; border-radius: 6px; outline: none;" onclick="this.select()">
+            <button class="btn-resolve" onclick="copyGeneratedKey()" style="height: 38px;">Copy Key</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partner Keys Table -->
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1.2fr 1fr 100px">
+          <span>Partner Name</span><span>Key ID</span><span>Tier</span><span>Status</span><span>Created At</span><span>Total Scans</span><span>Action</span>
+        </div>
+        <div id="partnersTable"></div>
+      </div>
+    </div>
+
+    <!-- Global Audit Trail Tab Content -->
+    <div id="global-historyTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-title" style="margin:0">Global Scan Audit Trail (All Customers)</div>
+        <button class="refresh-btn" onclick="loadGlobalHistory()">↻ Refresh</button>
+      </div>
+
+      <!-- Filter Bar -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Days</label>
+          <select id="filterDays" onchange="loadGlobalHistory()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90" selected>Last 90 days</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Verdict</label>
+          <select id="filterVerdict" onchange="applyGlobalFilters()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="">All</option>
+            <option value="SAFE">Safe</option>
+            <option value="CAUTION">Caution</option>
+            <option value="HIGH_RISK">High Risk</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Source</label>
+          <select id="filterSource" onchange="applyGlobalFilters()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="">All Sources</option>
+            <option value="web_app">Web App</option>
+            <option value="extension">Extension</option>
+            <option value="api">API</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+        <div id="filterCount" style="font-size:12px;color:#4a6080;margin-left:auto;"></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 130px 1.2fr 90px 90px 80px 80px 80px 110px">
+          <span>Timestamp</span><span>Source / Key</span><span>Risk Score</span><span>Verdict</span><span>Language</span><span>Latency</span><span>Provider</span><span>📍 Location</span>
+        </div>
+        <div id="globalHistoryTable"></div>
+      </div>
+    </div>
+
+    <!-- Support Tickets Tab Content -->
+    <div id="ticketsTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="section-title" style="margin:0">Customer Support Tickets</div>
+        <button class="refresh-btn" onclick="loadTickets()">↻ Refresh</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 140px 140px 1.5fr 100px 120px">
+          <span>Date</span><span>Customer</span><span>Issue / Message</span><span>Status</span><span>Action</span>
+        </div>
+        <div id="ticketsListTable"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let ADMIN_KEY = '';
+
+const SRC_LABELS = {web_app:'Web App',extension:'Extension',whatsapp:'WhatsApp',gmail:'Gmail',api:'API',webhook:'Webhook',mobile_app:'Mobile',share_sheet:'Share',sms:'SMS'};
+
+function unlock() {
+  const key = document.getElementById('adminKey').value.trim();
+  if (!key) return;
+  ADMIN_KEY = key;
+
+  // Attempt to load — if it fails, show error
+  fetch(`${API}/audit/summary?days=30&admin_key=${ADMIN_KEY}`)
+    .then(res => {
+      if (res.status === 403) {
+        document.getElementById('authError').style.display = 'block';
+        return;
+      }
+      document.getElementById('authGate').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadAll();
+    })
+    .catch(() => {
+      document.getElementById('authError').style.display = 'block';
+    });
+}
+
+async function loadAll() {
+  await Promise.all([
+    loadSummary(),
+    loadPatterns(),
+    loadHistory(),
+    loadActivities(),
+    loadMetrics()
+  ]);
+}
+
+async function loadSummary() {
+  try {
+    const days = document.getElementById('threatDays')?.value || 90;
+    const res = await fetch(`${API}/audit/summary?days=${days}&admin_key=${ADMIN_KEY}`);
+    if (res.status === 403) return;
+    const data = await res.json();
+
+    document.getElementById('sTotal').textContent    = (data.total_scans || 0).toLocaleString();
+    document.getElementById('sHigh').textContent     = (data.by_band?.HIGH_RISK || 0).toLocaleString();
+    document.getElementById('sOverride').textContent = (data.confirmed_fraud_reports || 0).toLocaleString();
+    document.getElementById('sLatency').textContent  = (data.avg_latency_ms || 0) + 'ms';
+
+    const total = data.total_scans || 1;
+    const bands = [
+      { label: 'Safe',      count: data.by_band?.SAFE      || 0, color: '#00D4AA' },
+      { label: 'Caution',   count: data.by_band?.CAUTION   || 0, color: '#DD8A00' },
+      { label: 'High Risk', count: data.by_band?.HIGH_RISK || 0, color: '#ff6b6b' },
+    ];
+    document.getElementById('bandChart').innerHTML = bands.map(b => `
+      <div class="bar-row">
+        <span class="bar-label">${b.label}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.count/total*100)}%;background:${b.color}"></div></div>
+        <span class="bar-val">${b.count.toLocaleString()}</span>
+      </div>`).join('');
+
+    const srcData = data.by_source || {};
+    const srcTotal = Object.values(srcData).reduce((a,b)=>a+b,0) || 1;
+    document.getElementById('sourceChart').innerHTML = Object.entries(srcData)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([src, count]) => `
+        <div class="bar-row">
+          <span class="bar-label">${SRC_LABELS[src]||src}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/srcTotal*100)}%;background:linear-gradient(90deg,#00D4AA,#00B4D8)"></div></div>
+          <span class="bar-val">${count.toLocaleString()}</span>
+        </div>`).join('') || '<div class="empty">No source data yet</div>';
+
+  } catch(e) { console.error(e); }
+}
+
+async function loadPatterns() {
+  try {
+    const days = document.getElementById('threatDays')?.value || 90;
+    const res = await fetch(`${API}/audit/patterns?days=${days}&admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+
+    const byLang = data.by_language || {};
+    const total  = data.total_scans || 1;
+    document.getElementById('langTable').innerHTML = Object.entries(byLang)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([lang, count]) => `
+        <div class="table-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <span style="text-transform:capitalize;font-weight:500">${lang}</span>
+          <span>${count.toLocaleString()}</span>
+          <span style="color:#ff6b6b">${Math.round(((data.by_band?.HIGH_RISK||0)/total)*100)}%</span>
+          <span style="color:#DD8A00">—</span>
+        </div>`).join('') || '<div class="empty">No language data yet</div>';
+
+    const patterns = data.top_patterns || [];
+    document.getElementById('patternTable').innerHTML = patterns.length
+      ? patterns.map(p => `
+          <div class="table-row" style="grid-template-columns:2fr 1fr">
+            <span style="font-family:monospace;color:#7a94b0;font-size:12px">${p.pattern}</span>
+            <span style="font-weight:600">${p.count.toLocaleString()}</span>
+          </div>`).join('')
+      : '<div class="empty">No pattern data yet — patterns accumulate as scans run</div>';
+
+  } catch(e) { console.error(e); }
+}
+
+async function loadHistory() {
+  try {
+    const days = document.getElementById('threatDays')?.value || 90;
+    const res = await fetch(`${API}/audit/history?limit=10&days=${days}`);
+    const data = await res.json();
+    const records = (data.records||[]).filter(r => r.risk_band !== 'SAFE').slice(0,10);
+
+    document.getElementById('recentTable').innerHTML = records.length
+      ? records.map(r => {
+          const dt  = new Date(r.timestamp);
+          const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
+                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          return `
+            <div class="table-row" style="grid-template-columns:1fr 80px 80px 100px 80px">
+              <span style="color:#7a94b0;font-size:12px">${str}</span>
+              <span><span class="band-pill pill-${r.risk_band}">${r.risk_band==='HIGH_RISK'?'High':'Caution'}</span></span>
+              <span style="font-weight:700">${r.risk_score}</span>
+              <span style="color:#7a94b0;font-size:12px">${SRC_LABELS[r.source]||r.source||'—'}</span>
+              <span style="color:#7a94b0;font-size:12px;text-transform:capitalize">${r.detected_language||'en'}</span>
+            </div>`;}).join('')
+      : `<div class="empty">No flagged scans in the last ${days} days — looking good!</div>`;
+
+  } catch(e) { console.error(e); }
+}
+
+async function loadActivities() {
+  try {
+    const res = await fetch(`${API}/audit/activities?limit=25&admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    
+    document.getElementById('activitiesTable').innerHTML = data.length
+      ? data.map(a => {
+          const dt  = new Date(a.timestamp);
+          const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
+                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          const loc = (a.details && a.details.location) ? a.details.location : '—';
+          const isLocalhost = loc === 'Localhost (Dev)';
+          const locColor = isLocalhost ? '#4a6080' : '#00B4D8';
+          const locIcon = isLocalhost ? '🖥️' : '📍';
+          return `
+            <div class="table-row" style="grid-template-columns:140px 1.5fr 120px 140px; font-size:12px;">
+              <span style="color:#7a94b0">${str}</span>
+              <span style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${a.email}">${a.email}</span>
+              <span><span class="band-pill" style="background:rgba(0,212,160,0.1);color:#00D4AA;padding:2px 8px;font-size:10px;border-radius:6px;text-transform:uppercase;">${a.action}</span></span>
+              <span style="color:${locColor}; font-size:11px; display:flex; align-items:center; gap:4px;">${locIcon} ${loc}</span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No user activities logged yet</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function loadMetrics() {
+  try {
+    const res = await fetch(`${API}/audit/metrics?limit=15&admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    
+    document.getElementById('metricsTable').innerHTML = data.length
+      ? data.map(m => {
+          const latColor = m.latency_ms > 500 ? '#ff6b6b' : m.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
+          const statusColor = m.status_code >= 400 ? '#ff6b6b' : '#00D4AA';
+          return `
+            <div class="table-row" style="grid-template-columns:1fr 60px 60px 70px; font-size:12px;">
+              <span style="color:#7a94b0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${m.endpoint}">${m.endpoint}</span>
+              <span style="font-family:monospace;font-weight:600;">${m.method}</span>
+              <span style="color:${statusColor};font-weight:600;">${m.status_code}</span>
+              <span style="color:${latColor};font-family:monospace;">${m.latency_ms}ms</span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No platform metrics logged yet</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function downloadReport() {
+  try {
+    const res = await fetch(`${API}/audit/report?days=30&admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shieldiq_report_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Report generation failed: ' + e.message); }
+}
+
+// ── Super Admin Suite Navigation & Actions ──────────────────────────────────
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  
+  document.getElementById(`btn-${tabId}`).classList.add('active');
+  
+  if (tabId === 'threats') {
+    document.getElementById('threatsTab').classList.add('active');
+  } else if (tabId === 'users') {
+    document.getElementById('usersTab').classList.add('active');
+    loadUsers();
+  } else if (tabId === 'partners') {
+    document.getElementById('partnersTab').classList.add('active');
+    loadPartners();
+  } else if (tabId === 'global-history') {
+    document.getElementById('global-historyTab').classList.add('active');
+    loadGlobalHistory();
+  } else if (tabId === 'tickets') {
+    document.getElementById('ticketsTab').classList.add('active');
+    loadTickets();
+  }
+}
+
+async function loadPartners() {
+  try {
+    const res = await fetch(`${API}/audit/partners?admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    
+    document.getElementById('partnersTable').innerHTML = data.length
+      ? data.map(p => {
+          const dt = p.created_at ? new Date(p.created_at) : null;
+          const str = dt 
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            : '—';
+          
+          const isActive = p.is_active;
+          const statusBadge = isActive 
+            ? '<span class="badge-plan plan-plus">Active</span>' 
+            : '<span class="badge-plan plan-free" style="color: #ff6b6b; background: rgba(255,107,107,0.1)">Revoked</span>';
+          
+          const actionButton = isActive 
+            ? `<button class="btn-resolve" onclick="deactivatePartner('${p.key_id}')" style="border-color: rgba(255,107,107,0.3); color: #ff6b6b;">Revoke</button>` 
+            : '<span style="color:#4a6080; font-size:11px; font-weight:500;">No actions</span>';
+
+          return `
+            <div class="table-row" style="grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1.2fr 1fr 100px; align-items:center;">
+              <span style="font-weight:600; color:#fff">${p.partner_name}</span>
+              <span style="font-family:monospace; color:#7a94b0; font-size:12px;">${p.key_id}</span>
+              <span style="text-transform:uppercase; font-size:11px; color:#00B4D8; font-weight:600;">${p.tier}</span>
+              <span>${statusBadge}</span>
+              <span style="color:#7a94b0; font-size:12px;">${str}</span>
+              <span style="font-weight:700; color:#fff;">${(p.total_scans || 0).toLocaleString()}</span>
+              <span>${actionButton}</span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No B2B partner keys registered yet</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function generatePartnerKey() {
+  const name = document.getElementById('partnerName').value.trim();
+  const limit = parseInt(document.getElementById('partnerLimit').value) || 10000;
+  const tier = document.getElementById('partnerTier').value;
+
+  if (!name) {
+    alert('Please enter a partner name.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/audit/partners/generate?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partner_name: name, tier: tier, daily_limit: limit })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('generatedRawKey').value = data.raw_key;
+      document.getElementById('newKeyDisplay').style.display = 'block';
+      document.getElementById('partnerName').value = '';
+      loadPartners();
+    } else {
+      alert('Failed to generate API key.');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error generating API key.');
+  }
+}
+
+function copyGeneratedKey() {
+  const input = document.getElementById('generatedRawKey');
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  alert('API Key copied to clipboard!');
+}
+
+async function deactivatePartner(keyId) {
+  if (!confirm(`Are you sure you want to deactivate and revoke this B2B partner credential? This action is permanent and cannot be undone.`)) {
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API}/audit/partners/revoke?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key_id: keyId })
+    });
+    
+    if (res.ok) {
+      alert('API key revoked successfully.');
+      loadPartners();
+    } else {
+      alert('Failed to revoke API key.');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error revoking API key.');
+  }
+}
+
+// ── Global History with filters ─────────────────────────────────────────────
+let _allGlobalRecords = [];
+
+async function loadGlobalHistory() {
+  try {
+    const days = document.getElementById('filterDays')?.value || 30;
+    const res = await fetch(`${API}/audit/global-history?limit=500&days=${days}&admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    _allGlobalRecords = data.records || [];
+    applyGlobalFilters();
+  } catch(e) { console.error(e); }
+}
+
+function applyGlobalFilters() {
+  const verdict  = document.getElementById('filterVerdict')?.value || '';
+  const source   = document.getElementById('filterSource')?.value  || '';
+  const days     = document.getElementById('filterDays')?.value    || 30;
+
+  // Re-fetch if days changed (need different dataset)
+  // (handled by onchange calling loadGlobalHistory first for days)
+
+  let filtered = _allGlobalRecords;
+  if (verdict)  filtered = filtered.filter(r => r.risk_band === verdict);
+  if (source)   filtered = filtered.filter(r => r.source === source);
+
+  document.getElementById('filterCount').textContent = `Showing ${filtered.length} of ${_allGlobalRecords.length} records`;
+
+  document.getElementById('globalHistoryTable').innerHTML = filtered.length
+    ? filtered.map(r => {
+        const dt  = new Date(r.timestamp);
+        const str = dt.toLocaleDateString('en-GB', {month:'short', day:'numeric'}) + ' ' +
+                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+        const sourceLabel = r.api_key_id ? r.api_key_id : (SRC_LABELS[r.source] || r.source || 'Web App (B2C)');
+        const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
+
+        // Country code from backend — generate flag emoji from ISO 2-letter code
+        const cc = r.client_ip || null;
+        let locDisplay;
+        if (!cc) {
+          locDisplay = '<span style="color:#4a6080">—</span>';
+        } else if (cc === 'LOCAL') {
+          locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Dev</span>';
+        } else if (/^[A-Z]{2}$/.test(cc.toUpperCase())) {
+          // Valid ISO 2-letter country code — generate flag emoji
+          const flag = cc.toUpperCase().split('').map(c =>
+            String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
+          ).join('');
+          locDisplay = `<span style="font-size:14px;">${flag}</span>&nbsp;<span style="color:#00B4D8;font-size:11px;font-weight:600;">${cc.toUpperCase()}</span>`;
+        } else {
+          // Raw IP or legacy data — just show dash
+          locDisplay = '<span style="color:#4a6080">—</span>';
+        }
+
+        return `
+          <div class="table-row" style="grid-template-columns:130px 1.2fr 90px 90px 80px 80px 80px 110px; align-items:center;">
+            <span style="color:#7a94b0;font-size:12px">${str}</span>
+            <span style="font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sourceLabel}">${sourceLabel}</span>
+            <span style="font-weight:700">${r.risk_score}</span>
+            <span><span class="band-pill pill-${r.risk_band}">${r.risk_band === 'HIGH_RISK' ? 'High Risk' : r.risk_band}</span></span>
+            <span style="color:#7a94b0;text-transform:capitalize;">${r.detected_language || 'en'}</span>
+            <span style="color:${latColor};font-family:monospace;">${r.latency_ms}ms</span>
+            <span style="color:#7a94b0">${r.provider_used || 'gemini'}</span>
+            <span style="display:flex;align-items:center;gap:4px;">${locDisplay}</span>
+          </div>`;
+      }).join('')
+    : '<div class="empty">No records match the current filters</div>';
+}
+
+let allUsersList = [];
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API}/audit/users?admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    allUsersList = data;
+    renderUsers(data);
+  } catch(e) { console.error(e); }
+}
+
+function renderUsers(users) {
+  document.getElementById('usersListTable').innerHTML = users.length
+    ? users.map(u => {
+        const dt = u.created_at ? new Date(u.created_at) : null;
+        const str = dt 
+          ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+          : '—';
+        return `
+          <div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; align-items:center;">
+            <span style="color:#7a94b0; font-size:12px;">${str}</span>
+            <span style="font-weight:600; color:#fff">${u.full_name || 'User'}</span>
+            <span style="color:#7a94b0; font-size:13px;">${u.email}</span>
+            <span><span class="badge-plan plan-${u.plan}">${u.plan}</span></span>
+            <span>
+              <select class="user-plan-select" onchange="changeUserPlan(${u.id}, this.value)">
+                <option value="free" ${u.plan==='free'?'selected':''}>Free</option>
+                <option value="pro" ${u.plan==='pro'?'selected':''}>Pro</option>
+                <option value="plus" ${u.plan==='plus'?'selected':''}>Plus</option>
+              </select>
+            </span>
+          </div>`;
+      }).join('')
+    : '<div class="empty">No users registered yet</div>';
+}
+
+function filterUsers() {
+  const query = document.getElementById('userSearch').value.toLowerCase();
+  const filtered = allUsersList.filter(u => u.email.toLowerCase().includes(query) || (u.full_name || '').toLowerCase().includes(query));
+  renderUsers(filtered);
+}
+
+async function changeUserPlan(userId, newPlan) {
+  if (!confirm(`Are you sure you want to change this user's plan to ${newPlan.toUpperCase()}?`)) {
+    loadUsers();
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/audit/users/change-plan?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, plan: newPlan })
+    });
+    if (res.ok) {
+      alert('Plan updated successfully!');
+      loadUsers();
+    } else {
+      alert('Failed to update plan.');
+      loadUsers();
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error updating plan.');
+    loadUsers();
+  }
+}
+
+async function loadTickets() {
+  try {
+    const res = await fetch(`${API}/audit/tickets?admin_key=${ADMIN_KEY}`);
+    const data = await res.json();
+    
+    document.getElementById('ticketsListTable').innerHTML = data.length
+      ? data.map(t => {
+          const dt = t.created_at ? new Date(t.created_at) : null;
+          const str = dt 
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            : '—';
+          const isResolved = t.status === 'Resolved';
+          return `
+            <div class="table-row" style="grid-template-columns: 140px 140px 1.5fr 100px 120px; align-items:start; padding:18px 20px;">
+              <span style="color:#7a94b0; font-size:12px;">${str}</span>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <span style="font-weight:600; color:#fff">${t.name}</span>
+                <span style="color:#4a6080; font-size:11px;">${t.email}</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:600; color:#c8d6e5;">${t.subject}</span>
+                <div class="ticket-msg">${t.message}</div>
+              </div>
+              <span>
+                <span class="band-pill" style="background:${isResolved?'rgba(0,212,160,0.1)':'rgba(255,107,107,0.1)'}; color:${isResolved?'#00D4AA':'#ff6b6b'}; padding:2px 8px; font-size:10px; border-radius:6px; text-transform:uppercase;">
+                  ${t.status}
+                </span>
+              </span>
+              <span>
+                ${isResolved 
+                  ? '<span style="color:#4a6080; font-size:11px; font-weight:500;">No actions</span>' 
+                  : `<button class="btn-resolve" onclick="resolveTicket(${t.id})">Mark Resolved</button>`
+                }
+              </span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No support tickets found</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function resolveTicket(ticketId) {
+  try {
+    const res = await fetch(`${API}/audit/tickets/resolve?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticket_id: ticketId })
+    });
+    if (res.ok) {
+      loadTickets();
+    } else {
+      alert('Failed to resolve ticket.');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+</script>
+</body>
+</html>

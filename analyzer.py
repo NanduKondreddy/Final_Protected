@@ -3,154 +3,467 @@ load_dotenv()
 
 import json
 import os
-import google.generativeai as genai
-from prompts import PASS1_SYSTEM, PASS2_SYSTEM
-from models import ScanResult
+import re
+import asyncio
+from typing import Any
 
-# Optional PDF support
+import google.generativeai as genai
+
+from fraud_rules import (
+    apply_rule_validation,
+    heuristic_result,
+    normalize_ai_result,
+    scan_message_rules,
+)
+from models import ScanResult
+from prompts import PASS1_SYSTEM, PASS2_SYSTEM
+
 try:
     import fitz  # PyMuPDF
 except ImportError:
     fitz = None
 
-# Configure Gemini
-api_key = os.environ.get("GEMINI_API_KEY")
+
+api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
 
-# Use the latest 2.5 Flash model available on your API key
-model = genai.GenerativeModel('gemini-2.5-flash')
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_FALLBACK_MODELS = [
+    GEMINI_MODEL,
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+]
 
-async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    """Extract text content from a PDF file using PyMuPDF."""
+SAFETY_SETTINGS = {
+    "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+    "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
+    "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
+    "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
+}
+
+
+# ── Typosquatting / Domain Safety Check ──────────────────────────────────────
+
+TRUSTED_DOMAINS = []
+try:
+    with open(os.path.join(os.path.dirname(__file__), "data_store", "trusted_domains.json"), "r") as f:
+        data = json.load(f)
+        TRUSTED_DOMAINS = [d.lower().strip() for d in data.get("trusted_domains", [])]
+except Exception:
+    TRUSTED_DOMAINS = [
+        "google.com", "gmail.com", "youtube.com", "facebook.com", "instagram.com",
+        "whatsapp.com", "twitter.com", "x.com", "linkedin.com", "netflix.com",
+        "amazon.com", "apple.com", "microsoft.com", "paypal.com", "github.com",
+        "reddit.com", "ebay.com", "walmart.com", "zoom.us", "telegram.org", "discord.com"
+    ]
+
+def levenshtein_distance(s1: str, s2: str) -> int:
+    if len(s1) < len(s2):
+        return levenshtein_distance(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+
+    return previous_row[-1]
+
+def extract_domains(text: str) -> list[str]:
+    domain_pattern = re.compile(
+        r'(?:https?://)?(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z]{2,63})',
+        re.IGNORECASE
+    )
+    matches = domain_pattern.findall(text)
+    domains = []
+    for m in matches:
+        d = m.lower().strip()
+        if d:
+            domains.append(d)
+    return list(set(domains))
+
+def check_typosquatting(text: str) -> list[str]:
+    if not text:
+        return []
+    domains = extract_domains(text)
+    warnings = []
+    
+    for d in domains:
+        if d in TRUSTED_DOMAINS:
+            continue
+            
+        d_parts = d.split(".")
+        if not d_parts:
+            continue
+        d_name = d_parts[0]
+        
+        for td in TRUSTED_DOMAINS:
+            td_parts = td.split(".")
+            if not td_parts:
+                continue
+            td_name = td_parts[0]
+            
+            # Check 1: Substring phishing (e.g., "paypal-update.com" contains "paypal")
+            if td_name in d_name and len(d_name) > len(td_name):
+                warnings.append(
+                    f"The link '{d}' impersonates the trusted brand '{td_name}' (part of '{td}')."
+                )
+                break
+                
+            # Check 2: Typosquatting / Edit distance
+            if abs(len(d_name) - len(td_name)) <= 2:
+                dist = levenshtein_distance(d_name, td_name)
+                if 1 <= dist <= 2:
+                    warnings.append(
+                        f"The link '{d}' is a potential typosquatted lookalike of the trusted brand '{td}'."
+                    )
+                    break
+    return warnings
+
+
+async def extract_text_from_pdf_basic(pdf_bytes: bytes) -> str:
+    """Extract only the first page text content from a PDF file for basic plans."""
     if not fitz:
-        return "[Error: PDF processing library (PyMuPDF) not installed on server]"
+        return "[PDF text extraction is unavailable because PyMuPDF is not installed]"
 
-    text = ""
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        if doc.page_count > 0:
+            return doc[0].get_text().strip()
+        return ""
+    except Exception as exc:
+        return f"[Error extracting PDF text: {exc}]"
+
+
+async def extract_text_from_pdf_advanced(pdf_bytes: bytes) -> tuple[str, dict, list[str]]:
+    """Extract full text content, metadata, and embedded hyperlinks from a PDF file for advanced plans."""
+    if not fitz:
+        return "[PDF text extraction is unavailable because PyMuPDF is not installed]", {}, []
+
+    try:
+        text_parts = []
+        links = []
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         for page in doc:
-            text += page.get_text()
-        return text
-    except Exception as e:
-        return f"[Error extracting PDF text: {str(e)}]"
+            text_parts.append(page.get_text())
+            for link in page.get_links():
+                if "uri" in link:
+                    links.append(link["uri"])
+        return "\n".join(text_parts).strip(), doc.metadata or {}, links
+    except Exception as exc:
+        return f"[Error extracting PDF text: {exc}]", {}, []
 
 
 async def analyze_message(
     message: str = None,
     image_bytes: bytes = None,
     image_media_type: str = None,
+    user_plan: str = "free",
 ) -> ScanResult:
     """
-    Two-pass fraud analysis using Gemini AI.
-    Pass 1: Prompt injection guard
-    Pass 2: Deep fraud analysis
+    Fraud analysis pipeline.
 
-    Supports: text messages, images/screenshots, and PDF documents.
+    1. Deterministic fraud rules create a safety baseline.
+    2. Gemini performs language and context-aware analysis when an API key exists.
+    3. The rule layer validates the AI output to catch false positives/negatives.
     """
+    if user_plan == "free":
+        # Simulate queue/non-priority processing delay
+        await asyncio.sleep(1.5)
+
+    content, text_for_rules = await _build_content(message, image_bytes, image_media_type, user_plan=user_plan)
+
+    if not content:
+        raise ValueError("No content provided for analysis")
+
+    typo_warnings = check_typosquatting(text_for_rules) if text_for_rules else []
+
+    if text_for_rules and not image_bytes:
+        if typo_warnings:
+            return ScanResult(
+                risk_score=95,
+                risk_level="HIGH",
+                summary="Brand Impersonation / Lookalike URL Detected.",
+                reasons=typo_warnings,
+                action="BLOCK",
+                what_to_do="Do not click links in this message. They mimic trusted brand domains to deceive you.",
+                priority_used=(user_plan != "free"),
+            )
+        rule_verdict = scan_message_rules(text_for_rules)
+        if (rule_verdict.force_high and rule_verdict.score >= 85) or rule_verdict.force_low:
+            res = heuristic_result(text_for_rules)
+            res.priority_used = (user_plan != "free")
+            return res
+
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable is not set. Please add it to your .env file.")
+        if typo_warnings:
+            return ScanResult(
+                risk_score=95,
+                risk_level="HIGH",
+                summary="Brand Impersonation / Lookalike URL Detected.",
+                reasons=typo_warnings,
+                action="BLOCK",
+                what_to_do="Do not click links in this message. They mimic trusted brand domains to deceive you.",
+                priority_used=(user_plan != "free"),
+            )
+        if text_for_rules:
+            res = heuristic_result(text_for_rules)
+            res.priority_used = (user_plan != "free")
+            return res
+        raise ValueError("GEMINI_API_KEY is required to analyze images or PDFs without extractable text.")
 
     try:
-        content = []
-
-        # Handle PDF
-        if image_media_type == "application/pdf" and image_bytes:
-            pdf_text = await extract_text_from_pdf(image_bytes)
-            content.append(f"Document Content (PDF):\n\n{pdf_text}")
-
-        # Handle Images
-        elif image_bytes:
-            # Gemini expects image bytes wrapped in a dict with mime_type
-            content.append({
-                "mime_type": image_media_type or "image/jpeg",
-                "data": image_bytes
-            })
-            if not message:
-                content.append("Analyse the text in this image for fraud signals.")
-
-        # Handle Text Message
-        if message:
-            content.append(f"Message to check:\n\n{message}")
-
-        if not content:
-            raise ValueError("No content provided for analysis")
-
-        safety_settings = {
-            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
-            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
-            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
-        }
-
-        # ── Pass 1: Prompt Injection Guard ──────────────────────────────
-        # Very short messages (under 30 chars) cannot possibly be prompt injections—skip the guard
-        msg_text = message or ""
-        is_injection = False
-
-        if len(msg_text) >= 30:
-            pass1_user_message = (
-                PASS1_SYSTEM
-                + "\n\nHere is the message to evaluate:\n\n"
-                + msg_text
-            )
-            pass1_response = await model.generate_content_async(
-                pass1_user_message,
-                generation_config=genai.GenerationConfig(max_output_tokens=5),
-                safety_settings=safety_settings
-            )
-            try:
-                verdict = pass1_response.text.strip().upper()
-            except ValueError:
-                # Gemini safety filters blocked it — treat as injection
-                verdict = "BLOCK"
-
-            print(f"[PASS1] verdict='{verdict}' for message: {msg_text[:80]}")
-
-            # Use exact match — only block when model returns exactly "BLOCK"
-            is_injection = (verdict == "BLOCK")
-
-        if is_injection:
+        verdict = await _run_injection_guard(content)
+        if verdict == "BLOCK":
             return ScanResult(
                 risk_score=100,
                 risk_level="HIGH",
                 summary="This message contains hidden instructions designed to manipulate AI systems.",
                 reasons=[
-                    "The message contains text trying to override AI safety rules",
-                    "This is a prompt injection attack — used by advanced fraudsters to fool AI tools",
-                    "No legitimate message would contain instructions telling an AI to ignore its rules",
+                    "The message tries to override or control the fraud scanner",
+                    "Hidden AI instructions are a known advanced abuse technique",
+                    "Normal messages do not ask security tools to ignore their rules",
                 ],
                 action="BLOCK",
-                what_to_do="Do not interact with this message or whoever sent it. Block the sender immediately.",
+                what_to_do="Do not follow the message; block or report the sender if it came from an unknown source.",
                 pass1_blocked=True,
+                priority_used=(user_plan != "free"),
             )
 
-        # ── Pass 2: Deep Fraud Analysis ──────────────────────────────────
-        pass2_response = await model.generate_content_async(
-            [PASS2_SYSTEM] + content,
-            generation_config=genai.GenerationConfig(
-                max_output_tokens=1000,
-                temperature=0.2,
-                response_mime_type="application/json"
-            ),
-            safety_settings=safety_settings
+        ai_result = await _run_deep_analysis(content)
+        result = ai_result
+        if text_for_rules:
+            result = apply_rule_validation(ai_result, text_for_rules)
+        result.priority_used = (user_plan != "free")
+        return result
+
+    except Exception as exc:
+        if "safety filters blocked" in str(exc):
+            return ScanResult(
+                risk_score=100,
+                risk_level="HIGH",
+                summary="AI Security Alert: This document was flagged and blocked by AI safety filters.",
+                reasons=[
+                    "The document contains content that triggered safety policies",
+                    "Safety blocks indicate potentially hazardous or manipulative text",
+                    "Security tools block requests that contain malicious payloads",
+                ],
+                action="BLOCK",
+                what_to_do="Do not open or trust this document; delete it immediately.",
+                pass1_blocked=True,
+                priority_used=(user_plan != "free"),
+            )
+        if text_for_rules:
+            res = heuristic_result(text_for_rules)
+            res.priority_used = (user_plan != "free")
+            return res
+        raise ValueError(f"AI Analysis Failed: {exc}") from exc
+
+
+async def _build_content(
+    message: str | None,
+    image_bytes: bytes | None,
+    image_media_type: str | None,
+    user_plan: str = "free",
+) -> tuple[list[Any], str]:
+    content: list[Any] = []
+    text_for_rules = (message or "").strip()
+
+    if image_media_type == "application/pdf" and image_bytes:
+        if user_plan == "free":
+            if len(image_bytes) > 100 * 1024:
+                raise ValueError("PDF size limit exceeded (100KB max for free tier). Upgrade to Pro for unlimited document size and advanced link scanning.")
+            pdf_text = await extract_text_from_pdf_basic(image_bytes)
+            content.append(f"Document Content (PDF - Basic Scan):\n\n{pdf_text}")
+            text_for_rules = "\n\n".join(filter(None, [text_for_rules, pdf_text]))
+        else:
+            pdf_text, metadata, links = await extract_text_from_pdf_advanced(image_bytes)
+            content.append({
+                "mime_type": "application/pdf",
+                "data": image_bytes
+            })
+            analysis_text = "Read all text and analyze this PDF document for fraud signals."
+            if metadata:
+                analysis_text += f"\n\nDocument Metadata:\n{json.dumps(metadata)}"
+            if links:
+                analysis_text += f"\n\nEmbedded Hyperlinks:\n" + "\n".join(links)
+            content.append(analysis_text)
+            text_for_rules = "\n\n".join(filter(None, [text_for_rules, pdf_text] + links))
+    elif image_bytes:
+        content.append({
+            "mime_type": image_media_type or "image/jpeg",
+            "data": image_bytes,
+        })
+        content.append(
+            "Read all visible text in this image or screenshot, then analyze it for fraud signals."
         )
-        
+
+    if message:
+        content.append(f"Message to check:\n\n{message.strip()[:5000]}")
+
+    # Inject typosquatting warnings into AI context
+    warnings = check_typosquatting(text_for_rules)
+    if warnings:
+        content.append("Domain Verification Analyzer Warnings:\n" + "\n".join(warnings))
+
+    return content, text_for_rules[:7000]
+
+
+async def _run_injection_guard(content: list[Any]) -> str:
+    response = await _generate_with_fallback(
+        [PASS1_SYSTEM] + content,
+        generation_config=genai.GenerationConfig(max_output_tokens=50, temperature=0),
+    )
+    verdict = _safe_text(response).strip().upper()
+    return "BLOCK" if "BLOCK" in verdict and "SAFE" not in verdict else "SAFE"
+
+
+async def _run_deep_analysis(content: list[Any]) -> ScanResult:
+    response = await _generate_with_fallback(
+        [PASS2_SYSTEM] + content,
+        generation_config=genai.GenerationConfig(
+            max_output_tokens=1200,
+            temperature=0.1,
+            response_mime_type="application/json",
+        ),
+    )
+    raw = _safe_text(response).strip()
+    data = _extract_json(raw)
+    return normalize_ai_result(data)
+
+
+def _get_gemini_api_keys() -> list[str]:
+    raw_keys = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+    keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
+    for i in range(2, 6):
+        k = os.environ.get(f"GEMINI_API_KEY_{i}")
+        if k:
+            keys.append(k.strip())
+    return keys
+
+
+async def _generate_with_fallback(content: list[Any], generation_config: genai.GenerationConfig):
+    keys = _get_gemini_api_keys()
+    if not keys:
+        raise ValueError("No Gemini API key configured.")
+
+    last_error = None
+    for key in keys:
         try:
-            raw = pass2_response.text.strip()
-        except ValueError:
-            raise ValueError("The AI safety filters completely blocked the content. It contains highly dangerous, graphic, or restricted material.")
+            genai.configure(api_key=key)
+        except Exception as e:
+            last_error = e
+            continue
 
-        if "```json" in raw:
-            raw = raw.split("```json")[1].split("```")[0]
-        elif raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
+        tried = []
+        for model_name in dict.fromkeys(GEMINI_FALLBACK_MODELS):
+            if not model_name or model_name in tried:
+                continue
+            tried.append(model_name)
+            try:
+                model = genai.GenerativeModel(model_name)
+                return await model.generate_content_async(
+                    content,
+                    generation_config=generation_config,
+                    safety_settings=SAFETY_SETTINGS,
+                )
+            except Exception as exc:
+                last_error = exc
+                err_str = str(exc).lower()
+                if "quota" in err_str or "exhausted" in err_str or "api key" in err_str or "invalid" in err_str or "429" in err_str:
+                    break
 
-        data = json.loads(raw.strip())
-        data["pass1_blocked"] = False
-        return ScanResult(**data)
+    raise ValueError(f"Gemini request failed for configured models: {last_error}")
 
-    except Exception as e:
-        raise ValueError(f"AI Analysis Failed: {str(e)}")
+
+def _safe_text(response) -> str:
+    try:
+        if hasattr(response, "candidates") and response.candidates:
+            candidate = response.candidates[0]
+            finish_reason = getattr(candidate, "finish_reason", None)
+            # FinishReason 3 corresponds to SAFETY
+            if finish_reason == 3 or (hasattr(finish_reason, "name") and finish_reason.name == "SAFETY"):
+                raise ValueError("The AI safety filters blocked the content completely.")
+            
+            content_obj = getattr(candidate, "content", None)
+            if content_obj and hasattr(content_obj, "parts"):
+                parts = getattr(content_obj, "parts", [])
+                text_parts = [part.text for part in parts if hasattr(part, "text") and part.text]
+                if text_parts:
+                    return "".join(text_parts)
+        return response.text or ""
+    except ValueError as exc:
+        if "safety" in str(exc).lower():
+            raise ValueError("The AI safety filters blocked the content completely.") from exc
+        return ""
+
+
+def _repair_json_string(raw: str) -> str:
+    cleaned = raw.strip()
+    if not cleaned:
+        return "{}"
+        
+    in_quote = False
+    escaped = False
+    reconstructed = []
+    
+    for char in cleaned:
+        if char == '"' and not escaped:
+            in_quote = not in_quote
+        if char == '\\' and not escaped:
+            escaped = True
+        else:
+            escaped = False
+        reconstructed.append(char)
+        
+    if in_quote:
+        reconstructed.append('"')
+        
+    repaired = "".join(reconstructed)
+    
+    # Try to close open braces
+    open_braces = repaired.count("{")
+    close_braces = repaired.count("}")
+    if open_braces > close_braces:
+        temp = repaired.rstrip()
+        # Remove trailing trailing comma or colon if present
+        if temp.endswith(",") or temp.endswith(":"):
+            temp = temp[:-1].rstrip()
+            if in_quote and not temp.endswith('"'):
+                temp += '"'
+        repaired = temp + "}" * (open_braces - close_braces)
+        
+    return repaired
+
+
+def _extract_json(raw: str) -> dict:
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=re.IGNORECASE).strip()
+        cleaned = re.sub(r"```$", "", cleaned).strip()
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            cleaned = match.group(0)
+
+    # Attempt to auto-repair truncated JSON
+    repaired = _repair_json_string(cleaned)
+    try:
+        return json.loads(repaired)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"AI did not return JSON: {raw[:200]}") from e
