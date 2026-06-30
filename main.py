@@ -45,13 +45,13 @@ def _safe_alter(sql: str):
 _safe_alter("ALTER TABLE users ADD COLUMN plan VARCHAR DEFAULT 'free'")
 for col in ["paystack_customer_code", "paystack_subscription_code", "subscription_status"]:
     _safe_alter(f"ALTER TABLE users ADD COLUMN {col} VARCHAR")
-_safe_alter("ALTER TABLE users ADD COLUMN subscription_ends_at DATETIME")
+_safe_alter("ALTER TABLE users ADD COLUMN subscription_ends_at TIMESTAMP")
 _safe_alter("ALTER TABLE users ADD COLUMN pending_plan VARCHAR")
 
 # audit_records: client_ip column (added v3.1) — MUST be isolated from users migrations
 _safe_alter("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR")
 _safe_alter("ALTER TABLE users ADD COLUMN retention_days INTEGER DEFAULT 0")
-_safe_alter("ALTER TABLE scans ADD COLUMN expires_at DATETIME")
+_safe_alter("ALTER TABLE scans ADD COLUMN expires_at TIMESTAMP")
 _safe_alter("ALTER TABLE scans ADD COLUMN api_key_id VARCHAR")
 _safe_alter("ALTER TABLE scans ADD COLUMN pass1_blocked BOOLEAN DEFAULT FALSE")
 
