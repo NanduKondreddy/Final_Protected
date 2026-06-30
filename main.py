@@ -53,6 +53,7 @@ _safe_alter("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR")
 _safe_alter("ALTER TABLE users ADD COLUMN retention_days INTEGER DEFAULT 0")
 _safe_alter("ALTER TABLE scans ADD COLUMN expires_at DATETIME")
 _safe_alter("ALTER TABLE scans ADD COLUMN api_key_id VARCHAR")
+_safe_alter("ALTER TABLE scans ADD COLUMN pass1_blocked BOOLEAN DEFAULT FALSE")
 
 
 app = FastAPI(
@@ -60,6 +61,20 @@ app = FastAPI(
     version="3.0.0",
     description="Enterprise-grade AI fraud detection platform",
 )
+
+import traceback
+import logging
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    logging.getLogger("main").error(f"Global exception handler: {exc}\n{tb}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}", "traceback": tb}
+    )
+
 
 # B2B Partner API Key Authentication Middleware
 @app.middleware("http")
