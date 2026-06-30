@@ -54,6 +54,29 @@ def write_pattern(
     finally:
         db.close()
 
+    # Also write to flat-file JSONL to ensure persistence across restarts/redeploys
+    import os
+    import json
+    try:
+        pattern_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "patterns")
+        os.makedirs(pattern_dir, exist_ok=True)
+        pattern_file = os.path.join(pattern_dir, "pattern_log.jsonl")
+        
+        log_entry = {
+            "request_id": request_id,
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "risk_band": risk_band,
+            "patterns": fired_patterns or [],
+            "fraud_type": fraud_type,
+            "detected_language": detected_language,
+            "source": source,
+            "api_key_id": api_key_id,
+        }
+        with open(pattern_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        logger.error("Failed to append to pattern_log.jsonl: %s", str(e))
+
 
 def get_pattern_stats(days: int = 30) -> dict:
     """

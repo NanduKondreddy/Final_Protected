@@ -18,6 +18,8 @@ class ScanResult(BaseModel):
     what_to_do: str
     pass1_blocked: bool = False
     priority_used: bool = False
+    fraud_type: Optional[str] = None
+
  
  
 # ── Auth Models ──────────────────────────────────────────────────────────────

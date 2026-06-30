@@ -14,6 +14,7 @@ from database import engine
 import db_models
 from routers import auth_router, scan_router, billings
 from routers import audit_router, webhook_router, community_router
+from routers.reviews import router as reviews_router
 from prompts import DEMO_SCENARIOS
 from enterprise.api_key_manager import validate_key
 
@@ -49,6 +50,9 @@ _safe_alter("ALTER TABLE users ADD COLUMN pending_plan VARCHAR")
 
 # audit_records: client_ip column (added v3.1) — MUST be isolated from users migrations
 _safe_alter("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR")
+_safe_alter("ALTER TABLE users ADD COLUMN retention_days INTEGER DEFAULT 0")
+_safe_alter("ALTER TABLE scans ADD COLUMN expires_at DATETIME")
+_safe_alter("ALTER TABLE scans ADD COLUMN api_key_id VARCHAR")
 
 
 app = FastAPI(
@@ -72,6 +76,7 @@ async def api_key_auth_middleware(request: Request, call_next):
     request.state.partner_name = None
     request.state.tier = None
     request.state.org_id = None
+    request.state.retention_days = 0
 
     if api_key:
         partner_meta = validate_key(api_key)
@@ -80,6 +85,7 @@ async def api_key_auth_middleware(request: Request, call_next):
             request.state.partner_name = partner_meta["partner_name"]
             request.state.tier = partner_meta["tier"]
             request.state.org_id = partner_meta.get("org_id")
+            request.state.retention_days = partner_meta.get("retention_days", 0)
 
     response = await call_next(request)
     return response
@@ -131,6 +137,7 @@ app.include_router(billings.router)
 app.include_router(audit_router.router)
 app.include_router(webhook_router.router)
 app.include_router(community_router.router)
+app.include_router(reviews_router)
 
 
 # ── Existing Endpoints (unchanged) ───────────────────────────────────────────
@@ -186,6 +193,10 @@ class NoCacheFileResponse(FileResponse):
 
 @app.get("/")
 async def serve_home():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+@app.get("/login")
+async def serve_login():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 @app.get("/scan")

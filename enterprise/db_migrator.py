@@ -55,7 +55,8 @@ def migrate_audit_records():
                         was_overridden=data.get("was_overridden", False),
                         fraud_type=data.get("fraud_type"),
                         api_key_id=data.get("api_key_id"),
-                        org_id=data.get("org_id")
+                        org_id=data.get("org_id"),
+                        client_ip=data.get("client_ip")
                     )
                     records.append(record)
                     existing_ids.add(req_id)

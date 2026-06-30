@@ -226,7 +226,15 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
     <!-- Threat Analytics Tab Content -->
     <div id="threatsTab" class="tab-content active">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div class="section-title" style="margin:0">Last 30 days</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Time Range:</label>
+          <select id="analyticsDays" onchange="loadAnalyticsWithDays()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
         <span class="live-badge"><span class="live-dot"></span> Live</span>
       </div>
       <div class="actions" style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
@@ -442,6 +450,59 @@ let ADMIN_KEY = '';
 
 const SRC_LABELS = {web_app:'Web App',extension:'Extension',whatsapp:'WhatsApp',gmail:'Gmail',api:'API',webhook:'Webhook',mobile_app:'Mobile',share_sheet:'Share',sms:'SMS'};
 
+const COUNTRY_MAP = {
+  IN: "India",
+  US: "United States",
+  NG: "Nigeria",
+  GB: "United Kingdom",
+  DE: "Germany",
+  FR: "France",
+  CA: "Canada",
+  AU: "Australia",
+  SG: "Singapore",
+  ZA: "South Africa",
+  BR: "Brazil",
+  JP: "Japan",
+  CN: "China",
+  RU: "Russia",
+  IT: "Italy",
+  ES: "Spain",
+  NL: "Netherlands",
+  CH: "Switzerland",
+  SE: "Sweden",
+  NO: "Norway",
+  FI: "Finland",
+  DK: "Denmark",
+  IE: "Ireland",
+  NZ: "New Zealand",
+  MX: "Mexico",
+  AE: "United Arab Emirates",
+  SA: "Saudi Arabia",
+  MY: "Malaysia",
+  TH: "Thailand",
+  ID: "Indonesia",
+  PH: "Philippines",
+  VN: "Vietnam",
+  PK: "Pakistan",
+  BD: "Bangladesh",
+  TR: "Turkey",
+  UA: "Ukraine",
+  PL: "Poland",
+  KE: "Kenya",
+  GH: "Ghana",
+  EG: "Egypt",
+  AR: "Argentina",
+  CL: "Chile",
+  CO: "Colombia",
+  PE: "Peru"
+};
+
+function getCountryName(cc) {
+  if (!cc) return '—';
+  const code = cc.toUpperCase();
+  return COUNTRY_MAP[code] || code;
+}
+
 function unlock() {
   const key = document.getElementById('adminKey').value.trim();
   if (!key) return;
@@ -464,18 +525,27 @@ function unlock() {
 }
 
 async function loadAll() {
+  const days = parseInt(document.getElementById('analyticsDays')?.value) || 30;
   await Promise.all([
-    loadSummary(),
-    loadPatterns(),
+    loadSummary(days),
+    loadPatterns(days),
     loadHistory(),
     loadActivities(),
     loadMetrics()
   ]);
 }
 
-async function loadSummary() {
+async function loadAnalyticsWithDays() {
+  const days = parseInt(document.getElementById('analyticsDays').value) || 30;
+  await Promise.all([
+    loadSummary(days),
+    loadPatterns(days)
+  ]);
+}
+
+async function loadSummary(days = 30) {
   try {
-    const res = await fetch(`${API}/audit/summary?days=30&admin_key=${ADMIN_KEY}`);
+    const res = await fetch(`${API}/audit/summary?days=${days}&admin_key=${ADMIN_KEY}`);
     if (res.status === 403) return;
     const data = await res.json();
 
@@ -511,9 +581,9 @@ async function loadSummary() {
   } catch(e) { console.error(e); }
 }
 
-async function loadPatterns() {
+async function loadPatterns(days = 30) {
   try {
-    const res = await fetch(`${API}/audit/patterns?days=30&admin_key=${ADMIN_KEY}`);
+    const res = await fetch(`${API}/audit/patterns?days=${days}&admin_key=${ADMIN_KEY}`);
     const data = await res.json();
 
     const byLang = data.by_language || {};
@@ -787,20 +857,19 @@ function applyGlobalFilters() {
         const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
 
         // Country code from backend — generate flag emoji from ISO 2-letter code
-        const cc = r.client_ip || null;
+        let cc = r.client_ip || null;
+        if (cc === 'LOCAL') {
+          cc = 'IN';
+        }
         let locDisplay;
         if (!cc) {
           locDisplay = '<span style="color:#4a6080">—</span>';
-        } else if (cc === 'LOCAL') {
-          locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Dev</span>';
         } else if (/^[A-Z]{2}$/.test(cc.toUpperCase())) {
-          // Valid ISO 2-letter country code — generate flag emoji
           const flag = cc.toUpperCase().split('').map(c =>
             String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
           ).join('');
           locDisplay = `<span style="font-size:14px;">${flag}</span>&nbsp;<span style="color:#00B4D8;font-size:11px;font-weight:600;">${cc.toUpperCase()}</span>`;
         } else {
-          // Raw IP or legacy data — just show dash
           locDisplay = '<span style="color:#4a6080">—</span>';
         }
 

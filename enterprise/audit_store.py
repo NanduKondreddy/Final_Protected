@@ -60,6 +60,34 @@ def write_audit(
     finally:
         db.close()
 
+    # Also write to flat-file JSONL to ensure persistence across restarts/redeploys
+    import os
+    import json
+    try:
+        audit_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_store", "audit")
+        os.makedirs(audit_dir, exist_ok=True)
+        audit_file = os.path.join(audit_dir, "audit_log.jsonl")
+        
+        log_entry = {
+            "request_id": request_id,
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "risk_score": risk_score,
+            "risk_band": risk_band,
+            "detected_language": detected_language,
+            "provider_used": provider_used,
+            "latency_ms": latency_ms,
+            "source": source,
+            "was_overridden": was_overridden,
+            "fraud_type": fraud_type,
+            "api_key_id": api_key_id,
+            "org_id": org_id,
+            "client_ip": client_ip,
+        }
+        with open(audit_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        logger.error("Failed to append to audit_log.jsonl: %s", str(e))
+
 
 def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
     """Read audit records from the database, filtered by time and optionally by org."""
@@ -319,22 +347,20 @@ def resolve_and_write_user_activity(
 def resolve_country_code(ip: str) -> str:
     """
     Resolve an IP address to a 2-letter ISO country code (e.g. 'IN', 'US', 'NG').
-    Returns 'LOCAL' for localhost, None on failure.
-    Used by scan endpoints to store human-readable location in audit records.
+    Returns country code of the server's public IP on localhost, or defaults to 'IN'.
     """
     if not ip or ip in ("127.0.0.1", "::1", "localhost", "unknown", ""):
-        return "LOCAL"
+        url = "http://ip-api.com/json/?fields=status,countryCode"
+    else:
+        url = f"http://ip-api.com/json/{ip}?fields=status,countryCode"
     try:
-        res = httpx.get(
-            f"http://ip-api.com/json/{ip}?fields=status,countryCode",
-            timeout=1.5
-        )
+        res = httpx.get(url, timeout=1.5)
         if res.status_code == 200:
             data = res.json()
             if data.get("status") == "success":
                 cc = data.get("countryCode", "")
                 if cc:
-                    return cc   # e.g. "IN", "US", "NG", "GB"
+                    return cc.upper()
     except Exception:
         pass
-    return None
+    return "IN"

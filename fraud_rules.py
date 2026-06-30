@@ -220,6 +220,7 @@ def apply_rule_validation(ai_result: ScanResult, message: str) -> ScanResult:
     result.risk_level = _level_for_score(result.risk_score)
     result.action = _action_for_score(result.risk_score)
     result.reasons = _normalize_reasons(result.reasons, result.risk_level)
+    result.fraud_type = rules.fraud_type or result.fraud_type
 
     if not result.summary:
         result.summary = _summary_for_rules(rules, result.risk_level)
@@ -247,6 +248,7 @@ def heuristic_result(message: str) -> ScanResult:
         action=_action_for_score(score),
         what_to_do=_action_for_level(level, rules.fraud_type),
         pass1_blocked=False,
+        fraud_type=rules.fraud_type,
     )
 
 
@@ -263,6 +265,7 @@ def normalize_ai_result(data: dict) -> ScanResult:
         action=_normalize_action(data.get("action"), score),
         what_to_do=str(data.get("what_to_do") or data.get("recommendation") or "").strip(),
         pass1_blocked=bool(data.get("pass1_blocked", False)),
+        fraud_type=data.get("fraud_type") or data.get("scam_type") or None,
     )
 
 

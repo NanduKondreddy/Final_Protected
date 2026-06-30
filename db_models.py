@@ -1,5 +1,5 @@
 # backend/db_models.py
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from database import Base
@@ -14,6 +14,7 @@ class User(Base):
     password_hash              = Column(String, nullable=False)
     plan                       = Column(String, nullable=False, default="free")  # free | pro | plus
     created_at                 = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    retention_days             = Column(Integer, nullable=False, default=0)
 
     # ── Paystack billing ────────────────────────────────────────────────
     paystack_customer_code     = Column(String, nullable=True)
@@ -39,6 +40,8 @@ class Scan(Base):
     what_to_do    = Column(String, nullable=False)
     pass1_blocked = Column(Boolean, default=False)
     scanned_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at    = Column(DateTime, nullable=True)
+    api_key_id    = Column(String, nullable=True)
 
     user = relationship("User", back_populates="scans")
 
@@ -109,3 +112,15 @@ class PatternRecord(Base):
     detected_language = Column(String, default="en")
     source            = Column(String, default="web_app")
     api_key_id        = Column(String, nullable=True)
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    reviewer_name = Column(String(80),  nullable=False)
+    rating        = Column(Integer,     nullable=False)          # 1-5
+    review_text   = Column(Text,        nullable=True)           # optional
+    location      = Column(String(80),  nullable=True)           # optional
+    approved      = Column(Boolean,     default=False, nullable=False)
+    created_at    = Column(DateTime,    default=lambda: datetime.now(timezone.utc))

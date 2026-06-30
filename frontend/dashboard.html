@@ -220,6 +220,10 @@
         <div id="lblRisk" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase;">Risk Level</div>
         <div id="detailRiskLevel" style="font-size:20px; font-weight:800; margin-top:4px;">-</div>
       </div>
+      <div style="flex:1; min-width: 120px;">
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase;">Source Channel</div>
+        <div id="detailChannel" style="font-size:20px; font-weight:800; color:var(--teal); margin-top:4px; text-transform:uppercase;">-</div>
+      </div>
       <div style="text-align:center; padding:10px 16px; border-radius:12px; background:rgba(0,0,0,0.2); border:1px solid var(--border);">
         <div id="lblScore" style="font-family:var(--font-mono); font-size:9px; color:var(--muted); text-transform:uppercase;">Risk Score</div>
         <div style="font-size:24px; font-weight:900; color:var(--white); margin-top:2px;"><span id="detailRiskScore">-</span><span style="font-size:12px; color:var(--muted); font-weight:400;">/100</span></div>
@@ -286,7 +290,7 @@ const token = localStorage.getItem('dovtek_token');
 document.body.setAttribute('data-shieldiq-token-bridge', token || '');
 document.body.setAttribute('data-shieldiq-user-bridge', localStorage.getItem('dovtek_user') || '');
 let currentScans = [];
-if (!token) { window.location.href = '/'; }
+if (!token) { window.location.href = '/login'; }
 
 const userObj  = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
 const userPlan = userObj.plan || 'free';
@@ -495,6 +499,22 @@ function copyExtToken() {
   showToast('Copied token to clipboard!');
 }
 
+// Helper function to dynamically guess source channel from message/summary content for display in history
+function guessChannel(message, summary) {
+  const msg = (message || '').toLowerCase();
+  const sum = (summary || '').toLowerCase();
+  if (msg.includes('subject:') || msg.includes('from:') || msg.includes('to:') || msg.includes('dear ') || msg.includes('regards') || msg.includes('\n\n') || sum.includes('email') || sum.includes('subject:')) {
+    return 'Email';
+  }
+  if (msg.includes('whatsapp') || sum.includes('whatsapp') || msg.includes('wa.me') || msg.includes('group chat')) {
+    return 'WhatsApp';
+  }
+  if (msg.includes('sms') || sum.includes('sms') || msg.includes('otp') || msg.length <= 160) {
+    return 'SMS';
+  }
+  return 'Web App';
+}
+
 // ── CSV Export ────────────────────────────────────────────────────────────
 let _allScans = [];
 function exportHistory() {
@@ -609,56 +629,34 @@ async function loadDashboard() {
 
     const list = document.getElementById('scanList');
     list.innerHTML = '';
-    // Use visibleScans (your Pro slice logic) but their rendering
-    const visibleScans = isPro ? _allScans : _allScans.slice(0, 5);
-    const hiddenCount  = _allScans.length - visibleScans.length;
 
-    visibleScans.forEach((s, idx) => {
+    _allScans.forEach((s, idx) => {
+      const isLocked = !isPro && idx >= 5;
       const cls  = s.risk_level === 'HIGH' ? 'h' : s.risk_level === 'MEDIUM' ? 'm' : 'l';
       const date = new Date(s.scanned_at).toLocaleDateString(
         lang === 'ar' ? 'ar' : lang === 'zh' ? 'zh-CN' : 'en-US',
         { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }
       );
+      const channel = guessChannel(s.message, s.summary);
+      
       list.innerHTML += `
-        <div class="scan-row" style="cursor:pointer;" onclick="showScanDetail(${idx})">
-          <div class="sdot ${cls}"></div>
-          <div class="scan-info">
-            <div class="scan-band ${cls}">${s.risk_level} Risk</div>
+        <div class="scan-row ${isLocked ? 'locked-scan' : ''}" style="cursor:pointer; ${isLocked ? 'position: relative; overflow: hidden;' : ''}" onclick="showScanDetail(${idx})">
+          <div class="sdot ${isLocked ? '' : cls}">${isLocked ? '🔒' : ''}</div>
+          <div class="scan-info" style="${isLocked ? 'filter: blur(1.5px); opacity: 0.5; pointer-events: none;' : ''}">
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+              <span class="scan-band ${cls}">${s.risk_level} Risk</span>
+              <span style="font-family: var(--font-mono); font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--muted); text-transform: uppercase;">${channel}</span>
+            </div>
             <div class="scan-msg">${s.summary || (s.message || '').substring(0, 80)}</div>
             <div class="scan-meta">${date}</div>
           </div>
-          <div class="scan-score ${cls}">${s.risk_score}</div>
+          <div class="scan-score ${cls}" style="${isLocked ? 'filter: blur(1.5px); opacity: 0.5; pointer-events: none;' : ''}">${s.risk_score}<span style="font-size: 10px; color: var(--muted); font-weight: 400;">/100</span></div>
+          ${isLocked ? `
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10, 22, 40, 0.45); backdrop-filter: blur(1px); font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--teal); gap: 6px;">
+            🔒 UNLOCK WITH PRO
+          </div>` : ''}
         </div>`;
     });
-
-    // Locked row for free users
-    if (!isPro && hiddenCount > 0) {
-      const lockRow = document.createElement('div');
-      lockRow.style.cssText = `
-        display:flex;align-items:center;justify-content:space-between;
-        padding:18px 20px;margin-top:4px;
-        background:rgba(0,0,0,0.3);border:1px dashed rgba(255,255,255,0.08);
-        border-radius:var(--radius-sm);`;
-      lockRow.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">🔒</span>
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;">
-              ${hiddenCount} older scan${hiddenCount === 1 ? '' : 's'} hidden
-            </div>
-            <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">
-              Full history available on Pro
-            </div>
-          </div>
-        </div>
-        <a href="/checkout?plan=pro"
-          style="font-family:var(--font-mono);font-size:11px;font-weight:700;
-                 color:#000;background:var(--teal);padding:7px 14px;
-                 border-radius:6px;text-decoration:none;white-space:nowrap;">
-          Unlock History →
-        </a>`;
-      list.appendChild(lockRow);
-    }
 
   } catch(e) {
     document.getElementById('loadingState').textContent = T.loadFail + ' ' + e.message;
@@ -668,6 +666,12 @@ async function loadDashboard() {
 
 // Dashboard script initialization is called at the end of this script block
 function showScanDetail(idx) {
+  if (!isPro && idx >= 5) {
+    document.getElementById('upgTitle').textContent = "Unlock Scan History";
+    document.getElementById('upgSub').textContent   = "Viewing details of older scans in your history is exclusive to Pro users. Upgrade to Pro to view full analysis, recommendations, and unlimited scans.";
+    document.getElementById('upgradeOverlay').classList.add('on');
+    return;
+  }
   const s = currentScans[idx];
   if (!s) return;
   
@@ -682,6 +686,7 @@ function showScanDetail(idx) {
   }
 
   document.getElementById('detailRiskScore').textContent = s.risk_score;
+  document.getElementById('detailChannel').textContent = guessChannel(s.message, s.summary);
 
   const badge = document.getElementById('detailActionBadge');
   badge.textContent = s.action || 'TRUST';

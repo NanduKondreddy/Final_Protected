@@ -21,6 +21,28 @@ router = APIRouter(tags=["Scans"])
 MESSAGE_NOT_STORED = "[Message content not stored]"
 
 
+def cleanup_expired_scans(db: Session) -> None:
+    """
+    Background job to remove expired scan messages.
+    Ensures message content is completely purged/redacted after the retention period.
+    """
+    from datetime import datetime, timezone
+    try:
+        now = datetime.now(timezone.utc)
+        expired_scans = db.query(db_models.Scan).filter(
+            db_models.Scan.expires_at.is_not(None),
+            db_models.Scan.expires_at <= now,
+            db_models.Scan.message != MESSAGE_NOT_STORED
+        ).all()
+        if expired_scans:
+            for scan in expired_scans:
+                scan.message = MESSAGE_NOT_STORED
+            db.commit()
+            logger.info("Purged %d expired scan message bodies.", len(expired_scans))
+    except Exception as e:
+        logger.error("Failed to run expired scans cleanup background job: %s", str(e))
+
+
 @router.post("/scan", response_model=ScanResult)
 async def scan(
     request: Request,
@@ -115,10 +137,21 @@ async def scan(
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
     # Save scan to DB — user_id is None for anonymous scans
-    if current_user:
+    retention_days = getattr(request.state, "retention_days", 0)
+    if current_user and current_user.plan == "enterprise":
+        retention_days = current_user.retention_days or 0
+
+    if current_user or (api_key_id and retention_days > 0):
+        from datetime import datetime, timezone, timedelta
+        expires_at = None
+        message_to_store = MESSAGE_NOT_STORED
+        if retention_days > 0:
+            expires_at = datetime.now(timezone.utc) + timedelta(days=retention_days)
+            message_to_store = message or "[Uploaded File Scan]"
+
         scan_record = db_models.Scan(
-            user_id=current_user.id,
-            message=MESSAGE_NOT_STORED,
+            user_id=current_user.id if current_user else None,
+            message=message_to_store,
             risk_score=result.risk_score,
             risk_level=result.risk_level,
             summary=result.summary,
@@ -126,9 +159,13 @@ async def scan(
             action=result.action,
             what_to_do=result.what_to_do,
             pass1_blocked=result.pass1_blocked,
+            expires_at=expires_at,
+            api_key_id=api_key_id,
         )
         db.add(scan_record)
         db.commit()
+
+    background_tasks.add_task(cleanup_expired_scans, db)
 
     # ── Enterprise: Write audit + pattern data (metadata only, non-blocking) ──
     try:
@@ -145,11 +182,13 @@ async def scan(
             api_key_id=api_key_id,
             org_id=org_id,
             client_ip=location,
+            fraud_type=result.fraud_type,
         )
         write_pattern(
             request_id=request_id,
             risk_band=_score_to_band(result.risk_score),
             fired_patterns=_fired,
+            fraud_type=result.fraud_type,
             detected_language="en",
             source=source_name,
             api_key_id=api_key_id,
@@ -252,10 +291,22 @@ async def scan_json(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-    if current_user:
+    # Save scan to DB — user_id is None for anonymous scans
+    retention_days = getattr(request.state, "retention_days", 0)
+    if current_user and current_user.plan == "enterprise":
+        retention_days = current_user.retention_days or 0
+
+    if current_user or (api_key_id and retention_days > 0):
+        from datetime import datetime, timezone, timedelta
+        expires_at = None
+        message_to_store = MESSAGE_NOT_STORED
+        if retention_days > 0:
+            expires_at = datetime.now(timezone.utc) + timedelta(days=retention_days)
+            message_to_store = body.message or MESSAGE_NOT_STORED
+
         scan_record = db_models.Scan(
-            user_id=current_user.id,
-            message=MESSAGE_NOT_STORED,
+            user_id=current_user.id if current_user else None,
+            message=message_to_store,
             risk_score=result.risk_score,
             risk_level=result.risk_level,
             summary=result.summary,
@@ -263,9 +314,13 @@ async def scan_json(
             action=result.action,
             what_to_do=result.what_to_do,
             pass1_blocked=result.pass1_blocked,
+            expires_at=expires_at,
+            api_key_id=api_key_id,
         )
         db.add(scan_record)
         db.commit()
+
+    background_tasks.add_task(cleanup_expired_scans, db)
 
     # ── Enterprise audit ──
     try:
@@ -282,11 +337,13 @@ async def scan_json(
             api_key_id=api_key_id,
             org_id=org_id,
             client_ip=location,
+            fraud_type=result.fraud_type,
         )
         write_pattern(
             request_id=request_id,
             risk_band=_score_to_band(result.risk_score),
             fired_patterns=_fired,
+            fraud_type=result.fraud_type,
             detected_language="en",
             source=source_name,
             api_key_id=api_key_id,
