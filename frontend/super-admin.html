@@ -852,17 +852,15 @@ function applyGlobalFilters() {
     ? filtered.map(r => {
         const dt  = new Date(r.timestamp);
         const str = dt.toLocaleDateString('en-GB', {month:'short', day:'numeric'}) + ' ' +
-                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
         const sourceLabel = r.api_key_id ? r.api_key_id : (SRC_LABELS[r.source] || r.source || 'Web App (B2C)');
         const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
+        const shortId = (r.request_id || '').slice(0, 8);
 
         // Country code from backend — generate flag emoji from ISO 2-letter code
         let cc = r.client_ip || null;
-        if (cc === 'LOCAL') {
-          cc = 'IN';
-        }
         let locDisplay;
-        if (!cc) {
+        if (!cc || cc === 'LOCAL') {
           locDisplay = '<span style="color:#4a6080">—</span>';
         } else if (/^[A-Z]{2}$/.test(cc.toUpperCase())) {
           const flag = cc.toUpperCase().split('').map(c =>
@@ -874,7 +872,7 @@ function applyGlobalFilters() {
         }
 
         return `
-          <div class="table-row" style="grid-template-columns:130px 1.2fr 90px 90px 80px 80px 80px 110px; align-items:center;">
+          <div class="table-row" style="grid-template-columns:130px 1.2fr 90px 90px 80px 80px 80px 110px; align-items:center;" title="ID: ${r.request_id}">
             <span style="color:#7a94b0;font-size:12px">${str}</span>
             <span style="font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sourceLabel}">${sourceLabel}</span>
             <span style="font-weight:700">${r.risk_score}</span>

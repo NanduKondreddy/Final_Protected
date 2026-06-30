@@ -580,7 +580,12 @@ function handleFile(input){
   }
 }
 
+let _scanInProgress = false;
 async function performScan(){
+  // ── Prevent double-submission ──
+  if (_scanInProgress) return;
+  _scanInProgress = true;
+
   // ── Quota check ──
   if (getRemaining() <= 0) {
     if (token) {
@@ -592,13 +597,13 @@ async function performScan(){
     } else {
       document.getElementById('guestGateOverlay').style.display = 'flex';
     }
-    return;
+    _scanInProgress = false; return;
   }
 
   const text=document.getElementById('scanInput').value.trim();
   const file=document.getElementById('fileInput').files[0];
-  if(mode==='text'&&!text){showToast('Please paste a message','error');return}
-  if(mode==='image'&&!file){showToast('Please upload a file','error');return}
+  if(mode==='text'&&!text){showToast('Please paste a message','error');_scanInProgress=false;return}
+  if(mode==='image'&&!file){showToast('Please upload a file','error');_scanInProgress=false;return}
 
   const btn=document.getElementById('scanBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analyzing with AI...';
@@ -663,6 +668,7 @@ async function performScan(){
   }catch(err){
     showToast(err.message,'error');
   }finally{
+    _scanInProgress = false;
     btn.disabled=false;btn.textContent='Analyze Message';
   }
 }
