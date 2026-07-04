@@ -226,6 +226,52 @@ The ShieldIQ Team"""
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
+
+@router.get("/test-email")
+def test_email():
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_user = os.getenv("SMTP_USER")
+    
+    debug_info = {
+        "has_brevo_api_key": bool(brevo_api_key),
+        "brevo_key_len": len(brevo_api_key) if brevo_api_key else 0,
+        "brevo_key_prefix": brevo_api_key[:10] if brevo_api_key else "",
+        "brevo_key_suffix": brevo_api_key[-10:] if brevo_api_key else "",
+        "has_resend_api_key": bool(resend_api_key),
+        "smtp_host": smtp_host,
+        "smtp_user": smtp_user,
+    }
+    
+    brevo_response = None
+    if brevo_api_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "ShieldIQ", "email": os.getenv("BREVO_SENDER_EMAIL", "knkreddy2201@gmail.com")},
+                "to": [{"email": "knkreddy2201@gmail.com"}],
+                "subject": "ShieldIQ Test Email",
+                "textContent": "This is a debug test email."
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            brevo_response = {
+                "status_code": res.status_code,
+                "body": res.text
+            }
+        except Exception as e:
+            brevo_response = {"error": str(e)}
+
+    return {
+        "debug_info": debug_info,
+        "brevo_response": brevo_response
+    }
+
+
 @router.get("/migrate")
 def migrate_db(db: Session = Depends(get_db)):
     try:
