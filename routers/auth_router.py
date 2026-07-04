@@ -20,6 +20,7 @@ logger = logging.getLogger("auth_router")
 
 def send_reset_email(email: str, reset_link: str):
     resend_api_key = os.getenv("RESEND_API_KEY")
+    brevo_api_key = os.getenv("BREVO_API_KEY")
     subject = "Reset Your ShieldIQ Password"
     body = f"""Hello,
 
@@ -33,7 +34,7 @@ If you did not request this, please ignore this email.
 Best regards,
 The ShieldIQ Team"""
 
-    # 1. Try Resend HTTP API first (never blocked by Render Free plan)
+    # 1. Try Resend HTTP API (never blocked by Render Free plan)
     if resend_api_key:
         try:
             url = "https://api.resend.com/emails"
@@ -52,11 +53,34 @@ The ShieldIQ Team"""
                 logger.info(f"Password reset email sent to {email} via Resend API")
                 return True
             else:
-                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying SMTP fallback...")
+                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying next fallback...")
         except Exception as e:
-            logger.warning(f"Resend API connection failed: {e}. Trying SMTP fallback...")
+            logger.warning(f"Resend API connection failed: {e}. Trying next fallback...")
 
-    # 2. Fallback to standard SMTP
+    # 2. Try Brevo HTTP API (never blocked by Render Free plan, allows arbitrary recipients)
+    if brevo_api_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "ShieldIQ", "email": os.getenv("BREVO_SENDER_EMAIL", "knkreddy2201@gmail.com")},
+                "to": [{"email": email}],
+                "subject": subject,
+                "textContent": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"Password reset email sent to {email} via Brevo API")
+                return True
+            else:
+                logger.warning(f"Brevo API failed ({res.status_code}): {res.text}. Trying next fallback...")
+        except Exception as e:
+            logger.warning(f"Brevo API connection failed: {e}. Trying next fallback...")
+
+    # 3. Fallback to standard SMTP
     smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
     try:
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -99,6 +123,7 @@ The ShieldIQ Team"""
 
 def send_otp_email(email: str, otp: str):
     resend_api_key = os.getenv("RESEND_API_KEY")
+    brevo_api_key = os.getenv("BREVO_API_KEY")
     subject = "Verify Your ShieldIQ Account"
     body = f"""Hello,
 
@@ -112,7 +137,7 @@ This code is valid for 10 minutes. If you did not request this, please ignore th
 Best regards,
 The ShieldIQ Team"""
 
-    # 1. Try Resend HTTP API first (never blocked by Render Free plan)
+    # 1. Try Resend HTTP API (never blocked by Render Free plan)
     if resend_api_key:
         try:
             url = "https://api.resend.com/emails"
@@ -131,11 +156,34 @@ The ShieldIQ Team"""
                 logger.info(f"OTP email sent to {email} via Resend API")
                 return True
             else:
-                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying SMTP fallback...")
+                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying next fallback...")
         except Exception as e:
-            logger.warning(f"Resend API connection failed: {e}. Trying SMTP fallback...")
+            logger.warning(f"Resend API connection failed: {e}. Trying next fallback...")
 
-    # 2. Fallback to standard SMTP
+    # 2. Try Brevo HTTP API (never blocked by Render Free plan, allows arbitrary recipients)
+    if brevo_api_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "ShieldIQ", "email": os.getenv("BREVO_SENDER_EMAIL", "knkreddy2201@gmail.com")},
+                "to": [{"email": email}],
+                "subject": subject,
+                "textContent": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"OTP email sent to {email} via Brevo API")
+                return True
+            else:
+                logger.warning(f"Brevo API failed ({res.status_code}): {res.text}. Trying next fallback...")
+        except Exception as e:
+            logger.warning(f"Brevo API connection failed: {e}. Trying next fallback...")
+
+    # 3. Fallback to standard SMTP
     smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
     try:
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
