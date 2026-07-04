@@ -252,6 +252,19 @@
         <span class="res-action-label">Recommendation</span>
         <p class="res-action-text" id="resAction"></p>
       </div>
+
+      <!-- Language detection warning alert -->
+      <div class="res-lang-warning" id="resLangWarning" style="display:none; margin-top:16px; padding:12px; background:rgba(245,158,11,0.1); border-left:4px solid #f59e0b; border-radius:4px; color:#f59e0b; font-size:13px; font-family:var(--font-mono); line-height:1.5;">
+        ⚠️ Unable to identify the message language. Please select a language manually.
+      </div>
+
+      <!-- Translation display section -->
+      <div class="res-translation" id="resTranslation" style="display:none; margin-top:20px; padding-top:16px; border-top:1px dashed var(--border);">
+        <span class="res-action-label" style="display:flex; align-items:center; gap:6px;">
+          🌐 Translation <span id="resLangDetected" style="font-size:10px; font-family:var(--font-mono); background:rgba(0,212,160,0.15); color:var(--teal); border:1.5px solid var(--teal); border-radius:4px; padding:1px 6px;">Unknown</span>
+        </span>
+        <p class="res-action-text" id="resTranslatedText" style="margin-top:8px; font-style:italic; line-height:1.6; color:var(--warm);"></p>
+      </div>
     </div>
   </div>
 </div>
@@ -612,6 +625,7 @@ async function performScan(){
   const fd=new FormData();
   if(mode==='text')fd.append('message',text);
   else fd.append('file',file);
+  fd.append('ui_lang', localStorage.getItem('dovtek_lang') || 'en');
 
   const headers={};
   if(token)headers['Authorization']='Bearer '+token;
@@ -717,6 +731,29 @@ function renderResult(res){
     li.innerHTML='<div class="res-reason-dot" style="background:'+color+'"></div>'+r;
     list.appendChild(li);
   });
+
+  // Handle translation and language detection warning display
+  const transSection = document.getElementById('resTranslation');
+  const transText = document.getElementById('resTranslatedText');
+  const transBadge = document.getElementById('resLangDetected');
+  const langWarning = document.getElementById('resLangWarning');
+
+  if (transSection) transSection.style.display = 'none';
+  if (langWarning) langWarning.style.display = 'none';
+
+  if (res.detected_language_confidence !== undefined && res.detected_language_confidence < 0.5 || res.detected_language === 'unknown') {
+    if (langWarning) langWarning.style.display = 'block';
+  } else if (res.translated_message) {
+    if (transSection && transText) {
+      transSection.style.display = 'block';
+      transText.textContent = res.translated_message;
+      if (transBadge) {
+        const langName = LANG_NAMES[res.detected_language] || res.detected_language || 'Unknown';
+        const confidencePct = Math.round((res.detected_language_confidence || 1.0) * 100);
+        transBadge.textContent = `${langName} (${confidencePct}% confidence)`;
+      }
+    }
+  }
 
   if(res.risk_level==='HIGH'){
     card.style.borderColor='rgba(255,71,87,0.3)';

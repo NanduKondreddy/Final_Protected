@@ -49,6 +49,7 @@ async def scan(
     background_tasks: BackgroundTasks,
     message: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
+    ui_lang: Optional[str] = Form("en"),
     db: Session = Depends(get_db),
     current_user: Optional[db_models.User] = Depends(get_optional_user),
 ):
@@ -130,6 +131,7 @@ async def scan(
             image_bytes=image_bytes,
             image_media_type=image_media_type,
             user_plan=user_plan,
+            ui_lang=ui_lang,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -176,7 +178,7 @@ async def scan(
             request_id=request_id,
             risk_score=result.risk_score,
             risk_band=_score_to_band(result.risk_score),
-            detected_language="en",
+            detected_language=result.detected_language or "en",
             provider_used="gemini",
             source=source_name,
             api_key_id=api_key_id,
@@ -189,7 +191,7 @@ async def scan(
             risk_band=_score_to_band(result.risk_score),
             fired_patterns=_fired,
             fraud_type=result.fraud_type,
-            detected_language="en",
+            detected_language=result.detected_language or "en",
             source=source_name,
             api_key_id=api_key_id,
         )

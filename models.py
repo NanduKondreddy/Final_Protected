@@ -19,6 +19,9 @@ class ScanResult(BaseModel):
     pass1_blocked: bool = False
     priority_used: bool = False
     fraud_type: Optional[str] = None
+    detected_language: Optional[str] = "en"
+    detected_language_confidence: Optional[float] = 1.0
+    translated_message: Optional[str] = None
 
  
  

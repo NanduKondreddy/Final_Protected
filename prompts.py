@@ -29,7 +29,10 @@ Return ONLY valid JSON in this exact shape:
     "<specific reason 3>"
   ],
   "action": "<TRUST or CAUTION or BLOCK>",
-  "what_to_do": "<one practical sentence telling the user what to do next>"
+  "what_to_do": "<one practical sentence telling the user what to do next>",
+  "detected_language": "<detected ISO language code like 'es', 'fr', 'hi', 'en', or 'unknown'>",
+  "detected_language_confidence": <float 0.0 to 1.0 representing confidence>,
+  "translated_message": "<in-memory translated text in the user's selected UI language only if original is not in that language, else null>"
 }
 
 SCORING:
