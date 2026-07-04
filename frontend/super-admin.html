@@ -731,7 +731,9 @@ async function loadPartners() {
       ? data.map(p => {
           const dt = p.created_at ? new Date(p.created_at) : null;
           const str = dt 
-            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+              dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' ' + 
+              dt.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop()
             : '—';
           
           const isActive = p.is_active;
@@ -851,8 +853,9 @@ function applyGlobalFilters() {
   document.getElementById('globalHistoryTable').innerHTML = filtered.length
     ? filtered.map(r => {
         const dt  = new Date(r.timestamp);
+        const tzSuffix = dt.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
         const str = dt.toLocaleDateString('en-GB', {month:'short', day:'numeric'}) + ' ' +
-                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' ' + tzSuffix;
         const sourceLabel = r.api_key_id ? r.api_key_id : (SRC_LABELS[r.source] || r.source || 'Web App (B2C)');
         const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
         const shortId = (r.request_id || '').slice(0, 8);
@@ -901,7 +904,9 @@ function renderUsers(users) {
     ? users.map(u => {
         const dt = u.created_at ? new Date(u.created_at) : null;
         const str = dt 
-          ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+          ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+            dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' ' + 
+            dt.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop()
           : '—';
         return `
           <div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; align-items:center;">
@@ -961,7 +966,9 @@ async function loadTickets() {
       ? data.map(t => {
           const dt = t.created_at ? new Date(t.created_at) : null;
           const str = dt 
-            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+              dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' ' + 
+              dt.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop()
             : '—';
           const isResolved = t.status === 'Resolved';
           return `

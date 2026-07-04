@@ -633,10 +633,13 @@ async function loadDashboard() {
     _allScans.forEach((s, idx) => {
       const isLocked = !isPro && idx >= 5;
       const cls  = s.risk_level === 'HIGH' ? 'h' : s.risk_level === 'MEDIUM' ? 'm' : 'l';
-      const date = new Date(s.scanned_at).toLocaleDateString(
+      const dateObj = new Date(s.scanned_at);
+      const dateStr = dateObj.toLocaleDateString(
         lang === 'ar' ? 'ar' : lang === 'zh' ? 'zh-CN' : 'en-US',
         { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }
       );
+      const tzSuffix = dateObj.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
+      const date = `${dateStr} ${tzSuffix}`;
       const channel = guessChannel(s.message, s.summary);
       
       list.innerHTML += `

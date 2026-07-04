@@ -379,8 +379,9 @@ async function loadHistory() {
     document.getElementById('recentTable').innerHTML = records.length
       ? records.map(r => {
           const dt  = new Date(r.timestamp);
+          const tzSuffix = dt.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
           const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
-                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' ' + tzSuffix;
           return `
             <div class="table-row" style="grid-template-columns:1fr 80px 80px 100px 80px">
               <span style="color:#7a94b0;font-size:12px">${str}</span>
@@ -402,8 +403,9 @@ async function loadActivities() {
     document.getElementById('activitiesTable').innerHTML = data.length
       ? data.map(a => {
           const dt  = new Date(a.timestamp);
+          const tzSuffix = dt.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
           const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
-                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' ' + tzSuffix;
           return `
             <div class="table-row" style="grid-template-columns:140px 1fr 100px; font-size:12px;">
               <span style="color:#7a94b0">${str}</span>
