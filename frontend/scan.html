@@ -183,7 +183,10 @@
         <a href="#" onclick="forgotPassword();return false"
           style="font-family:var(--font-mono); font-size:10px; color:var(--teal); text-decoration:none;">Forgot password?</a>
       </div>
-      <input class="field" id="loginPass" type="password" placeholder="Your password">
+      <div style="position:relative; margin-bottom:16px;">
+        <input class="field" id="loginPass" type="password" placeholder="Your password" style="margin-bottom:0; padding-right:42px;">
+        <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
+      </div>
       <button class="auth-btn" onclick="handleLogin()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Log In</button>
       <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">No account? <a onclick="switchModal('login','signup')" style="color:var(--teal);cursor:pointer;text-decoration:none;">Sign up free →</a></div>
     </div>
@@ -207,7 +210,10 @@
       <label class="field-label">Email Address</label>
       <input class="field" id="signupEmail" type="email" placeholder="you@example.com">
       <label class="field-label">Password</label>
-      <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()">
+      <div style="position:relative; margin-bottom:16px;">
+        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()" style="margin-bottom:0; padding-right:42px;">
+        <button type="button" onclick="togglePasswordVisibility('signupPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
+      </div>
       <div id="pwdStrength" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:-10px; margin-bottom:16px;">
         Strength: <span id="pwdLabel">None</span></div>
       <button class="auth-btn" onclick="handleSignup()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Create Free Account</button>
@@ -293,6 +299,16 @@
 
 <script>
 const API = '';
+function togglePasswordVisibility(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
 let mode = 'text';
 const token = localStorage.getItem('dovtek_token');
 document.body.setAttribute('data-shieldiq-token-bridge', token || '');
