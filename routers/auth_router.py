@@ -1,7 +1,8 @@
 # backend/routers/auth_router.py
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from sqlalchemy.orm import Session
-from database import get_db
+from database import get_db, engine
+from sqlalchemy import inspect
 import db_models
 from auth import hash_password, verify_password, create_access_token, get_current_user, create_reset_token, decode_reset_token
 from models import RegisterRequest, LoginRequest, AuthResponse, UserOut, ForgotPasswordRequest, ResetPasswordRequest, VerifyOTPRequest
@@ -223,6 +224,18 @@ The ShieldIQ Team"""
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+@router.get("/migrate")
+def migrate_db(db: Session = Depends(get_db)):
+    try:
+        db_models.Base.metadata.create_all(bind=engine)
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        return {"status": "success", "tables": tables}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 
 @router.post("/forgot-password")
