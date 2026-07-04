@@ -11,11 +11,50 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import httpx
 import logging
 
 logger = logging.getLogger("auth_router")
 
 def send_reset_email(email: str, reset_link: str):
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    subject = "Reset Your ShieldIQ Password"
+    body = f"""Hello,
+
+You requested a password reset for your ShieldIQ account.
+Click the link below to reset your password:
+
+{reset_link}
+
+If you did not request this, please ignore this email.
+
+Best regards,
+The ShieldIQ Team"""
+
+    # 1. Try Resend HTTP API first (never blocked by Render Free plan)
+    if resend_api_key:
+        try:
+            url = "https://api.resend.com/emails"
+            headers = {
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": "ShieldIQ <onboarding@resend.dev>",
+                "to": [email],
+                "subject": subject,
+                "text": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"Password reset email sent to {email} via Resend API")
+                return True
+            else:
+                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying SMTP fallback...")
+        except Exception as e:
+            logger.warning(f"Resend API connection failed: {e}. Trying SMTP fallback...")
+
+    # 2. Fallback to standard SMTP
     smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
     try:
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -28,27 +67,14 @@ def send_reset_email(email: str, reset_link: str):
     if not smtp_user or not smtp_password:
         raise HTTPException(
             status_code=500,
-            detail="SMTP credentials are not configured on the server."
+            detail="Email credentials are not configured. Please set RESEND_API_KEY or SMTP variables."
         )
 
     try:
         msg = MIMEMultipart()
         msg['From'] = smtp_from
         msg['To'] = email
-        msg['Subject'] = "Reset Your ShieldIQ Password"
-
-        body = f"""Hello,
-
-You requested a password reset for your ShieldIQ account.
-Click the link below to reset your password:
-
-{reset_link}
-
-If you did not request this, please ignore this email.
-
-Best regards,
-The ShieldIQ Team"""
-
+        msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
         if smtp_port == 465:
@@ -59,7 +85,7 @@ The ShieldIQ Team"""
         server.login(smtp_user, smtp_password)
         server.sendmail(smtp_from, email, msg.as_string())
         server.quit()
-        logger.info(f"Password reset email sent to {email}")
+        logger.info(f"Password reset email sent to {email} via SMTP")
         return True
     except Exception as e:
         logger.error(f"Failed to send reset email to {email}: {e}")
