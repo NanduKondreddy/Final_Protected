@@ -26,8 +26,10 @@ def send_reset_email(email: str, reset_link: str):
     smtp_from = os.getenv("SMTP_FROM", smtp_user)
 
     if not smtp_user or not smtp_password:
-        logger.warning(f"SMTP credentials not configured. Reset link for {email}: {reset_link}")
-        return False
+        raise HTTPException(
+            status_code=500,
+            detail="SMTP credentials are not configured on the server."
+        )
 
     try:
         msg = MIMEMultipart()
@@ -58,7 +60,10 @@ The ShieldIQ Team"""
         return True
     except Exception as e:
         logger.error(f"Failed to send reset email to {email}: {e}")
-        return False
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send email. SMTP Error: {str(e)}"
+        )
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -78,8 +83,8 @@ def forgot_password(body: ForgotPasswordRequest, request: Request, background_ta
     base_url = str(request.base_url).rstrip('/')
     reset_link = f"{base_url}/reset-password?token={token}"
 
-    # Send reset email in background
-    background_tasks.add_task(send_reset_email, body.email, reset_link)
+    # Send reset email synchronously so errors can be reported
+    send_reset_email(body.email, reset_link)
 
     # Log user activity
     xff = request.headers.get("x-forwarded-for")
