@@ -220,6 +220,23 @@
       <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Already have an account? <a onclick="switchModal('signup','login')" style="color:var(--teal);cursor:pointer;text-decoration:none;">Log in →</a></div>
     </div>
   </div>
+  <!-- OTP VERIFICATION MODAL -->
+  <div class="overlay" id="otpOverlay">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal('otp')">×</button>
+      <div class="modal-logo" style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
+      <div class="modal-sub-brand" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">AI Verification</div>
+      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Verify Your Email</div>
+      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:20px;text-align:center;">We've sent a 6-digit verification code to <strong id="otpTargetEmail" style="color:var(--teal);"></strong>. Please enter it below to complete registration.</p>
+      
+      <label class="field-label">Verification Code</label>
+      <input class="field" id="otpCode" type="text" maxlength="6" placeholder="123456" onkeydown="if(event.key === 'Enter') handleVerifyOTP()" style="text-align:center; font-size:20px; font-family:var(--font-mono); letter-spacing:4px; font-weight:700;">
+      
+      <button class="auth-btn" onclick="handleVerifyOTP()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Verify & Sign Up</button>
+      <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Didn't get the code? <a onclick="resendOTP()" style="color:var(--teal);cursor:pointer;text-decoration:none;">Resend OTP →</a></div>
+    </div>
+  </div>
+
 
   <!-- Upgrade Modal (For logged-in users who hit 3 scans) -->
   <div class="overlay" id="upgradeOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
@@ -580,6 +597,8 @@ async function handleLogin() {
   } catch (e) { showToast(e.message) }
 }
 
+let pendingSignupEmail = '';
+
 async function handleSignup() {
   const name = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
@@ -587,15 +606,49 @@ async function handleSignup() {
   if (!name || !email || !pass) { showToast('Please fill in all fields'); return }
   if (pass.length < 8) { showToast('Password must be at least 8 characters'); return }
   try {
-    const r = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: name, email, password: pass }) });
+    showToast('Sending verification code...');
+    const r = await fetch(API + '/auth/register', { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ full_name: name, email, password: pass }) 
+    });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || 'Signup failed');
+    
+    pendingSignupEmail = email;
+    document.getElementById('otpTargetEmail').textContent = email;
+    
+    closeModal('signup');
+    setTimeout(() => openModal('otp'), 200);
+    showToast('Verification code sent!');
+  } catch (e) { showToast(e.message) }
+}
+
+async function handleVerifyOTP() {
+  const otp = document.getElementById('otpCode').value.trim();
+  if (!otp) { showToast('Please enter the verification code'); return }
+  if (otp.length !== 6) { showToast('OTP must be 6 digits'); return }
+  try {
+    showToast('Verifying code...');
+    const r = await fetch(API + '/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingSignupEmail, otp_code: otp })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Verification failed');
+    
     localStorage.setItem('dovtek_token', d.token);
     localStorage.setItem('dovtek_user', JSON.stringify(d.user));
-    showToast('Account created!');
-    closeModal('signup');
+    showToast('Email verified! Account created!');
+    closeModal('otp');
     setTimeout(() => location.reload(), 800);
   } catch (e) { showToast(e.message) }
+}
+
+async function resendOTP() {
+  if (!pendingSignupEmail) { showToast('No pending signup found'); return }
+  handleSignup();
 }
 
 function showToast(msg,type){

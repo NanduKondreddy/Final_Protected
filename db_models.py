@@ -123,4 +123,16 @@ class Review(Base):
     review_text   = Column(Text,        nullable=True)           # optional
     location      = Column(String(80),  nullable=True)           # optional
     approved      = Column(Boolean,     default=False, nullable=False)
-    created_at    = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
+    created_at    = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
+
+
+class OTPVerification(Base):
+    __tablename__ = "otp_verifications"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    email         = Column(String, unique=True, index=True, nullable=False)
+    otp_code      = Column(String, nullable=False)
+    full_name     = Column(String, nullable=False)
+    password_hash = Column(String, nullable=False)
+    expires_at    = Column(DateTime, nullable=False)
+    created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))

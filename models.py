@@ -83,3 +83,7 @@ class ScanHistoryResponse(BaseModel):
     page: int
     page_size: int
     scans: List[ScanHistoryItem]
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
