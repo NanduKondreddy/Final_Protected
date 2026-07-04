@@ -374,6 +374,7 @@ def get_history(
     current_user: db_models.User = Depends(get_current_user),  # must be logged in
 ):
     """Get scan history for the current authenticated user."""
+    from datetime import timezone
     query = db.query(db_models.Scan).filter(db_models.Scan.user_id == current_user.id)
 
     total = query.count()
@@ -400,7 +401,7 @@ def get_history(
                 action=s.action,
                 what_to_do=s.what_to_do,
                 pass1_blocked=s.pass1_blocked,
-                scanned_at=s.scanned_at,
+                scanned_at=s.scanned_at.replace(tzinfo=timezone.utc) if s.scanned_at else None,
             )
             for s in scans
         ],

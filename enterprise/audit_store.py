@@ -101,7 +101,7 @@ def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
         return [
             {
                 "request_id": r.request_id,
-                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                "timestamp": r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else None,
                 "risk_score": r.risk_score,
                 "risk_band": r.risk_band,
                 "detected_language": r.detected_language,
@@ -147,7 +147,7 @@ def get_user_history(
             "records": [
                 {
                     "request_id": r.request_id,
-                    "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                    "timestamp": r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else None,
                     "risk_score": r.risk_score,
                     "risk_band": r.risk_band,
                     "detected_language": r.detected_language,
@@ -275,7 +275,7 @@ def get_user_activities(limit: int = 50) -> list:
                 "user_id": r.user_id,
                 "email": r.email,
                 "action": r.action,
-                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                "timestamp": r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else None,
                 "details": r.details,
             }
             for r in records
@@ -299,7 +299,7 @@ def get_platform_metrics(limit: int = 50) -> list:
                 "status_code": r.status_code,
                 "latency_ms": r.latency_ms,
                 "client_ip": r.client_ip,
-                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                "timestamp": r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else None,
             }
             for r in records
         ]
