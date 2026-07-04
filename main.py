@@ -214,6 +214,11 @@ async def serve_home():
 async def serve_login():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
+@app.get("/reset-password")
+@app.get("/reset-password.html")
+async def serve_reset_password():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
+
 @app.get("/scan")
 async def serve_scan_page():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "scan.html"))

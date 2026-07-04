@@ -1265,10 +1265,22 @@
       else { label.textContent = 'Strong'; label.style.color = 'var(--teal)'; }
     }
 
-    function forgotPassword() {
+    async function forgotPassword() {
       const email = document.getElementById('loginEmail').value.trim();
       if (!email) { showToast('Please enter your email first to reset your password'); return; }
-      showToast('Password reset link sent to ' + email);
+      showToast('Checking email...');
+      try {
+        const r = await fetch(API + '/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Failed to send reset link');
+        showToast('Password reset link sent to ' + email, 4000);
+      } catch (e) {
+        showToast(e.message);
+      }
     }
 
     async function handleLogin() {
