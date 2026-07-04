@@ -1168,7 +1168,7 @@
       <div class="modal-h">Welcome back</div>
       <p class="modal-p">Log in to access your scan history and dashboard.</p>
       <label class="field-label">Email Address</label>
-      <input class="field" id="loginEmail" type="email" placeholder="you@example.com">
+      <input class="field" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleLogin()">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <label class="field-label" style="margin-bottom:0;">Password</label>
         <a href="#" onclick="forgotPassword();return false"
@@ -1176,7 +1176,7 @@
           password?</a>
       </div>
       <div style="position:relative; margin-bottom:16px;">
-        <input class="field" id="loginPass" type="password" placeholder="Your password" style="margin-bottom:0; padding-right:42px;">
+        <input class="field" id="loginPass" type="password" placeholder="Your password" onkeydown="if(event.key === 'Enter') handleLogin()" style="margin-bottom:0; padding-right:42px;">
         <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
       </div>
       <button class="auth-btn" onclick="handleLogin()">Log In</button>
@@ -1198,12 +1198,12 @@
         <div class="perk">Your messages are never stored</div>
       </div>
       <label class="field-label">Full Name</label>
-      <input class="field" id="signupName" type="text" placeholder="Jane Doe">
+      <input class="field" id="signupName" type="text" placeholder="Jane Doe" onkeydown="if(event.key === 'Enter') handleSignup()">
       <label class="field-label">Email Address</label>
-      <input class="field" id="signupEmail" type="email" placeholder="you@example.com">
+      <input class="field" id="signupEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleSignup()">
       <label class="field-label">Password</label>
       <div style="position:relative; margin-bottom:16px;">
-        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()" style="margin-bottom:0; padding-right:42px;">
+        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()" onkeydown="if(event.key === 'Enter') handleSignup()" style="margin-bottom:0; padding-right:42px;">
         <button type="button" onclick="togglePasswordVisibility('signupPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
       </div>
       <div id="pwdStrength"
