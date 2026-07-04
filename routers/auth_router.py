@@ -51,8 +51,11 @@ The ShieldIQ Team"""
 
         msg.attach(MIMEText(body, 'plain'))
 
-        server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
-        server.starttls()
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            server.starttls()
         server.login(smtp_user, smtp_password)
         server.sendmail(smtp_from, email, msg.as_string())
         server.quit()
