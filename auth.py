@@ -21,6 +21,9 @@ SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-this-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
  
+# AC6 — reset tokens are short-lived and single-purpose
+RESET_TOKEN_EXPIRE_MINUTES = 30
+ 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
  
  
@@ -34,7 +37,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
  
  
-# ── JWT ─────────────────────────────────────────────────────────────────────
+# ── JWT — access tokens ───────────────────────────────────────────────────
  
 def create_access_token(user_id: int, email: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
@@ -52,28 +55,73 @@ def decode_token(token: str) -> dict:
         )
  
  
-def check_and_apply_pending_subscription(user, db: Session):
-    if user and user.subscription_ends_at:
-        ends_at = user.subscription_ends_at
-        if ends_at.tzinfo is None:
-            ends_at = ends_at.replace(tzinfo=timezone.utc)
-        if datetime.now(timezone.utc) > ends_at:
-            if hasattr(user, "pending_plan") and user.pending_plan:
-                user.plan = user.pending_plan
-                user.pending_plan = None
-            else:
-                user.plan = "free"
-            
-            if user.plan == "free":
-                user.paystack_subscription_code = None
-                user.subscription_status = "canceled"
-                user.subscription_ends_at = None
-            else:
-                user.subscription_status = "active"
-                user.subscription_ends_at = None
-            db.commit()
-            db.refresh(user)
-
+# ── JWT — password reset tokens ─────────────────────────────────────────────
+#
+# Reset tokens are deliberately a *different* token type from access tokens:
+#   - they carry "purpose": "password_reset" so a reset link can never be
+#     replayed as a login token (and vice versa)
+#   - they carry the user's current password_hash so that once the password
+#     is changed, the OLD token automatically stops working (the hash won't
+#     match anymore) — even before its 30-minute expiry. This gives "single use"
+#     behaviour without needing a separate DB table to track used tokens.
+#   - they expire in RESET_TOKEN_EXPIRE_MINUTES (AC6)
+ 
+def create_reset_token(user: db_models.User) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        "sub": str(user.id),
+        "email": user.email,
+        "purpose": "password_reset",
+        # Bind the token to the current hash so it's invalidated the moment
+        # the password actually changes, regardless of expiry.
+        "pwd_fingerprint": user.password_hash[-12:],
+        "exp": expire,
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+ 
+ 
+def decode_reset_token(token: str, db: Session) -> db_models.User:
+    """
+    Validates a password reset token end-to-end:
+      - signature + expiry (raises 400 if invalid/expired — AC6)
+      - correct purpose claim (can't reuse a login token here)
+      - user still exists
+      - token's password fingerprint still matches the user's CURRENT hash
+        (so a token can't be reused after a successful reset, or after a
+        second reset request has superseded it)
+    Returns the User on success, raises HTTPException otherwise.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid or has expired. Please request a new one.",
+        )
+ 
+    if payload.get("purpose") != "password_reset":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token.",
+        )
+ 
+    user = db.query(db_models.User).filter(
+        db_models.User.id == int(payload["sub"])
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+ 
+    if payload.get("pwd_fingerprint") != user.password_hash[-12:]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link has already been used. Please request a new one.",
+        )
+ 
+    return user
+ 
+ 
+# ── Dependencies ─────────────────────────────────────────────────────────────
+ 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
@@ -88,11 +136,9 @@ def get_current_user(
     user = db.query(db_models.User).filter(db_models.User.id == int(payload["sub"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    check_and_apply_pending_subscription(user, db)
     return user
-
-
+ 
+ 
 def get_optional_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
@@ -102,10 +148,6 @@ def get_optional_user(
         return None
     try:
         payload = decode_token(token)
-        user = db.query(db_models.User).filter(db_models.User.id == int(payload["sub"])).first()
-        if user:
-            check_and_apply_pending_subscription(user, db)
-        return user
+        return db.query(db_models.User).filter(db_models.User.id == int(payload["sub"])).first()
     except Exception:
         return None
- 

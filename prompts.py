@@ -29,7 +29,10 @@ Return ONLY valid JSON in this exact shape:
     "<specific reason 3>"
   ],
   "action": "<TRUST or CAUTION or BLOCK>",
-  "what_to_do": "<one practical sentence telling the user what to do next>"
+  "what_to_do": "<one practical sentence telling the user what to do next>",
+  "detected_language": "<detected ISO language code like 'es', 'fr', 'hi', 'en', or 'unknown'>",
+  "detected_language_confidence": <float 0.0 to 1.0 representing confidence>,
+  "translated_message": "<in-memory translated text in the user's selected UI language only if original is not in that language, else null>"
 }
 
 SCORING:
@@ -62,17 +65,6 @@ FALSE-POSITIVE PROTECTION:
 - Newsletters, podcasts, job alerts, receipts, shipping notices, and normal
   platform notifications from recognizable brands are usually LOW risk if they
   do not request sensitive data, urgent payment, or off-platform verification.
-- Do NOT flag or block normal developer, coding, or AI platforms on their own. They are completely safe and legitimate:
-  * Competitive programming/coding portals: HackerRank, LeetCode, HackerEarth, Codeforces, Topcoder, GeeksforGeeks, Kaggle, Codewars, FreeCodeCamp.
-  * Well-known tech & developer platforms: Google, Microsoft, Apple, Amazon, Meta (Facebook, Instagram, WhatsApp), GitHub, GitLab, Stack Overflow, Bitbucket, Oracle, Salesforce, HubSpot, Stripe, PayPal, Netflix, Spotify, LinkedIn, Indeed.
-  * AI, machine learning & LLM services: OpenAI, ChatGPT, Anthropic, Claude, Google Gemini, DeepMind, Copilot, Midjourney, Perplexity, Hugging Face, Cohere, Mistral AI, xAI, Grok, DeepSeek, Qwen.
-  * E-Learning & tech education providers: Coursera, Udemy, edX, Pluralsight, Udacity, Khan Academy.
-  * Professional freelancing & job portals: Glassdoor, Monster, ZipRecruiter, CareerBuilder, Upwork, Fiverr, Toptal, Freelancer.
-  * Collaboration, productivity & workspace tools: Slack, Zoom, Microsoft Teams, Trello, Jira, Asana, Notion, Canva, Figma, Dropbox, Box, Google Drive, OneDrive.
-  * Trusted email clients and informational platforms: Yahoo, Outlook, Gmail, Wikipedia, Medium, Substack, Quora, Reddit.
-  * Financial, banking & fintech platforms: Stripe, PayPal, Wise, Payoneer, Shopify, Coinbase, Binance, Robinhood, Revolut, Chase, Bank of America, Wells Fargo, Citibank.
-  * Delivery, logistics & ridesharing services: FedEx, UPS, DHL, USPS, Uber, Lyft, DoorDash, Grubhub, Instacart.
-  * Cloud providers & edge networks: AWS (Amazon Web Services), Microsoft Azure, Google Cloud (GCP), Heroku, Vercel, Netlify, DigitalOcean, Cloudflare.
 - A legitimate sender/domain, unsubscribe link, educational content, or routine
   notification should be described as safe, not suspicious.
 - Do not mark a message HIGH just because it contains a link. The link must be

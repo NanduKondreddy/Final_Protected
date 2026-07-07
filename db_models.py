@@ -1,5 +1,5 @@
 # backend/db_models.py
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from database import Base
@@ -20,9 +20,9 @@ class User(Base):
     paystack_subscription_code = Column(String, nullable=True)
     subscription_status        = Column(String, nullable=True)   # active | canceled | past_due
     subscription_ends_at       = Column(DateTime, nullable=True)
-    pending_plan               = Column(String, nullable=True)   # pro | free
 
     scans = relationship("Scan", back_populates="user")
+    payment_transactions = relationship("PaymentTransaction", back_populates="user", lazy="dynamic")
 
 
 class Scan(Base):
@@ -42,70 +42,38 @@ class Scan(Base):
 
     user = relationship("User", back_populates="scans")
 
+class Review(Base):
+    __tablename__ = "reviews"
+ 
+    id            = Column(Integer, primary_key=True, index=True)
+    reviewer_name = Column(String(80),  nullable=False)
+    rating        = Column(Integer,     nullable=False)          # 1-5
+    review_text   = Column(Text,        nullable=True)           # optional
+    location      = Column(String(80),  nullable=True)           # optional
+    approved      = Column(Boolean,     default=False, nullable=False)
+    created_at    = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
+ 
 
-class SupportTicket(Base):
-    __tablename__ = "support_tickets"
-
-    id         = Column(Integer, primary_key=True, index=True)
-    name       = Column(String, nullable=False)
-    email      = Column(String, nullable=False)
-    subject    = Column(String, nullable=False)
-    message    = Column(String, nullable=False)
-    status     = Column(String, default="Open")  # Open | Resolved
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-
-class AuditRecord(Base):
-    __tablename__ = "audit_records"
-
-    id                = Column(Integer, primary_key=True, index=True)
-    request_id        = Column(String, index=True, nullable=False)
-    timestamp         = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    risk_score        = Column(Integer, nullable=False)
-    risk_band         = Column(String, nullable=False)
-    detected_language = Column(String, default="en")
-    provider_used     = Column(String, default="gemini")
-    latency_ms        = Column(Integer, default=0)
-    source            = Column(String, default="web_app")
-    was_overridden    = Column(Boolean, default=False)
-    fraud_type        = Column(String, nullable=True)
-    api_key_id        = Column(String, nullable=True)
-    org_id            = Column(String, nullable=True)
-    client_ip         = Column(String, nullable=True)
-
-
-class UserActivity(Base):
-    __tablename__ = "user_activities"
-
-    id        = Column(Integer, primary_key=True, index=True)
-    user_id   = Column(Integer, nullable=True)
-    email     = Column(String, nullable=False)
-    action    = Column(String, nullable=False)
-    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    details   = Column(JSON, nullable=True)
-
-
-class PlatformMetric(Base):
-    __tablename__ = "platform_metrics"
-
-    id          = Column(Integer, primary_key=True, index=True)
-    endpoint    = Column(String, nullable=False)
-    method      = Column(String, nullable=False)
-    status_code = Column(Integer, nullable=False)
-    latency_ms  = Column(Integer, nullable=False)
-    client_ip   = Column(String, nullable=False)
-    timestamp   = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-
-class PatternRecord(Base):
-    __tablename__ = "pattern_records"
-
-    id                = Column(Integer, primary_key=True, index=True)
-    request_id        = Column(String, index=True, nullable=False)
-    timestamp         = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    risk_band         = Column(String, nullable=False)
-    patterns          = Column(JSON, nullable=False)
-    fraud_type        = Column(String, nullable=True)
-    detected_language = Column(String, default="en")
-    source            = Column(String, default="web_app")
-    api_key_id        = Column(String, nullable=True)
+class PaymentTransaction(Base):
+    """
+    Stores every payment attempt — pending, successful, and failed.
+    Written from routers/billings.py at checkout, verify, and webhook events.
+    """
+    __tablename__ = "payment_transactions"
+ 
+    id               = Column(Integer, primary_key=True, index=True)
+    user_id          = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    reference        = Column(String, unique=True, index=True, nullable=False)
+    plan             = Column(String, nullable=False)           # "pro" | "plus"
+    amount           = Column(Integer, nullable=False)          # smallest unit (kobo/cents)
+    currency         = Column(String(10), nullable=False)       # "NGN" | "USD" etc.
+    status           = Column(String(20), nullable=False)       # "pending"|"success"|"failed"
+    paystack_event   = Column(String(50), nullable=True)        # originating event name
+    gateway_response = Column(String(255), nullable=True)       # Paystack gateway_response text
+    email_sent       = Column(Boolean, default=False, nullable=False)  # receipt sent? (avoid double-send)
+    created_at       = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+ 
+    user = relationship("User", back_populates="payment_transactions")
+ 
+    def __repr__(self):
+        return f"<PaymentTransaction ref={self.reference!r} plan={self.plan!r} status={self.status!r}>"

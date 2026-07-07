@@ -1,4 +1,4 @@
-# backend/billing.py
+# backend/routers/billings.py
 import os
 import hmac
 import hashlib
@@ -13,6 +13,7 @@ from pydantic import BaseModel
 import db_models
 from database import get_db
 from auth import get_current_user
+from email_service import send_payment_receipt
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/billing", tags=["billing"])
@@ -42,6 +43,8 @@ if PAYSTACK_DEFAULT_CURRENCY == "USD":
     DEFAULT_CURRENCY = {"currency": "USD", "pro": 399, "plus": 999}
 else:
     DEFAULT_CURRENCY = {"currency": "NGN", "pro": 590800, "plus": 1398600}
+
+USD_AMOUNTS = {"pro": 399, "plus": 999}
 
 PAYSTACK_API = "https://api.paystack.co"
 
@@ -130,6 +133,72 @@ def _write_plan(
     logger.info("Plan updated: user=%s plan=%s status=%s", user.id, plan, status)
 
 
+def _record_transaction(
+    db: Session,
+    user_id: int,
+    reference: str,
+    plan: str,
+    amount: int,
+    currency: str,
+    status: str,          # "success" | "failed" | "pending"
+    paystack_event: str,  # e.g. "charge.success", "verify", "dummy"
+    gateway_response: str = None,
+) -> db_models.PaymentTransaction:
+    """
+    Insert or upsert a PaymentTransaction row.
+    If a row with the same reference already exists, update its status only.
+    """
+    existing = (
+        db.query(db_models.PaymentTransaction)
+        .filter_by(reference=reference)
+        .first()
+    )
+    if existing:
+        existing.status           = status
+        existing.paystack_event   = paystack_event
+        existing.gateway_response = gateway_response
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    tx = db_models.PaymentTransaction(
+        user_id          = user_id,
+        reference        = reference,
+        plan             = plan,
+        amount           = amount,
+        currency         = currency,
+        status           = status,
+        paystack_event   = paystack_event,
+        gateway_response = gateway_response,
+        created_at       = datetime.now(timezone.utc),
+    )
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+    logger.info(
+        "Transaction recorded: ref=%s user=%s plan=%s status=%s",
+        reference, user_id, plan, status,
+    )
+    return tx
+
+
+async def _send_receipt_if_needed(db: Session, tx: db_models.PaymentTransaction, user: db_models.User):
+    if tx.status == "success" and not tx.email_sent:
+        logger.info("Attempting to send payment receipt for ref=%s to %s", tx.reference, user.email)
+        success = await send_payment_receipt(
+            to_email=user.email,
+            customer_name=user.full_name,
+            plan=tx.plan,
+            amount=tx.amount,
+            currency=tx.currency,
+            reference=tx.reference,
+            paid_at=tx.created_at,
+        )
+        if success:
+            tx.email_sent = True
+            db.commit()
+
+
 def _verify_paystack_signature(payload: bytes, signature: str) -> bool:
     expected = hmac.new(
         PAYSTACK_SECRET_KEY.encode("utf-8"),
@@ -164,12 +233,24 @@ async def create_checkout(
         return {
             "mode": "dummy",
             "plan": plan,
-            "reference": f"dummy_{current_user.id}_{plan}_{int(datetime.now().timestamp())}",
+            "reference": f"dummy_{current_user.id}_{plan}_{int(datetime.now(timezone.utc).timestamp())}",
         }
 
     # ── LIVE PAYSTACK ─────────────────────────────────────────────────────
     billing_details = _get_billing_details(plan, body.country_code)
-    reference = f"shieldiq_{current_user.id}_{plan}_{int(datetime.now().timestamp())}"
+    reference = f"shieldiq_{current_user.id}_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
+
+    # Record transaction before we redirect
+    _record_transaction(
+        db,
+        user_id        = current_user.id,
+        reference      = reference,
+        plan           = plan,
+        amount         = billing_details["amount"],
+        currency       = billing_details["currency"],
+        status         = "pending",
+        paystack_event = "checkout_initiated",
+    )
 
     # Use the current frontend origin or referrer for the callback to prevent origin-mismatched logout
     origin = request.headers.get("origin")
@@ -208,7 +289,6 @@ async def create_checkout(
     print("PAYSTACK RESPONSE:", data)
     print("STATUS CODE:", resp.status_code)
 
-
     if not data.get("status"):
         raise HTTPException(502, detail="Payment provider error — please try again")
 
@@ -226,10 +306,33 @@ async def verify_payment(
     db: Session = Depends(get_db),
     current_user: db_models.User = Depends(get_current_user),
 ):
-    """Called by frontend after Paystack redirects back — verifies before writing plan."""
+    """
+    Called by the frontend after Paystack redirects back.
+    The webhook (charge.success) is the authoritative activation path.
+    This endpoint acts as a fallback — it verifies with Paystack directly
+    and activates the plan if the webhook hasn't already done so.
+    It is idempotent: calling it twice is safe.
+    """
     if DUMMY_MODE:
         raise HTTPException(403, detail="Use /activate-dummy in dummy mode")
 
+    plan = _normalise_plan(body.plan)
+
+    # ── If the webhook already activated this plan, skip the Paystack call ──
+    existing_tx = (
+        db.query(db_models.PaymentTransaction)
+        .filter_by(reference=body.reference, status="success")
+        .first()
+    )
+    if existing_tx and current_user.plan == plan:
+        logger.info(
+            "verify: webhook already activated plan=%s for user=%s, skipping",
+            plan, current_user.id,
+        )
+        await _send_receipt_if_needed(db, existing_tx, current_user)
+        return {"ok": True, "plan": plan, "mode": "live", "source": "webhook"}
+
+    # ── Verify with Paystack ───────────────────────────────────────────────
     async with httpx.AsyncClient() as client:
         resp = await client.get(
             f"{PAYSTACK_API}/transaction/verify/{body.reference}",
@@ -238,26 +341,54 @@ async def verify_payment(
         )
 
     data = resp.json()
-    if not data.get("status") or data["data"]["status"] != "success":
+    tx_data = data.get("data", {})
+
+    if not data.get("status") or tx_data.get("status") != "success":
+        # Record the failed / abandoned attempt
+        _record_transaction(
+            db,
+            user_id          = current_user.id,
+            reference        = body.reference,
+            plan             = plan,
+            amount           = tx_data.get("amount", 0),
+            currency         = tx_data.get("currency", ""),
+            status           = "failed",
+            paystack_event   = "verify",
+            gateway_response = tx_data.get("gateway_response"),
+        )
         raise HTTPException(402, detail={
             "error": "payment_not_verified",
             "message": "Payment could not be verified — no charge was made.",
         })
 
-    plan         = _normalise_plan(body.plan)
-    customer     = data["data"].get("customer", {})
-    subscription = data["data"].get("plan_object", {})
+    customer     = tx_data.get("customer", {})
+    subscription = tx_data.get("plan_object", {})
+
+    # Record successful transaction (upserts if already written by webhook)
+    tx = _record_transaction(
+        db,
+        user_id          = current_user.id,
+        reference        = body.reference,
+        plan             = plan,
+        amount           = tx_data.get("amount", 0),
+        currency         = tx_data.get("currency", ""),
+        status           = "success",
+        paystack_event   = "verify",
+        gateway_response = tx_data.get("gateway_response"),
+    )
 
     _write_plan(
         db, current_user,
-        plan=plan,
-        customer_code=customer.get("customer_code"),
-        subscription_code=subscription.get("plan_code"),
-        status="active",
-        ends_at=datetime.now(timezone.utc) + timedelta(days=30),
+        plan              = plan,
+        customer_code     = customer.get("customer_code"),
+        subscription_code = subscription.get("plan_code"),
+        status            = "active",
+        ends_at           = datetime.now(timezone.utc) + timedelta(days=30),
     )
 
-    return {"ok": True, "plan": plan, "mode": "live"}
+    await _send_receipt_if_needed(db, tx, current_user)
+
+    return {"ok": True, "plan": plan, "mode": "live", "source": "verify"}
 
 
 @router.post("/activate-dummy")
@@ -274,18 +405,115 @@ async def activate_dummy(
     if plan not in ("pro", "plus"):
         raise HTTPException(400, detail="Invalid plan")
 
+    reference = f"dummy_{current_user.id}_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
+
+    # Record the dummy transaction
+    tx = _record_transaction(
+        db,
+        user_id          = current_user.id,
+        reference        = reference,
+        plan             = plan,
+        amount           = USD_AMOUNTS.get(plan, 0),
+        currency         = "USD",
+        status           = "success",
+        paystack_event   = "dummy",
+        gateway_response = "Dummy payment approved",
+    )
+
     _write_plan(
         db, current_user,
         plan=plan,
         status="active",
         ends_at=datetime.now(timezone.utc) + timedelta(days=30),
     )
+
+    await _send_receipt_if_needed(db, tx, current_user)
+
     return {"ok": True, "plan": plan, "mode": "dummy"}
+
+
+@router.get("/subscription")
+async def get_subscription(
+    db: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user),
+):
+    """
+    Returns the current user's subscription status and recent payment history.
+    Used by the dashboard subscription card (AC6, AC7).
+    """
+    transactions = (
+        db.query(db_models.PaymentTransaction)
+        .filter_by(user_id=current_user.id)
+        .order_by(db_models.PaymentTransaction.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    tx_list = [
+        {
+            "reference":        t.reference,
+            "plan":             t.plan,
+            "amount":           t.amount,
+            "currency":         t.currency,
+            "status":           t.status,
+            "paystack_event":   t.paystack_event,
+            "gateway_response": t.gateway_response,
+            "created_at":       t.created_at.isoformat() if t.created_at else None,
+        }
+        for t in transactions
+    ]
+
+    return {
+        "plan":               current_user.plan,
+        "subscription_status": current_user.subscription_status,
+        "subscription_ends_at": (
+            current_user.subscription_ends_at.isoformat()
+            if current_user.subscription_ends_at else None
+        ),
+        "transactions": tx_list,
+    }
+
+
+@router.get("/transaction/{reference}")
+async def get_transaction(
+    reference: str,
+    db: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user),
+):
+    """
+    Fetch details of a single transaction by reference.
+    Used by the payment-confirmation page to show the receipt.
+    """
+    tx = (
+        db.query(db_models.PaymentTransaction)
+        .filter_by(reference=reference)
+        .first()
+    )
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    # Ensure users can only see their own transactions, unless they're admin
+    if tx.user_id != current_user.id and current_user.plan != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    return {
+        "reference":        tx.reference,
+        "plan":             tx.plan,
+        "amount":           tx.amount,
+        "currency":         tx.currency,
+        "status":           tx.status,
+        "gateway_response": tx.gateway_response,
+        "created_at":       tx.created_at.isoformat() if tx.created_at else None,
+    }
 
 
 @router.post("/webhook")
 async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
-    """Paystack POSTs here for every subscription event."""
+    """
+    Paystack POSTs here for every subscription event.
+    This is the PRIMARY activation path for live payments — it fires
+    server-to-server so it succeeds even if the user closes their tab.
+    """
     if DUMMY_MODE:
         return {"status": "ignored — dummy mode"}
 
@@ -303,19 +531,56 @@ async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
     logger.info("Paystack webhook: %s", event_type)
 
     if event_type == "charge.success":
-        user_id = data.get("metadata", {}).get("user_id")
-        plan    = data.get("metadata", {}).get("plan")
+        user_id   = data.get("metadata", {}).get("user_id")
+        plan      = data.get("metadata", {}).get("plan")
+        reference = data.get("reference", "")
+        amount    = data.get("amount", 0)
+        currency  = data.get("currency", "")
+        gw_resp   = data.get("gateway_response", "")
+
         if user_id and plan:
+            plan = _normalise_plan(plan)
             user = db.query(db_models.User).filter_by(id=int(user_id)).first()
             if user:
+                # persist full transaction record
+                tx = _record_transaction(
+                    db,
+                    user_id          = user.id,
+                    reference        = reference,
+                    plan             = plan,
+                    amount           = amount,
+                    currency         = currency,
+                    status           = "success",
+                    paystack_event   = "charge.success",
+                    gateway_response = gw_resp,
+                )
+                # activate the plan — this is the authoritative write
                 _write_plan(
                     db, user,
-                    plan=_normalise_plan(plan),
-                    customer_code=data.get("customer", {}).get("customer_code"),
-                    subscription_code=data.get("plan_object", {}).get("plan_code"),
-                    status="active",
-                    ends_at=datetime.now(timezone.utc) + timedelta(days=30),
+                    plan              = plan,
+                    customer_code     = data.get("customer", {}).get("customer_code"),
+                    subscription_code = data.get("plan_object", {}).get("plan_code"),
+                    status            = "active",
+                    ends_at           = datetime.now(timezone.utc) + timedelta(days=30),
                 )
+                await _send_receipt_if_needed(db, tx, user)
+
+    elif event_type == "charge.failed":
+        reference = data.get("reference", "")
+        user_id   = data.get("metadata", {}).get("user_id")
+        plan      = _normalise_plan(data.get("metadata", {}).get("plan", "pro"))
+        if reference and user_id:
+            _record_transaction(
+                db,
+                user_id          = int(user_id),
+                reference        = reference,
+                plan             = plan,
+                amount           = data.get("amount", 0),
+                currency         = data.get("currency", ""),
+                status           = "failed",
+                paystack_event   = "charge.failed",
+                gateway_response = data.get("gateway_response"),
+            )
 
     elif event_type in ("subscription.disable", "subscription.not_renew"):
         sub_code = data.get("subscription_code")

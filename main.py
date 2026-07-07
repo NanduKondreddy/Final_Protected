@@ -14,6 +14,7 @@ from database import engine
 import db_models
 from routers import auth_router, scan_router, billings
 from routers import audit_router, webhook_router, community_router
+from routers.reviews import router as reviews_router
 from prompts import DEMO_SCENARIOS
 from enterprise.api_key_manager import validate_key
 
@@ -44,11 +45,15 @@ def _safe_alter(sql: str):
 _safe_alter("ALTER TABLE users ADD COLUMN plan VARCHAR DEFAULT 'free'")
 for col in ["paystack_customer_code", "paystack_subscription_code", "subscription_status"]:
     _safe_alter(f"ALTER TABLE users ADD COLUMN {col} VARCHAR")
-_safe_alter("ALTER TABLE users ADD COLUMN subscription_ends_at DATETIME")
+_safe_alter("ALTER TABLE users ADD COLUMN subscription_ends_at TIMESTAMP")
 _safe_alter("ALTER TABLE users ADD COLUMN pending_plan VARCHAR")
 
 # audit_records: client_ip column (added v3.1) — MUST be isolated from users migrations
 _safe_alter("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR")
+_safe_alter("ALTER TABLE users ADD COLUMN retention_days INTEGER DEFAULT 0")
+_safe_alter("ALTER TABLE scans ADD COLUMN expires_at TIMESTAMP")
+_safe_alter("ALTER TABLE scans ADD COLUMN api_key_id VARCHAR")
+_safe_alter("ALTER TABLE scans ADD COLUMN pass1_blocked BOOLEAN DEFAULT FALSE")
 
 
 app = FastAPI(
@@ -56,6 +61,20 @@ app = FastAPI(
     version="3.0.0",
     description="Enterprise-grade AI fraud detection platform",
 )
+
+import traceback
+import logging
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    logging.getLogger("main").error(f"Global exception handler: {exc}\n{tb}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}", "traceback": tb}
+    )
+
 
 # B2B Partner API Key Authentication Middleware
 @app.middleware("http")
@@ -72,6 +91,7 @@ async def api_key_auth_middleware(request: Request, call_next):
     request.state.partner_name = None
     request.state.tier = None
     request.state.org_id = None
+    request.state.retention_days = 0
 
     if api_key:
         partner_meta = validate_key(api_key)
@@ -80,6 +100,7 @@ async def api_key_auth_middleware(request: Request, call_next):
             request.state.partner_name = partner_meta["partner_name"]
             request.state.tier = partner_meta["tier"]
             request.state.org_id = partner_meta.get("org_id")
+            request.state.retention_days = partner_meta.get("retention_days", 0)
 
     response = await call_next(request)
     return response
@@ -131,6 +152,7 @@ app.include_router(billings.router)
 app.include_router(audit_router.router)
 app.include_router(webhook_router.router)
 app.include_router(community_router.router)
+app.include_router(reviews_router)
 
 
 # ── Existing Endpoints (unchanged) ───────────────────────────────────────────
@@ -188,6 +210,15 @@ class NoCacheFileResponse(FileResponse):
 async def serve_home():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
+@app.get("/login")
+async def serve_login():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+@app.get("/reset-password")
+@app.get("/reset-password.html")
+async def serve_reset_password():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
+
 @app.get("/scan")
 async def serve_scan_page():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "scan.html"))
@@ -203,6 +234,11 @@ async def serve_plans():
 @app.get("/checkout")
 async def serve_checkout():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "checkout.html"))
+
+@app.get("/payment-confirmation")
+@app.get("/payment-confirmation.html")
+async def serve_payment_confirmation():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "payment-confirmation.html"))
 
 @app.get("/ai")
 async def serve_ai():

@@ -1,38 +1,408 @@
 # backend/routers/auth_router.py
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from sqlalchemy.orm import Session
-from database import get_db
+from database import get_db, engine
+from sqlalchemy import inspect
 import db_models
-from auth import hash_password, verify_password, create_access_token, get_current_user
-from models import RegisterRequest, LoginRequest, AuthResponse, UserOut
+from auth import hash_password, verify_password, create_access_token, get_current_user, create_reset_token, decode_reset_token
+from models import RegisterRequest, LoginRequest, AuthResponse, UserOut, ForgotPasswordRequest, ResetPasswordRequest, VerifyOTPRequest
 from enterprise.audit_store import write_user_activity, resolve_and_write_user_activity
- 
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+import random
+from datetime import datetime, timezone, timedelta
+import httpx
+import logging
+
+logger = logging.getLogger("auth_router")
+
+def send_reset_email(email: str, reset_link: str):
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    subject = "Reset Your ShieldIQ Password"
+    body = f"""Hello,
+
+You requested a password reset for your ShieldIQ account.
+Click the link below to reset your password:
+
+{reset_link}
+
+If you did not request this, please ignore this email.
+
+Best regards,
+The ShieldIQ Team"""
+
+    # 1. Try Resend HTTP API (never blocked by Render Free plan)
+    if resend_api_key:
+        try:
+            url = "https://api.resend.com/emails"
+            headers = {
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": "ShieldIQ <onboarding@resend.dev>",
+                "to": [email],
+                "subject": subject,
+                "text": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"Password reset email sent to {email} via Resend API")
+                return True
+            else:
+                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying next fallback...")
+        except Exception as e:
+            logger.warning(f"Resend API connection failed: {e}. Trying next fallback...")
+
+    # 2. Try Brevo HTTP API (never blocked by Render Free plan, allows arbitrary recipients)
+    if brevo_api_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "ShieldIQ", "email": os.getenv("BREVO_SENDER_EMAIL", "knkreddy2201@gmail.com")},
+                "to": [{"email": email}],
+                "subject": subject,
+                "textContent": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"Password reset email sent to {email} via Brevo API")
+                return True
+            else:
+                logger.warning(f"Brevo API failed ({res.status_code}): {res.text}. Trying next fallback...")
+        except Exception as e:
+            logger.warning(f"Brevo API connection failed: {e}. Trying next fallback...")
+
+    # 3. Fallback to standard SMTP
+    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    try:
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    except ValueError:
+        smtp_port = 587
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user)
+
+    if not smtp_user or not smtp_password:
+        raise HTTPException(
+            status_code=500,
+            detail="Email credentials are not configured. Please set RESEND_API_KEY or SMTP variables."
+        )
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_from
+        msg['To'] = email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_from, email, msg.as_string())
+        server.quit()
+        logger.info(f"Password reset email sent to {email} via SMTP")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send reset email to {email}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send email. SMTP Error: {str(e)}"
+        )
+
+
+def send_otp_email(email: str, otp: str):
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    subject = "Verify Your ShieldIQ Account"
+    body = f"""Hello,
+
+Welcome to ShieldIQ!
+Your 6-digit email verification code (OTP) is:
+
+{otp}
+
+This code is valid for 10 minutes. If you did not request this, please ignore this email.
+
+Best regards,
+The ShieldIQ Team"""
+
+    # 1. Try Resend HTTP API (never blocked by Render Free plan)
+    if resend_api_key:
+        try:
+            url = "https://api.resend.com/emails"
+            headers = {
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": "ShieldIQ <onboarding@resend.dev>",
+                "to": [email],
+                "subject": subject,
+                "text": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"OTP email sent to {email} via Resend API")
+                return True
+            else:
+                logger.warning(f"Resend API failed ({res.status_code}): {res.text}. Trying next fallback...")
+        except Exception as e:
+            logger.warning(f"Resend API connection failed: {e}. Trying next fallback...")
+
+    # 2. Try Brevo HTTP API (never blocked by Render Free plan, allows arbitrary recipients)
+    if brevo_api_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "ShieldIQ", "email": os.getenv("BREVO_SENDER_EMAIL", "knkreddy2201@gmail.com")},
+                "to": [{"email": email}],
+                "subject": subject,
+                "textContent": body
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            if res.status_code in [200, 201]:
+                logger.info(f"OTP email sent to {email} via Brevo API")
+                return True
+            else:
+                logger.warning(f"Brevo API failed ({res.status_code}): {res.text}. Trying next fallback...")
+        except Exception as e:
+            logger.warning(f"Brevo API connection failed: {e}. Trying next fallback...")
+
+    # 3. Fallback to standard SMTP
+    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    try:
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    except ValueError:
+        smtp_port = 587
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user)
+
+    if not smtp_user or not smtp_password:
+        logger.warning(f"No email credentials configured. Local OTP for {email}: {otp}")
+        return False
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_from
+        msg['To'] = email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_from, email, msg.as_string())
+        server.quit()
+        logger.info(f"OTP email sent to {email} via SMTP")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send OTP email to {email}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send email. SMTP Error: {str(e)}"
+        )
+
+
 router = APIRouter(prefix="/auth", tags=["Auth"])
- 
- 
-@router.post("/register", response_model=AuthResponse)
+
+
+
+@router.get("/test-email")
+def test_email():
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_user = os.getenv("SMTP_USER")
+    
+    debug_info = {
+        "has_brevo_api_key": bool(brevo_api_key),
+        "brevo_key_len": len(brevo_api_key) if brevo_api_key else 0,
+        "brevo_key_prefix": brevo_api_key[:10] if brevo_api_key else "",
+        "brevo_key_suffix": brevo_api_key[-10:] if brevo_api_key else "",
+        "has_resend_api_key": bool(resend_api_key),
+        "smtp_host": smtp_host,
+        "smtp_user": smtp_user,
+    }
+    
+    brevo_response = None
+    if brevo_api_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "ShieldIQ", "email": os.getenv("BREVO_SENDER_EMAIL", "knkreddy2201@gmail.com")},
+                "to": [{"email": "knkreddy2201@gmail.com"}],
+                "subject": "ShieldIQ Test Email",
+                "textContent": "This is a debug test email."
+            }
+            res = httpx.post(url, json=payload, headers=headers, timeout=10)
+            brevo_response = {
+                "status_code": res.status_code,
+                "body": res.text
+            }
+        except Exception as e:
+            brevo_response = {"error": str(e)}
+
+    return {
+        "debug_info": debug_info,
+        "brevo_response": brevo_response
+    }
+
+
+@router.get("/migrate")
+def migrate_db(db: Session = Depends(get_db)):
+    try:
+        db_models.Base.metadata.create_all(bind=engine)
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        return {"status": "success", "tables": tables}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+
+@router.post("/forgot-password")
+def forgot_password(body: ForgotPasswordRequest, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    # Check if email exists in DB
+    user = db.query(db_models.User).filter(db_models.User.email == body.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Email is not registered")
+
+    # Generate reset token
+    token = create_reset_token(body.email)
+
+    # Determine base URL dynamically
+    base_url = str(request.base_url).rstrip('/')
+    reset_link = f"{base_url}/reset-password?token={token}"
+
+    # Send reset email synchronously so errors can be reported
+    send_reset_email(body.email, reset_link)
+
+    # Log user activity
+    xff = request.headers.get("x-forwarded-for")
+    ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "127.0.0.1")
+    background_tasks.add_task(resolve_and_write_user_activity, user.id, user.email, "forgot_password_request", ip)
+
+    return {"message": "Password reset link has been sent to your email."}
+
+
+@router.post("/reset-password")
+def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    # Decode token to verify it
+    email = decode_reset_token(body.token)
+
+    # Fetch user
+    user = db.query(db_models.User).filter(db_models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update password hash
+    user.password_hash = hash_password(body.password)
+    db.commit()
+
+    return {"message": "Password has been reset successfully."}
+
+
+@router.post("/register")
 def register(body: RegisterRequest, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     # Check if email already exists
     existing = db.query(db_models.User).filter(db_models.User.email == body.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
  
-    user = db_models.User(
-        full_name=body.full_name,
+    # Generate OTP
+    otp = str(random.randint(100000, 999999))
+
+    # Delete any existing verification record for this email
+    db.query(db_models.OTPVerification).filter(db_models.OTPVerification.email == body.email).delete()
+
+    # Create new OTP verification record
+    db_otp = db_models.OTPVerification(
         email=body.email,
+        otp_code=otp,
+        full_name=body.full_name,
         password_hash=hash_password(body.password),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=10)
+    )
+    db.add(db_otp)
+    db.commit()
+
+    # Send verification email
+    send_otp_email(body.email, otp)
+    
+    return {"message": "Verification code sent to your email. Please enter the OTP to complete registration."}
+
+
+@router.post("/verify-otp", response_model=AuthResponse)
+def verify_otp(body: VerifyOTPRequest, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    # Query pending registration
+    pending = db.query(db_models.OTPVerification).filter(db_models.OTPVerification.email == body.email).first()
+    if not pending:
+        raise HTTPException(status_code=400, detail="No pending registration found for this email.")
+
+    # Check expiration
+    now = datetime.now(timezone.utc)
+    expires_at = pending.expires_at.replace(tzinfo=timezone.utc) if pending.expires_at.tzinfo is None else pending.expires_at
+    if now > expires_at:
+        db.delete(pending)
+        db.commit()
+        raise HTTPException(status_code=400, detail="Verification code has expired. Please sign up again.")
+
+    # Validate OTP code
+    if pending.otp_code != body.otp_code.strip():
+        raise HTTPException(status_code=400, detail="Invalid verification code.")
+
+    # Check once more if email was registered in the meantime
+    existing = db.query(db_models.User).filter(db_models.User.email == body.email).first()
+    if existing:
+        db.delete(pending)
+        db.commit()
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Success: Create the user!
+    user = db_models.User(
+        full_name=pending.full_name,
+        email=pending.email,
+        password_hash=pending.password_hash,
     )
     db.add(user)
+    
+    # Delete the pending OTP record
+    db.delete(pending)
     db.commit()
     db.refresh(user)
- 
+
+    # Generate token
     token = create_access_token(user.id, user.email)
-    
-    # Extract client IP (handle proxies/Render headers)
+
+    # Log user activity
     xff = request.headers.get("x-forwarded-for")
     ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "127.0.0.1")
     background_tasks.add_task(resolve_and_write_user_activity, user.id, user.email, "register", ip, {"name": user.full_name})
-    
+
     return AuthResponse(
         token=token,
         user=UserOut(id=user.id, full_name=user.full_name, email=user.email, plan=user.plan, created_at=user.created_at),

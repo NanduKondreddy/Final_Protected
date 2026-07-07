@@ -220,6 +220,7 @@ def apply_rule_validation(ai_result: ScanResult, message: str) -> ScanResult:
     result.risk_level = _level_for_score(result.risk_score)
     result.action = _action_for_score(result.risk_score)
     result.reasons = _normalize_reasons(result.reasons, result.risk_level)
+    result.fraud_type = rules.fraud_type or result.fraud_type
 
     if not result.summary:
         result.summary = _summary_for_rules(rules, result.risk_level)
@@ -227,6 +228,36 @@ def apply_rule_validation(ai_result: ScanResult, message: str) -> ScanResult:
         result.what_to_do = _action_for_level(result.risk_level, rules.fraud_type)
 
     return result
+
+
+def detect_language_heuristics(message: str) -> tuple[str, float]:
+    lower = (message or "").lower()
+    # Spanish keywords
+    es_keywords = ["suspendida", "identidad", "cuenta", "banco", "haga clic", "verificar", "gracias", "por favor", "suspendido"]
+    # French keywords
+    fr_keywords = ["suspendu", "identité", "compte", "banque", "cliquez", "vérifier", "merci", "s'il vous plaît"]
+    # Hindi keywords
+    hi_keywords = ["खाता", "निलंबित", "पहचान", "सत्यापित", "यहाँ क्लिक करें", "धन्यवाद", "कृपया"]
+    
+    es_score = sum(1 for w in es_keywords if w in lower)
+    fr_score = sum(1 for w in fr_keywords if w in lower)
+    hi_score = sum(1 for w in hi_keywords if w in lower)
+    
+    if es_score > 0 or fr_score > 0 or hi_score > 0:
+        scores = {"es": es_score, "fr": fr_score, "hi": hi_score}
+        best = max(scores, key=scores.get)
+        if scores[best] > 0:
+            return best, 0.8
+            
+    try:
+        from enterprise.nigeria_context import detect_nigerian_language
+        nig_lang = detect_nigerian_language(message)
+        if nig_lang != "en":
+            return nig_lang, 0.8
+    except Exception:
+        pass
+        
+    return "en", 1.0
 
 
 def heuristic_result(message: str) -> ScanResult:
@@ -238,6 +269,8 @@ def heuristic_result(message: str) -> ScanResult:
         "No suspicious link or sensitive information request detected",
         "Message does not match known fraud patterns",
     ])
+    
+    lang, conf = detect_language_heuristics(message)
 
     return ScanResult(
         risk_score=score,
@@ -247,6 +280,10 @@ def heuristic_result(message: str) -> ScanResult:
         action=_action_for_score(score),
         what_to_do=_action_for_level(level, rules.fraud_type),
         pass1_blocked=False,
+        fraud_type=rules.fraud_type,
+        detected_language=lang,
+        detected_language_confidence=conf,
+        translated_message=None,
     )
 
 
@@ -263,6 +300,10 @@ def normalize_ai_result(data: dict) -> ScanResult:
         action=_normalize_action(data.get("action"), score),
         what_to_do=str(data.get("what_to_do") or data.get("recommendation") or "").strip(),
         pass1_blocked=bool(data.get("pass1_blocked", False)),
+        fraud_type=data.get("fraud_type") or data.get("scam_type") or None,
+        detected_language=data.get("detected_language") or "en",
+        detected_language_confidence=float(data.get("detected_language_confidence") if data.get("detected_language_confidence") is not None else 1.0),
+        translated_message=data.get("translated_message"),
     )
 
 

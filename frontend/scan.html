@@ -177,13 +177,16 @@
       <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Welcome back</div>
       <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:24px;text-align:center;">Log in to access your scan history and dashboard.</p>
       <label class="field-label">Email Address</label>
-      <input class="field" id="loginEmail" type="email" placeholder="you@example.com">
+      <input class="field" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleLogin()">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <label class="field-label" style="margin-bottom:0;">Password</label>
         <a href="#" onclick="forgotPassword();return false"
           style="font-family:var(--font-mono); font-size:10px; color:var(--teal); text-decoration:none;">Forgot password?</a>
       </div>
-      <input class="field" id="loginPass" type="password" placeholder="Your password">
+      <div style="position:relative; margin-bottom:16px;">
+        <input class="field" id="loginPass" type="password" placeholder="Your password" onkeydown="if(event.key === 'Enter') handleLogin()" style="margin-bottom:0; padding-right:42px;">
+        <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
+      </div>
       <button class="auth-btn" onclick="handleLogin()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Log In</button>
       <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">No account? <a onclick="switchModal('login','signup')" style="color:var(--teal);cursor:pointer;text-decoration:none;">Sign up free →</a></div>
     </div>
@@ -203,17 +206,37 @@
         <div class="perk" style="font-size:12px;color:var(--white);display:flex;align-items:center;gap:8px;">✓ Your messages are never stored</div>
       </div>
       <label class="field-label">Full Name</label>
-      <input class="field" id="signupName" type="text" placeholder="Jane Doe">
+      <input class="field" id="signupName" type="text" placeholder="Jane Doe" onkeydown="if(event.key === 'Enter') handleSignup()">
       <label class="field-label">Email Address</label>
-      <input class="field" id="signupEmail" type="email" placeholder="you@example.com">
+      <input class="field" id="signupEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleSignup()">
       <label class="field-label">Password</label>
-      <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()">
+      <div style="position:relative; margin-bottom:16px;">
+        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()" onkeydown="if(event.key === 'Enter') handleSignup()" style="margin-bottom:0; padding-right:42px;">
+        <button type="button" onclick="togglePasswordVisibility('signupPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
+      </div>
       <div id="pwdStrength" style="font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:-10px; margin-bottom:16px;">
         Strength: <span id="pwdLabel">None</span></div>
       <button class="auth-btn" onclick="handleSignup()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Create Free Account</button>
       <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Already have an account? <a onclick="switchModal('signup','login')" style="color:var(--teal);cursor:pointer;text-decoration:none;">Log in →</a></div>
     </div>
   </div>
+  <!-- OTP VERIFICATION MODAL -->
+  <div class="overlay" id="otpOverlay">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal('otp')">×</button>
+      <div class="modal-logo" style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
+      <div class="modal-sub-brand" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">AI Verification</div>
+      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Verify Your Email</div>
+      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:20px;text-align:center;">We've sent a 6-digit verification code to <strong id="otpTargetEmail" style="color:var(--teal);"></strong>. Please enter it below to complete registration.</p>
+      
+      <label class="field-label">Verification Code</label>
+      <input class="field" id="otpCode" type="text" maxlength="6" placeholder="123456" onkeydown="if(event.key === 'Enter') handleVerifyOTP()" style="text-align:center; font-size:20px; font-family:var(--font-mono); letter-spacing:4px; font-weight:700;">
+      
+      <button class="auth-btn" onclick="handleVerifyOTP()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Verify & Sign Up</button>
+      <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Didn't get the code? <a onclick="resendOTP()" style="color:var(--teal);cursor:pointer;text-decoration:none;">Resend OTP →</a></div>
+    </div>
+  </div>
+
 
   <!-- Upgrade Modal (For logged-in users who hit 3 scans) -->
   <div class="overlay" id="upgradeOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
@@ -252,6 +275,19 @@
         <span class="res-action-label">Recommendation</span>
         <p class="res-action-text" id="resAction"></p>
       </div>
+
+      <!-- Language detection warning alert -->
+      <div class="res-lang-warning" id="resLangWarning" style="display:none; margin-top:16px; padding:12px; background:rgba(245,158,11,0.1); border-left:4px solid #f59e0b; border-radius:4px; color:#f59e0b; font-size:13px; font-family:var(--font-mono); line-height:1.5;">
+        ⚠️ Unable to identify the message language. Please select a language manually.
+      </div>
+
+      <!-- Translation display section -->
+      <div class="res-translation" id="resTranslation" style="display:none; margin-top:20px; padding-top:16px; border-top:1px dashed var(--border);">
+        <span class="res-action-label" style="display:flex; align-items:center; gap:6px;">
+          🌐 Translation <span id="resLangDetected" style="font-size:10px; font-family:var(--font-mono); background:rgba(0,212,160,0.15); color:var(--teal); border:1.5px solid var(--teal); border-radius:4px; padding:1px 6px;">Unknown</span>
+        </span>
+        <p class="res-action-text" id="resTranslatedText" style="margin-top:8px; font-style:italic; line-height:1.6; color:var(--warm);"></p>
+      </div>
     </div>
   </div>
 </div>
@@ -280,6 +316,16 @@
 
 <script>
 const API = '';
+function togglePasswordVisibility(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
 let mode = 'text';
 const token = localStorage.getItem('dovtek_token');
 document.body.setAttribute('data-shieldiq-token-bridge', token || '');
@@ -517,10 +563,22 @@ function checkStrength() {
   else { label.textContent = 'Strong'; label.style.color = 'var(--teal)'; }
 }
 
-function forgotPassword() {
+async function forgotPassword() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email) { showToast('Please enter your email first to reset your password'); return; }
-  showToast('Password reset link sent to ' + email);
+  showToast('Checking email...');
+  try {
+    const r = await fetch(API + '/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Failed to send reset link');
+    showToast('Password reset link sent to ' + email, 4000);
+  } catch (e) {
+    showToast(e.message);
+  }
 }
 
 async function handleLogin() {
@@ -539,6 +597,8 @@ async function handleLogin() {
   } catch (e) { showToast(e.message) }
 }
 
+let pendingSignupEmail = '';
+
 async function handleSignup() {
   const name = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
@@ -546,15 +606,49 @@ async function handleSignup() {
   if (!name || !email || !pass) { showToast('Please fill in all fields'); return }
   if (pass.length < 8) { showToast('Password must be at least 8 characters'); return }
   try {
-    const r = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: name, email, password: pass }) });
+    showToast('Sending verification code...');
+    const r = await fetch(API + '/auth/register', { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ full_name: name, email, password: pass }) 
+    });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || 'Signup failed');
+    
+    pendingSignupEmail = email;
+    document.getElementById('otpTargetEmail').textContent = email;
+    
+    closeModal('signup');
+    setTimeout(() => openModal('otp'), 200);
+    showToast('Verification code sent!');
+  } catch (e) { showToast(e.message) }
+}
+
+async function handleVerifyOTP() {
+  const otp = document.getElementById('otpCode').value.trim();
+  if (!otp) { showToast('Please enter the verification code'); return }
+  if (otp.length !== 6) { showToast('OTP must be 6 digits'); return }
+  try {
+    showToast('Verifying code...');
+    const r = await fetch(API + '/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingSignupEmail, otp_code: otp })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Verification failed');
+    
     localStorage.setItem('dovtek_token', d.token);
     localStorage.setItem('dovtek_user', JSON.stringify(d.user));
-    showToast('Account created!');
-    closeModal('signup');
+    showToast('Email verified! Account created!');
+    closeModal('otp');
     setTimeout(() => location.reload(), 800);
   } catch (e) { showToast(e.message) }
+}
+
+async function resendOTP() {
+  if (!pendingSignupEmail) { showToast('No pending signup found'); return }
+  handleSignup();
 }
 
 function showToast(msg,type){
@@ -580,7 +674,12 @@ function handleFile(input){
   }
 }
 
+let _scanInProgress = false;
 async function performScan(){
+  // ── Prevent double-submission ──
+  if (_scanInProgress) return;
+  _scanInProgress = true;
+
   // ── Quota check ──
   if (getRemaining() <= 0) {
     if (token) {
@@ -592,13 +691,13 @@ async function performScan(){
     } else {
       document.getElementById('guestGateOverlay').style.display = 'flex';
     }
-    return;
+    _scanInProgress = false; return;
   }
 
   const text=document.getElementById('scanInput').value.trim();
   const file=document.getElementById('fileInput').files[0];
-  if(mode==='text'&&!text){showToast('Please paste a message','error');return}
-  if(mode==='image'&&!file){showToast('Please upload a file','error');return}
+  if(mode==='text'&&!text){showToast('Please paste a message','error');_scanInProgress=false;return}
+  if(mode==='image'&&!file){showToast('Please upload a file','error');_scanInProgress=false;return}
 
   const btn=document.getElementById('scanBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analyzing with AI...';
@@ -607,6 +706,7 @@ async function performScan(){
   const fd=new FormData();
   if(mode==='text')fd.append('message',text);
   else fd.append('file',file);
+  fd.append('ui_lang', localStorage.getItem('dovtek_lang') || 'en');
 
   const headers={};
   if(token)headers['Authorization']='Bearer '+token;
@@ -663,6 +763,7 @@ async function performScan(){
   }catch(err){
     showToast(err.message,'error');
   }finally{
+    _scanInProgress = false;
     btn.disabled=false;btn.textContent='Analyze Message';
   }
 }
@@ -711,6 +812,29 @@ function renderResult(res){
     li.innerHTML='<div class="res-reason-dot" style="background:'+color+'"></div>'+r;
     list.appendChild(li);
   });
+
+  // Handle translation and language detection warning display
+  const transSection = document.getElementById('resTranslation');
+  const transText = document.getElementById('resTranslatedText');
+  const transBadge = document.getElementById('resLangDetected');
+  const langWarning = document.getElementById('resLangWarning');
+
+  if (transSection) transSection.style.display = 'none';
+  if (langWarning) langWarning.style.display = 'none';
+
+  if (res.detected_language_confidence !== undefined && res.detected_language_confidence < 0.5 || res.detected_language === 'unknown') {
+    if (langWarning) langWarning.style.display = 'block';
+  } else if (res.translated_message) {
+    if (transSection && transText) {
+      transSection.style.display = 'block';
+      transText.textContent = res.translated_message;
+      if (transBadge) {
+        const langName = LANG_NAMES[res.detected_language] || res.detected_language || 'Unknown';
+        const confidencePct = Math.round((res.detected_language_confidence || 1.0) * 100);
+        transBadge.textContent = `${langName} (${confidencePct}% confidence)`;
+      }
+    }
+  }
 
   if(res.risk_level==='HIGH'){
     card.style.borderColor='rgba(255,71,87,0.3)';

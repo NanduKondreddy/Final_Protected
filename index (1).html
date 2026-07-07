@@ -13,7 +13,6 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/css/global.css">
-  <script src="/js/subscription-manage.js"></script>
   <style>
     .hero {
       min-height: 100vh;
@@ -555,17 +554,7 @@
       gap: 12px;
     }
 
-    @media (max-width: 768px) {
-      .desktop-auth-nav {
-        display: none !important;
-      }
-
-      .loc-banner {
-        flex-wrap: wrap;
-        text-align: center;
-      }
-
-    /* ── Carousel shell ────────────────────────────────────────────── */
+     /* ── Carousel shell ─────────────────────────────────────── */
     .testimonials-track-wrap {
       overflow: hidden;
       position: relative;
@@ -579,7 +568,7 @@
       will-change: transform;
     }
   
-    /* ── Individual card ───────────────────────────────────────────── */
+    /* ── Individual card ────────────────────────────────────── */
     .tcard {
       flex: 0 0 calc(33.333% - 14px);
       background: var(--card);
@@ -681,7 +670,7 @@
       margin-top: 2px;
     }
   
-    /* ── Carousel controls ─────────────────────────────────────────── */
+    /* ── Carousel controls ──────────────────────────────────── */
     .testimonials-controls {
       display: flex;
       align-items: center;
@@ -734,7 +723,7 @@
       transform: scale(1.4);
     }
   
-    /* ── Write-a-review form ───────────────────────────────────────── */
+    /* ── Write-a-review form ────────────────────────────────── */
     .review-form-wrap {
       margin-top: 48px;
       background: var(--card);
@@ -830,7 +819,7 @@
   
     .review-success.show { display: flex; }
   
-    /* ── Mobile: 1 card at a time ─────────────────────────────────── */
+    /* ── Mobile: 1 card at a time ───────────────────────────── */
     @media (max-width: 900px) {
       .tcard { flex: 0 0 calc(50% - 10px); }
     }
@@ -838,6 +827,17 @@
     @media (max-width: 600px) {
       .tcard { flex: 0 0 100%; }
       .review-form-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .desktop-auth-nav {
+        display: none !important;
+      }
+
+      .loc-banner {
+        flex-wrap: wrap;
+        text-align: center;
+      }
     }
   </style>
 </head>
@@ -1003,6 +1003,8 @@
     </div>
   </section>
 
+
+
   <div class="divider"></div>
  
   <section class="section reveal" id="testimonials">
@@ -1078,9 +1080,9 @@
   
     <!-- Carousel controls -->
     <div class="testimonials-controls">
-      <button class="tcarousel-btn" id="tPrev" onclick="tSlide(-1)" aria-label="Previous reviews">←</button>
+      <button class="tcarousel-btn" id="tPrev" onclick="tSlide(-1)" aria-label="Previous reviews">&#8592;</button>
       <div class="tcarousel-dots" id="tDots"></div>
-      <button class="tcarousel-btn" id="tNext" onclick="tSlide(1)" aria-label="Next reviews">→</button>
+      <button class="tcarousel-btn" id="tNext" onclick="tSlide(1)" aria-label="Next reviews">&#8594;</button>
     </div>
   
     <!-- Write a review -->
@@ -1109,11 +1111,11 @@
       </div>
   
       <label class="field-label">Your Review <span class="optional-tag">optional</span></label>
-      <textarea class="field" id="rvText" rows="4" placeholder="What kind of scam did Shield IQ help you catch? (optional)" maxlength="600" style="resize:vertical; min-height:90px;" oninput="clearReviewTextError()"></textarea>
+      <textarea class="field" id="rvText" rows="4" placeholder="What kind of scam did Shield IQ help you catch? (optional)" maxlength="600" style="resize:vertical; min-height:90px;"></textarea>
       <div id="rvTextError" style="display:none; font-size:12px; color:var(--red); margin-top:4px;">
-        ⚠️ Your review contains inappropriate language. Please revise it before posting.
+        Inappropriate words are not allowed.
       </div>
-  
+
       <button class="btn btn-primary" style="margin-top:14px; min-width:160px;" onclick="submitReview()">
         Post Review
       </button>
@@ -1171,17 +1173,14 @@
       <div class="modal-h">Welcome back</div>
       <p class="modal-p">Log in to access your scan history and dashboard.</p>
       <label class="field-label">Email Address</label>
-      <input class="field" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleLogin()">
+      <input class="field" id="loginEmail" type="email" placeholder="you@example.com">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <label class="field-label" style="margin-bottom:0;">Password</label>
-        <a href="#" onclick="openForgotModal();return false"
+        <a href="#" onclick="forgotPassword();return false"
           style="font-family:var(--font-mono); font-size:10px; color:var(--teal); text-decoration:none;">Forgot
           password?</a>
       </div>
-      <div style="position:relative; margin-bottom:16px;">
-        <input class="field" id="loginPass" type="password" placeholder="Your password" onkeydown="if(event.key === 'Enter') handleLogin()" style="margin-bottom:0; padding-right:42px;">
-        <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
-      </div>
+      <input class="field" id="loginPass" type="password" placeholder="Your password">
       <button class="auth-btn" onclick="handleLogin()">Log In</button>
       <div class="switch-line">No account? <a onclick="switchModal('login','signup')">Sign up free →</a></div>
     </div>
@@ -1200,80 +1199,55 @@
         <div class="perk">Scan history saved to your account</div>
         <div class="perk">Your messages are never stored</div>
       </div>
+
       <label class="field-label">Full Name</label>
-      <input class="field" id="signupName" type="text" placeholder="Jane Doe" onkeydown="if(event.key === 'Enter') handleSignup()">
+      <input class="field" id="signupName" type="text" placeholder="Jane Doe">
+
       <label class="field-label">Email Address</label>
-      <input class="field" id="signupEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleSignup()">
+      <input class="field" id="signupEmail" type="email" placeholder="you@example.com">
+
       <label class="field-label">Password</label>
-      <div style="position:relative; margin-bottom:16px;">
-        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()" onkeydown="if(event.key === 'Enter') handleSignup()" style="margin-bottom:0; padding-right:42px;">
-        <button type="button" onclick="togglePasswordVisibility('signupPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
-      </div>
+      <input class="field" id="signupPass" type="password" placeholder="At least 8 characters"
+        onkeyup="checkStrength()">
       <div id="pwdStrength"
         style="font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:-10px; margin-bottom:16px;">
-        Strength: <span id="pwdLabel">Weak</span></div>
+        Strength: <span id="pwdLabel">None</span>
+      </div>
+
+      <label class="field-label" style="display:flex; align-items:flex-start; gap:8px; font-weight:normal; cursor:pointer;">
+        <input type="checkbox" id="agreeTerms" style="margin-top:3px;" onchange="clearAgreeError()">
+        <span>I agree to the <a href="/privacy" target="_blank">Privacy Policy</a> and <a href="/terms" target="_blank">Terms of Service</a></span>
+      </label>
+      <div id="agreeError" style="display:none; font-size:12px; color:var(--red); margin-top:4px; margin-bottom:10px;">
+        You must accept the Privacy Policy and Terms to continue.
+      </div>
+
       <button class="auth-btn" onclick="handleSignup()">Create Free Account</button>
       <div class="switch-line">Already have an account? <a onclick="switchModal('signup','login')">Log in →</a></div>
     </div>
   </div>
-  <!-- OTP VERIFICATION MODAL -->
-  <div class="overlay" id="otpOverlay">
-    <div class="modal">
-      <button class="modal-x" onclick="closeModal('otp')">×</button>
-      <div class="modal-logo" style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
-      <div class="modal-sub-brand" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">AI Verification</div>
-      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Verify Your Email</div>
-      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:20px;text-align:center;">We've sent a 6-digit verification code to <strong id="otpTargetEmail" style="color:var(--teal);"></strong>. Please enter it below to complete registration.</p>
-      
-      <label class="field-label">Verification Code</label>
-      <input class="field" id="otpCode" type="text" maxlength="6" placeholder="123456" onkeydown="if(event.key === 'Enter') handleVerifyOTP()" style="text-align:center; font-size:20px; font-family:var(--font-mono); letter-spacing:4px; font-weight:700;">
-      
-      <button class="auth-btn" onclick="handleVerifyOTP()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Verify & Sign Up</button>
-      <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Didn't get the code? <a onclick="resendOTP()" style="color:var(--teal);cursor:pointer;text-decoration:none;">Resend OTP →</a></div>
-    </div>
-  </div>
 
-  <!-- PASSWORD RESET REQUEST MODAL -->
-  <div class="overlay" id="forgotOverlay">
-    <div class="modal">
-      <button class="modal-x" onclick="closeModal('forgot')">×</button>
-      <div class="modal-logo">SHIELD <span class="accent">IQ</span></div>
-      <div class="modal-sub-brand">AI Fraud Detection</div>
-  
-      <!-- Request state -->
-      <div id="forgotRequestState">
-        <div class="modal-h">Reset your password</div>
-        <p class="modal-p">Enter your account email and we'll send you a link to reset your password.</p>
-        <label class="field-label">Email Address</label>
-        <input class="field" id="forgotEmail" type="email" placeholder="you@example.com">
-        <button class="auth-btn" id="forgotSubmitBtn" onclick="submitForgotPassword()">Send Reset Link</button>
-        <div class="switch-line">Remembered it? <a onclick="closeModal('forgot');openModal('login')">Back to login →</a></div>
-      </div>
-  
-      <!-- Sent state -->
-      <div id="forgotSentState" style="display:none; text-align:center;">
-        <div style="font-size:40px; margin-bottom:12px;">📧</div>
-        <div class="modal-h">Check your inbox</div>
-        <p class="modal-p" id="forgotSentText">
-          If an account exists with that email, we've sent a password reset link. It expires in 30 minutes.
-        </p>
-        <button class="auth-btn" onclick="closeModal('forgot')">Done</button>
+  <!-- PASSWORD WARNING MODAL -->
+  <div class="overlay" id="pwdWarningOverlay">
+    <div class="modal" style="max-width:360px; text-align:center;">
+      <div id="pwdModalIcon" style="font-size:28px; margin-bottom:8px;">⚠️</div>
+      <div id="pwdModalTitle" class="modal-h" style="font-size:18px;">We recommend a stronger password</div>
+      <p id="pwdModalText" class="modal-p" style="margin-bottom:20px;">
+        Your password meets the minimum requirements, but adding more length, symbols, or uppercase letters will make your account more secure.
+      </p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="pwdModalFixBtn" class="auth-btn" style="background:var(--bg); border:1px solid var(--border); color:var(--text);" onclick="closePwdModal()">
+          Choose a different password
+        </button>
+        <button id="pwdModalContinueBtn" class="auth-btn" onclick="continueAnyway()">
+          Continue anyway
+        </button>
       </div>
     </div>
   </div>
 
   <script>
     const API = '';
-    function togglePasswordVisibility(id, btn) {
-      const input = document.getElementById(id);
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        btn.textContent = '👁️';
-      }
-    }
 
     // Scroll reveal
     const obs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); obs.unobserve(e.target) } }) }, { threshold: 0.07 });
@@ -1297,6 +1271,8 @@
     function showToast(msg, dur = 3000) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), dur) }
 
     // Auth
+    let pwdStrengthScore = 0;
+
     function checkStrength() {
       const pwd = document.getElementById('signupPass').value;
       const label = document.getElementById('pwdLabel');
@@ -1306,70 +1282,64 @@
       if (pwd.match(/[0-9]/)) s++;
       if (pwd.match(/[^a-zA-Z0-9]/)) s++;
 
-      if (pwd.length === 0) { label.textContent = 'None'; label.style.color = 'var(--muted)'; }
-      else if (s <= 1) { label.textContent = 'Weak - Add numbers & symbols'; label.style.color = 'var(--red)'; }
-      else if (s === 2) { label.textContent = 'Fair - Add uppercase or symbols'; label.style.color = 'var(--orange)'; }
-      else if (s === 3) { label.textContent = 'Good'; label.style.color = 'var(--teal)'; }
-      else { label.textContent = 'Strong'; label.style.color = 'var(--teal)'; }
+      pwdStrengthScore = s;
+
+      if (pwd.length === 0) {
+        label.textContent = 'None'; label.style.color = 'var(--muted)';
+      } else if (s <= 1) {
+        label.textContent = 'Weak - Add numbers & symbols'; label.style.color = 'var(--red)';
+      } else if (s === 2) {
+        label.textContent = 'Fair - Add uppercase or symbols'; label.style.color = 'var(--orange)';
+      } else if (s === 3) {
+        label.textContent = 'Good'; label.style.color = 'var(--teal)';
+      } else {
+        label.textContent = 'Strong'; label.style.color = 'var(--teal)';
+      }
     }
 
-    function openForgotModal() {
-      closeModal('login');
-      // Pre-fill with whatever was typed in the login email field, if anything
-      const loginEmail = document.getElementById('loginEmail');
-      const forgotEmail = document.getElementById('forgotEmail');
-      if (loginEmail && forgotEmail && loginEmail.value.trim()) {
-        forgotEmail.value = loginEmail.value.trim();
-      }
-      // Reset modal to its initial state every time it's opened
-      document.getElementById('forgotRequestState').style.display = 'block';
-      document.getElementById('forgotSentState').style.display = 'none';
-      const btn = document.getElementById('forgotSubmitBtn');
-      btn.disabled = false;
-      btn.textContent = 'Send Reset Link';
-
-      openModal('forgot');
+    function clearAgreeError() {
+      document.getElementById('agreeError').style.display = 'none';
     }
 
-    async function submitForgotPassword() {
-      const emailInput = document.getElementById('forgotEmail');
-      const email = emailInput.value.trim();
+    function openPwdModal(mode) {
+      const icon = document.getElementById('pwdModalIcon');
+      const title = document.getElementById('pwdModalTitle');
+      const text = document.getElementById('pwdModalText');
+      const continueBtn = document.getElementById('pwdModalContinueBtn');
 
-      if (!email || !email.includes('@')) {
-        showToast('Please enter a valid email address');
-        return;
+      if (mode === 'weak') {
+        icon.textContent = '🚫';
+        title.textContent = 'Your password is too weak';
+        text.textContent = 'For your account\'s security, please choose a password that\'s at least 8 characters and includes a number or symbol.';
+        continueBtn.style.display = 'none';
+      } else {
+        icon.textContent = '⚠️';
+        title.textContent = 'We recommend a stronger password';
+        text.textContent = 'Your password meets the minimum requirements, but adding more length, symbols, or uppercase letters will make your account more secure.';
+        continueBtn.style.display = 'inline-block';
       }
 
-      const btn = document.getElementById('forgotSubmitBtn');
-      btn.disabled = true;
-      btn.textContent = 'Sending...';
+      document.getElementById('pwdWarningOverlay').classList.add('on');
+      document.body.style.overflow = 'hidden';
+    }
 
-      try {
-        const res = await fetch('/auth/forgot-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
+    function closePwdModal() {
+      document.getElementById('pwdWarningOverlay').classList.remove('on');
+      document.body.style.overflow = '';
+      document.getElementById('signupPass').focus();
+    }
 
-        const data = await res.json();
+    function continueAnyway() {
+      document.getElementById('pwdWarningOverlay').classList.remove('on');
+      document.body.style.overflow = '';
+      proceedWithSignup();
+    }
 
-        if (!res.ok) {
-          throw new Error(data.detail || 'Something went wrong. Please try again.');
-        }
 
-        // Backend always returns a generic success message regardless of
-        // whether the email is registered (prevents account enumeration) —
-        // so we always show the "check your inbox" state on a 200 response.
-        document.getElementById('forgotSentText').textContent =
-          data.message || 'If an account exists with that email, we\'ve sent a password reset link.';
-        document.getElementById('forgotRequestState').style.display = 'none';
-        document.getElementById('forgotSentState').style.display = 'block';
-
-      } catch (err) {
-        showToast(err.message || 'Could not send reset link — please try again');
-        btn.disabled = false;
-        btn.textContent = 'Send Reset Link';
-      }
+    function forgotPassword() {
+      const email = document.getElementById('loginEmail').value.trim();
+      if (!email) { showToast('Please enter your email first to reset your password'); return; }
+      showToast('Password reset link sent to ' + email);
     }
 
     async function handleLogin() {
@@ -1383,62 +1353,58 @@
         localStorage.setItem('dovtek_token', d.token);
         localStorage.setItem('dovtek_user', JSON.stringify(d.user));
         showToast(`Welcome back, ${d.user.full_name}!`); closeModal('login');
-        setTimeout(() => location.reload(), 800);
+        setTimeout(() => location.href = '/scan', 800);
       } catch (e) { showToast(e.message) }
     }
 
-    let pendingSignupEmail = '';
 
-    async function handleSignup() {
+    function handleSignup() {
+      console.log('handleSignup fired');
+      const pwd = document.getElementById('signupPass').value;
+      const agreed = document.getElementById('agreeTerms').checked;
+      console.log('pwd:', pwd, 'score:', pwdStrengthScore, 'agreed:', agreed);
+
+      if (!agreed) {
+        console.log('blocked: checkbox not agreed');
+        document.getElementById('agreeError').style.display = 'block';
+        return;
+      }
+
+      if (pwd.length === 0 || pwdStrengthScore <= 1) {
+        console.log('opening weak modal');
+        openPwdModal('weak');
+        return;
+      }
+
+      if (pwdStrengthScore === 2) {
+        console.log('opening fair modal');
+        openPwdModal('fair');
+        return;
+      }
+
+      console.log('good/strong — proceeding');
+      proceedWithSignup();
+    }
+
+
+
+    async function proceedWithSignup() {
       const name = document.getElementById('signupName').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const pass = document.getElementById('signupPass').value;
+
+
       if (!name || !email || !pass) { showToast('Please fill in all fields'); return }
       if (pass.length < 8) { showToast('Password must be at least 8 characters'); return }
       try {
-        showToast('Sending verification code...');
-        const r = await fetch(API + '/auth/register', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ full_name: name, email, password: pass }) 
-        });
+        const r = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: name, email, password: pass }) });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || 'Signup failed');
-        
-        pendingSignupEmail = email;
-        document.getElementById('otpTargetEmail').textContent = email;
-        
-        closeModal('signup');
-        setTimeout(() => openModal('otp'), 200);
-        showToast('Verification code sent!');
-      } catch (e) { showToast(e.message) }
-    }
-
-    async function handleVerifyOTP() {
-      const otp = document.getElementById('otpCode').value.trim();
-      if (!otp) { showToast('Please enter the verification code'); return }
-      if (otp.length !== 6) { showToast('OTP must be 6 digits'); return }
-      try {
-        showToast('Verifying code...');
-        const r = await fetch(API + '/auth/verify-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: pendingSignupEmail, otp_code: otp })
-        });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.detail || 'Verification failed');
-        
         localStorage.setItem('dovtek_token', d.token);
         localStorage.setItem('dovtek_user', JSON.stringify(d.user));
-        showToast('Email verified! Account created!');
-        closeModal('otp');
-        setTimeout(() => location.reload(), 800);
+        showToast('Account created!'); closeModal('signup');
+        setTimeout(() => location.href = '/scan', 800);
       } catch (e) { showToast(e.message) }
-    }
-
-    async function resendOTP() {
-      if (!pendingSignupEmail) { showToast('No pending signup found'); return }
-      handleSignup();
     }
 
     // Attach Enter key event listeners for modal form inputs
@@ -1454,8 +1420,6 @@
       if (signupName) signupName.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
       if (signupEmail) signupEmail.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
       if (signupPass) signupPass.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
-      const otpCode = document.getElementById('otpCode');
-      if (otpCode) otpCode.addEventListener('keydown', e => { if (e.key === 'Enter') handleVerifyOTP(); });
     });
 
     // ── Geolocation + Currency Detection ──
@@ -1472,24 +1436,6 @@
       'PH': '🇵🇭', 'ID': '🇮🇩', 'MY': '🇲🇾', 'TH': '🇹🇭', 'VN': '🇻🇳', 'BD': '🇧🇩', 'PK': '🇵🇰',
       'ES': '🇪🇸', 'IT': '🇮🇹', 'NL': '🇳🇱', 'SE': '🇸🇪', 'PL': '🇵🇱', 'LK': '🇱🇰', 'NP': '🇳🇵'
     };
-
-    function guessCountryByTimezone() {
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (tz) {
-          if (tz.includes('Kolkata') || tz.includes('Calcutta')) return 'IN';
-          if (tz.includes('Lagos')) return 'NG';
-          if (tz.includes('London')) return 'GB';
-          if (tz.includes('Johannesburg')) return 'ZA';
-          if (tz.includes('Nairobi')) return 'KE';
-          if (tz.includes('Accra')) return 'GH';
-        }
-        const offset = new Date().getTimezoneOffset();
-        if (offset === -330) return 'IN';
-        if (offset === -60) return 'NG';
-      } catch (e) {}
-      return 'US';
-    }
 
     async function detectLocation() {
       const cached = localStorage.getItem('dovtek_geo');
@@ -1510,9 +1456,7 @@
           localStorage.setItem('dovtek_geo', JSON.stringify(geo));
           applyGeo(geo);
         } catch (e2) {
-          const fallbackCode = guessCountryByTimezone();
-          const fallbackNames = { 'IN': 'India', 'NG': 'Nigeria', 'US': 'United States' };
-          applyGeo({ country: fallbackNames[fallbackCode] || 'your region', code: fallbackCode });
+          applyGeo({ country: 'your region', code: 'US' });
         }
       }
     }
@@ -1784,57 +1728,22 @@
       }
     })();
 
-    function toggleAvatarDropdown(event) {
-      event.stopPropagation();
-      const dropdown = document.getElementById('avatarDropdown');
-      if (dropdown) dropdown.classList.toggle('show');
-    }
-    window.addEventListener('click', () => {
-      const dropdown = document.getElementById('avatarDropdown');
-      if (dropdown) dropdown.classList.remove('show');
-    });
-
     function updateNavAuth() {
       const token = localStorage.getItem('dovtek_token');
-      document.body.setAttribute('data-shieldiq-token-bridge', token || '');
-      document.body.setAttribute('data-shieldiq-user-bridge', localStorage.getItem('dovtek_user') || '');
       if (token) {
-        let userObj = {};
-        try {
-          userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
-        } catch(e) {}
-        const initials = (userObj.full_name || userObj.email || 'U').charAt(0).toUpperCase();
-        const displayName = userObj.full_name || userObj.email?.split('@')[0] || 'User';
-        const planLabel = userObj.plan === 'plus' ? 'Shield Plus' : userObj.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
-        const upgradeStyle = userObj.plan === 'plus' ? 'style="display:none;"' : '';
-
         const desktopAuth = document.getElementById('desktopAuthNav');
         if (desktopAuth) {
           desktopAuth.innerHTML = `
-            <div class="avatar-wrapper" id="avatarWrapper">
-              <div class="avatar-btn" id="avatarBtn" onclick="toggleAvatarDropdown(event)">${initials}</div>
-              <div class="avatar-dropdown" id="avatarDropdown">
-                <div class="dropdown-header">
-                  <div class="dropdown-user-name">${displayName}</div>
-                  <div class="dropdown-user-plan">${planLabel}</div>
-                </div>
-                <a href="/dashboard" class="dropdown-item">📊 Dashboard</a>
-                <a href="/scan" class="dropdown-item">🛡️ Scan Message</a>
-                <a href="/plans" class="dropdown-item" id="dropdownUpgradeLink" ${upgradeStyle}>🚀 Upgrade Plan</a>
-                <a href="#" class="dropdown-item" onclick="openSubscriptionModal();return false">⚙️ Manage Subscription</a>
-                <a href="#" class="dropdown-item logout-item" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false">🚪 Logout</a>
-              </div>
-            </div>
-          `;
+        <a class="btn-ghost" href="/dashboard">Dashboard</a>
+        <a class="btn btn-primary btn-sm" href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="background:var(--dark);border:1px solid var(--border);color:var(--white);">Logout</a>
+      `;
         }
         const mobileAuth = document.getElementById('mobileAuthNav');
         if (mobileAuth) {
           mobileAuth.innerHTML = `
-            <a href="/dashboard">Dashboard</a>
-            <a href="/scan">Scanner</a>
-            <a href="/plans" ${upgradeStyle}>Upgrade Plan</a>
-            <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="color:#ef4444">Logout</a>
-          `;
+        <a href="/dashboard">Dashboard</a>
+        <a href="#" onclick="localStorage.removeItem('dovtek_token');localStorage.removeItem('dovtek_user');Object.keys(localStorage).forEach(k=>k.startsWith('dovtek_scan_')&&localStorage.removeItem(k));location.reload();return false" style="color:#ef4444">Logout</a>
+      `;
         }
 
         // Adapt Hero CTA
@@ -1885,8 +1794,9 @@
     detectLocation();
     updateNavAuth();
 
+
     (function () {
-    /* ── State ──────────────────────────────────────────────────────── */
+    /* ── State ─────────────────────────────────────────────── */
     let tReviews  = [];          // all reviews (seeds + API)
     let tPage     = 0;           // current carousel page
     let tPerPage  = 3;           // cards visible per page
@@ -2016,17 +1926,17 @@
       'piss', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'retard'
     ];
 
-    window.containsBannedWord = function (text) {
+    function containsBannedWord(text) {
       const lower = text.toLowerCase();
       // strip common leetspeak/punctuation tricks (f*ck, sh1t, f.u.c.k) before checking
       const normalized = lower.replace(/[^a-z0-9]/g, '');
       return BANNED_WORDS.some(word => normalized.includes(word));
-    };
+    }
 
-    window.clearReviewTextError = function () {
-      const err = document.getElementById('rvTextError');
-      if (err) err.style.display = 'none';
-    };
+    function clearReviewTextError() {
+      document.getElementById('rvTextError').style.display = 'none';
+    }
+
 
     /* ── Submit review ──────────────────────────────────────── */
     window.submitReview = async function () {
@@ -2035,30 +1945,29 @@
       const text   = document.getElementById('rvText').value.trim();
       const succ   = document.getElementById('rvSuccess');
       const rvTextError = document.getElementById('rvTextError');
-  
+
       if (!name)    { showToast('Please enter your name'); return; }
       if (!tPicked) { showToast('Please pick a star rating'); return; }
 
       // Profanity check (only runs if review text was actually written)
       if (text && containsBannedWord(text)) {
-        if (rvTextError) rvTextError.style.display = 'block';
-        const txtArea = document.getElementById('rvText');
-        if (txtArea) txtArea.focus();
+        rvTextError.style.display = 'block';
+        document.getElementById('rvText').focus();
         return;
       }
-      if (rvTextError) rvTextError.style.display = 'none';
-  
+      rvTextError.style.display = 'none';
+
       const payload = {
         reviewer_name : name,
         rating        : tPicked,
         review_text   : text   || null,
         location      : loc    || null,
       };
-  
+
       const token = localStorage.getItem('dovtek_token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-  
+
       try {
         const r = await fetch('/reviews', {
           method  : 'POST',
@@ -2067,12 +1976,12 @@
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || 'Could not post review');
-  
+
         // Optimistically prepend to carousel
         tReviews.unshift({ ...payload, created_at: new Date().toISOString() });
         tPage = 0;
         renderCarousel();
-  
+
         succ.classList.add('show');
         document.getElementById('rvName').value      = '';
         document.getElementById('rvLocation').value  = '';
@@ -2082,11 +1991,12 @@
           s.classList.remove('lit'); s.style.color = '';
         });
         setTimeout(() => succ.classList.remove('show'), 5000);
-  
+
       } catch (e) {
         showToast(e.message);
       }
     };
+
   
     /* ── Fetch existing reviews from API ────────────────────── */
     async function loadReviews() {
@@ -2105,18 +2015,12 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderCarousel(); // render seeds immediately
       loadReviews();    // then try to fetch DB reviews
-      if (window.location.pathname === '/login') {
-        openModal('login');
-      }
     });
   
     // Also re-render if page loads without DOMContentLoaded firing
     if (document.readyState !== 'loading') {
       renderCarousel();
       loadReviews();
-      if (window.location.pathname === '/login') {
-        openModal('login');
-      }
     }
   })();
   </script>

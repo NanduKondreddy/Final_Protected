@@ -18,6 +18,11 @@ class ScanResult(BaseModel):
     what_to_do: str
     pass1_blocked: bool = False
     priority_used: bool = False
+    fraud_type: Optional[str] = None
+    detected_language: Optional[str] = "en"
+    detected_language_confidence: Optional[float] = 1.0
+    translated_message: Optional[str] = None
+
  
  
 # ── Auth Models ──────────────────────────────────────────────────────────────
@@ -30,6 +35,13 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str = Field(..., min_length=8, description="Minimum 8 characters")
  
 class UserOut(BaseModel):
     id: int
@@ -71,3 +83,7 @@ class ScanHistoryResponse(BaseModel):
     page: int
     page_size: int
     scans: List[ScanHistoryItem]
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp_code: str

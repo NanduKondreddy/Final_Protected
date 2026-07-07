@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Confirmed — ShieldIQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.container { max-width: 520px; margin: 100px auto 60px; padding: 0 24px; }
+ 
+.confirm-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+}
+ 
+.success-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: rgba(0,212,160,0.12);
+  border: 2px solid rgba(0,212,160,0.35);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 32px;
+  animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pop-in {
+  0%   { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+ 
+.confirm-title { font-size: 24px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+.confirm-sub   { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+ 
+.receipt-box {
+  background: var(--darker);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: left;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.receipt-row:last-child { border-bottom: none; }
+.receipt-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.receipt-value {
+  font-size: 14px;
+  color: var(--white);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+.receipt-value.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--warm);
+  font-weight: 400;
+}
+.receipt-value.amount {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--teal);
+}
+.status-pill {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.status-pill.success { background: rgba(0,212,160,0.15); color: var(--teal); }
+.status-pill.pending  { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.status-pill.failed   { background: rgba(239,68,68,0.15);  color: #ef4444; }
+ 
+.plan-pill {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+ 
+.confirm-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.confirm-actions a, .confirm-actions button {
+  flex: 1;
+  min-width: 160px;
+  padding: 13px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+.btn-primary-action {
+  background: var(--gradient-primary);
+  color: var(--black);
+  border: none;
+}
+.btn-secondary-action {
+  background: transparent;
+  color: var(--warm);
+  border: 1px solid var(--border);
+}
+ 
+.email-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+ 
+.loading-state, .error-state { padding: 40px 0; }
+.loading-state { color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+.error-state { display: none; }
+.error-state.show { display: block; }
+.error-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+ 
+<nav class="nav">
+  <a class="nav-brand" href="/">
+    <span class="nav-brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <circle cx="12" cy="11" r="3" fill="currentColor"></circle>
+      </svg>
+    </span>
+    SHIELD <span class="accent">IQ</span>
+  </a>
+</nav>
+ 
+<div class="container">
+  <div class="confirm-card" id="confirmCard">
+ 
+    <div class="loading-state" id="loadingState">Loading your receipt...</div>
+ 
+    <!-- ── Success state (populated by JS) ──────────────────────────── -->
+    <div id="successState" style="display:none;">
+      <div class="success-icon">✓</div>
+      <div class="confirm-title">Payment confirmed</div>
+      <div class="confirm-sub" id="confirmSub">Your subscription is now active.</div>
+ 
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span class="receipt-label">Subscription Plan</span>
+          <span class="receipt-value"><span class="plan-pill" id="rxPlan">—</span></span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Amount Paid</span>
+          <span class="receipt-value amount" id="rxAmount">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Date</span>
+          <span class="receipt-value" id="rxDate">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Transaction ID</span>
+          <span class="receipt-value mono" id="rxRef">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Payment Status</span>
+          <span class="receipt-value"><span class="status-pill" id="rxStatus">—</span></span>
+        </div>
+      </div>
+ 
+      <div class="confirm-actions">
+        <a href="/dashboard" class="btn-primary-action">Go to Dashboard</a>
+        <button class="btn-secondary-action" onclick="window.print()">Print Receipt</button>
+      </div>
+ 
+      <div class="email-note">
+        📧 A copy of this receipt has also been sent to your email
+      </div>
+    </div>
+ 
+    <!-- ── Error state ───────────────────────────────────────────────── -->
+    <div class="error-state" id="errorState">
+      <div class="error-icon">⚠️</div>
+      <div class="confirm-title">Couldn't load receipt</div>
+      <div class="confirm-sub" id="errorMsg">
+        We couldn't find this transaction. If you completed a payment, check your email for the receipt,
+        or visit your dashboard — your plan may already be active.
+      </div>
+      <div class="confirm-actions">
+        <a href="/dashboard" class="btn-primary-action">Go to Dashboard</a>
+      </div>
+    </div>
+ 
+  </div>
+</div>
+ 
+<script>
+const token = localStorage.getItem('dovtek_token');
+if (!token) { location.href = '/'; }
+ 
+const params    = new URLSearchParams(location.search);
+const reference = params.get('reference');
+ 
+const PLAN_LABELS = { pro: 'ShieldIQ Pro', plus: 'Shield Plus' };
+ 
+const CURRENCY_SYMBOLS = {
+  NGN: '₦', GHS: 'GH₵', KES: 'KSh', ZAR: 'R', USD: '$', GBP: '£', EUR: '€'
+};
+ 
+function formatAmount(amount, currency) {
+  const symbol = CURRENCY_SYMBOLS[currency] || (currency + ' ');
+  return symbol + (amount / 100).toFixed(2);
+}
+ 
+function showError(msg) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('successState').style.display = 'none';
+  document.getElementById('errorState').classList.add('show');
+  if (msg) document.getElementById('errorMsg').textContent = msg;
+}
+ 
+async function loadReceipt() {
+  if (!reference) {
+    showError('No transaction reference was provided.');
+    return;
+  }
+ 
+  try {
+    const res = await fetch(`/api/billing/transaction/${encodeURIComponent(reference)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+ 
+    if (!res.ok) {
+      if (res.status === 404) {
+        showError("We couldn't find this transaction. It may still be processing — check your dashboard in a moment.");
+      } else {
+        showError('Something went wrong loading your receipt.');
+      }
+      return;
+    }
+ 
+    const tx = await res.json();
+ 
+    document.getElementById('loadingState').style.display = 'none';
+ 
+    if (tx.status !== 'success') {
+      // AC6 — failed/pending transactions don't show a success confirmation
+      showError(
+        tx.status === 'pending'
+          ? 'This payment is still processing. Please check back shortly.'
+          : 'This payment was not successful, so no charge was confirmed.'
+      );
+      return;
+    }
+ 
+    document.getElementById('successState').style.display = 'block';
+ 
+    const planLabel = PLAN_LABELS[tx.plan] || tx.plan;
+    document.getElementById('confirmSub').textContent = `You're now on ${planLabel}. Welcome aboard!`;
+    document.getElementById('rxPlan').textContent      = planLabel;
+    document.getElementById('rxAmount').textContent    = formatAmount(tx.amount, tx.currency);
+    document.getElementById('rxDate').textContent      = tx.created_at
+      ? new Date(tx.created_at).toLocaleString(undefined, {
+          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        })
+      : '—';
+    document.getElementById('rxRef').textContent       = tx.reference;
+    const statusEl = document.getElementById('rxStatus');
+    statusEl.textContent = 'Successful';
+    statusEl.className   = 'status-pill success';
+ 
+  } catch (err) {
+    showError('Something went wrong loading your receipt.');
+  }
+}
+ 
+loadReceipt();
+</script>
+</body>
+</html>
