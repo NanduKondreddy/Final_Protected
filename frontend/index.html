@@ -564,281 +564,311 @@
         flex-wrap: wrap;
         text-align: center;
       }
+    }
 
-    /* ── Carousel shell ────────────────────────────────────────────── */
-    .testimonials-track-wrap {
-      overflow: hidden;
-      position: relative;
-      margin-top: 40px;
-    }
-  
-    .testimonials-track {
-      display: flex;
-      gap: 20px;
-      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: transform;
-    }
-  
-    /* ── Individual card ───────────────────────────────────────────── */
-    .tcard {
-      flex: 0 0 calc(33.333% - 14px);
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg, 12px);
-      padding: 28px 26px 24px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      transition: border-color 0.25s, transform 0.25s;
-      animation: fade-up 0.6s var(--ease-out, ease) both;
-    }
-  
-    .tcard:hover {
-      border-color: rgba(0, 212, 160, 0.35);
-      transform: translateY(-3px);
-    }
-  
-    .tcard::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--gradient-primary);
-      border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0;
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.3s;
-    }
-  
-    .tcard:hover::before { transform: scaleX(1); }
-  
-    /* quote mark */
-    .tcard-quote {
-      font-size: 40px;
-      line-height: 1;
-      color: var(--teal);
-      opacity: 0.25;
-      font-family: Georgia, serif;
-      margin-bottom: -8px;
-      user-select: none;
-    }
-  
-    .tcard-body {
-      font-size: 14px;
-      line-height: 1.85;
-      color: var(--warm);
-      flex: 1;
-    }
-  
-    .tcard-stars {
-      display: flex;
-      gap: 3px;
-    }
-  
-    .tcard-star {
-      font-size: 14px;
-      color: #f59e0b;
-    }
-  
-    .tcard-star.empty { color: var(--border); }
-  
-    .tcard-footer {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-top: 1px solid var(--border);
-      padding-top: 14px;
-      margin-top: 4px;
-    }
-  
-    .tcard-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: var(--teal-dim, rgba(0,212,160,0.12));
-      border: 1px solid rgba(0,212,160,0.25);
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--teal);
-      flex-shrink: 0;
-      text-transform: uppercase;
-    }
-  
-    .tcard-name {
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 1.2;
-    }
-  
-    .tcard-meta {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-  
-    /* ── Carousel controls ─────────────────────────────────────────── */
-    .testimonials-controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin-top: 32px;
-    }
-  
-    .tcarousel-btn {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--white);
-      font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      flex-shrink: 0;
-    }
-  
-    .tcarousel-btn:hover {
-      border-color: var(--teal);
-      background: var(--teal-dim, rgba(0,212,160,0.08));
-    }
-  
-    .tcarousel-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-  
-    .tcarousel-dots {
-      display: flex;
-      gap: 7px;
-      align-items: center;
-    }
-  
-    .tcarousel-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--border);
-      transition: background 0.25s, transform 0.25s;
-      cursor: pointer;
-      border: none;
-      padding: 0;
-    }
-  
-    .tcarousel-dot.active {
-      background: var(--teal);
-      transform: scale(1.4);
-    }
-  
-    /* ── Write-a-review form ───────────────────────────────────────── */
-    .review-form-wrap {
-      margin-top: 48px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg, 12px);
-      padding: 32px 28px;
-      position: relative;
-      overflow: hidden;
-    }
-  
-    .review-form-wrap::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 2px;
-      background: var(--gradient-primary);
-    }
-  
-    .review-form-title {
-      font-weight: 700;
-      font-size: 18px;
-      margin-bottom: 6px;
-    }
-  
-    .review-form-sub {
-      font-size: 13px;
-      color: var(--warm);
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-  
-    .review-form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-  
-    /* Star picker */
-    .star-picker {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-  
-    .star-picker-label {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-right: 6px;
-    }
-  
-    .star-pick {
-      font-size: 22px;
-      cursor: pointer;
-      color: var(--border);
-      transition: color 0.15s, transform 0.15s;
-      line-height: 1;
-      user-select: none;
-    }
-  
-    .star-pick:hover,
-    .star-pick.lit { color: #f59e0b; }
-  
-    .star-pick:hover { transform: scale(1.2); }
-  
-    /* optional badge */
-    .optional-tag {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-  
-    .review-success {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      margin-top: 14px;
-      padding: 12px 16px;
-      background: rgba(0, 212, 160, 0.08);
-      border: 1px solid rgba(0, 212, 160, 0.25);
-      border-radius: var(--radius-sm, 6px);
-      font-size: 13px;
-      color: var(--teal);
-      font-family: var(--font-mono);
-    }
-  
-    .review-success.show { display: flex; }
-  
-    /* ── Mobile: 1 card at a time ─────────────────────────────────── */
-    @media (max-width: 900px) {
-      .tcard { flex: 0 0 calc(50% - 10px); }
-    }
-  
-    @media (max-width: 600px) {
-      .tcard { flex: 0 0 100%; }
-      .review-form-row { grid-template-columns: 1fr; }
-    }
+      /* ── Carousel shell ────────────────────────────────────────────── */
+      .testimonials-track-wrap {
+        overflow: hidden;
+        position: relative;
+        margin-top: 40px;
+      }
+
+      .testimonials-track {
+        display: flex;
+        gap: 20px;
+        transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+      }
+
+      /* ── Individual card ───────────────────────────────────────────── */
+      .tcard {
+        flex: 0 0 calc(33.333% - 14px);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg, 12px);
+        padding: 28px 26px 24px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        transition: border-color 0.25s, transform 0.25s;
+        animation: fade-up 0.6s var(--ease-out, ease) both;
+      }
+
+      .tcard:hover {
+        border-color: rgba(0, 212, 160, 0.35);
+        transform: translateY(-3px);
+      }
+
+      .tcard::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--gradient-primary);
+        border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s;
+      }
+
+      .tcard:hover::before {
+        transform: scaleX(1);
+      }
+
+      /* quote mark */
+      .tcard-quote {
+        font-size: 40px;
+        line-height: 1;
+        color: var(--teal);
+        opacity: 0.25;
+        font-family: Georgia, serif;
+        margin-bottom: -8px;
+        user-select: none;
+      }
+
+      .tcard-body {
+        font-size: 14px;
+        line-height: 1.85;
+        color: var(--warm);
+        flex: 1;
+      }
+
+      .tcard-stars {
+        display: flex;
+        gap: 3px;
+      }
+
+      .tcard-star {
+        font-size: 14px;
+        color: #f59e0b;
+      }
+
+      .tcard-star.empty {
+        color: var(--border);
+      }
+
+      .tcard-footer {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+        margin-top: 4px;
+      }
+
+      .tcard-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--teal-dim, rgba(0, 212, 160, 0.12));
+        border: 1px solid rgba(0, 212, 160, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--teal);
+        flex-shrink: 0;
+        text-transform: uppercase;
+      }
+
+      .tcard-name {
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .tcard-meta {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+
+      /* ── Carousel controls ─────────────────────────────────────────── */
+      .testimonials-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 32px;
+      }
+
+      .tcarousel-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--white);
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        flex-shrink: 0;
+      }
+
+      .tcarousel-btn:hover {
+        border-color: var(--teal);
+        background: var(--teal-dim, rgba(0, 212, 160, 0.08));
+      }
+
+      .tcarousel-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .tcarousel-dots {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+      }
+
+      .tcarousel-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--border);
+        transition: background 0.25s, transform 0.25s;
+        cursor: pointer;
+        border: none;
+        padding: 0;
+      }
+
+      .tcarousel-dot.active {
+        background: var(--teal);
+        transform: scale(1.4);
+      }
+
+      /* ── Write-a-review form ───────────────────────────────────────── */
+      .review-form-wrap {
+        margin-top: 48px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg, 12px);
+        padding: 32px 28px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .review-form-wrap::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--gradient-primary);
+      }
+
+      .review-form-title {
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+
+      .review-form-sub {
+        font-size: 13px;
+        color: var(--warm);
+        margin-bottom: 24px;
+        line-height: 1.6;
+      }
+
+      .review-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      /* Star picker */
+      .star-picker {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .star-picker-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-right: 6px;
+      }
+
+      .star-pick {
+        font-size: 22px;
+        cursor: pointer;
+        color: var(--border);
+        transition: color 0.15s, transform 0.15s;
+        line-height: 1;
+        user-select: none;
+      }
+
+      .star-pick:hover,
+      .star-pick.lit {
+        color: #f59e0b;
+      }
+
+      .star-pick:hover {
+        transform: scale(1.2);
+      }
+
+      /* optional badge */
+      .optional-tag {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
+
+      .review-success {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 12px 16px;
+        background: rgba(0, 212, 160, 0.08);
+        border: 1px solid rgba(0, 212, 160, 0.25);
+        border-radius: var(--radius-sm, 6px);
+        font-size: 13px;
+        color: var(--teal);
+        font-family: var(--font-mono);
+      }
+
+      .review-success.show {
+        display: flex;
+      }
+
+      /* ── Mobile: 1 card at a time ─────────────────────────────────── */
+      @media (max-width: 900px) {
+        .tcard {
+          flex: 0 0 calc(50% - 10px);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .tcard {
+          flex: 0 0 100%;
+        }
+
+        .review-form-row {
+          grid-template-columns: 1fr;
+        }
+      }
   </style>
 </head>
 
@@ -1004,7 +1034,7 @@
   </section>
 
   <div class="divider"></div>
- 
+
   <section class="section reveal" id="testimonials">
     <div class="tag">What People Say</div>
     <h2 class="section-title">Real people. Real scams<br>they didn't fall for.</h2>
@@ -1012,11 +1042,11 @@
       Thousands of people paste suspicious messages every day.
       Here's what some of them shared after getting their verdict.
     </p>
-  
+
     <!-- Carousel -->
     <div class="testimonials-track-wrap" id="tTrackWrap">
       <div class="testimonials-track" id="tTrack">
-  
+
         <!-- Seed review 1 -->
         <div class="tcard">
           <div class="tcard-quote">"</div>
@@ -1025,7 +1055,9 @@
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
             <span class="tcard-star">★</span>
           </div>
-          <p class="tcard-body">Got a WhatsApp message claiming my GTBank account was suspended. Looked completely real — official logo, proper English, everything. Pasted it here on a hunch. Risk score: 94. It flagged the fake domain instantly. Saved me from clicking that link.</p>
+          <p class="tcard-body">Got a WhatsApp message claiming my GTBank account was suspended. Looked completely real
+            — official logo, proper English, everything. Pasted it here on a hunch. Risk score: 94. It flagged the fake
+            domain instantly. Saved me from clicking that link.</p>
           <div class="tcard-footer">
             <div class="tcard-avatar">AO</div>
             <div>
@@ -1034,7 +1066,7 @@
             </div>
           </div>
         </div>
-  
+
         <!-- Seed review 2 -->
         <div class="tcard">
           <div class="tcard-quote">"</div>
@@ -1043,12 +1075,14 @@
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
             <span class="tcard-star">★</span>
           </div>
-          <p class="tcard-body">Got a WhatsApp from an unknown number saying 'Hi Mum, I dropped my phone down the loo, this is my new number. I have an urgent bill to pay, can you transfer £850?' I was literally about to log into my banking app. I ran the text through ShieldIQ first. It flagged it as high-risk impersonation. Saved me a huge loss!</p>
+          <p class="tcard-body">My mum forwarded me a message saying she'd won a prize from MTN and needed to pay ₦500
+            to claim it. I scanned it before telling her anything. The AI caught the urgency language and fake sender in
+            seconds. She would have paid without question.</p>
           <div class="tcard-footer">
-            <div class="tcard-avatar">SM</div>
+            <div class="tcard-avatar">EK</div>
             <div>
-              <div class="tcard-name">Sarah M.</div>
-              <div class="tcard-meta">Manchester, UK · 1 day ago</div>
+              <div class="tcard-name">Emmanuel K.</div>
+              <div class="tcard-meta">Accra, Ghana · 5 days ago</div>
             </div>
           </div>
         </div>
@@ -1059,14 +1093,16 @@
           <div class="tcard-stars">
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
-            <span class="tcard-star">★</span>
+            <span class="tcard-star empty">★</span>
           </div>
-          <p class="tcard-body">My mum forwarded me a message saying she'd won a prize from MTN and needed to pay ₦500 to claim it. I scanned it before telling her anything. The AI caught the urgency language and fake sender in seconds. She would have paid without question.</p>
+          <p class="tcard-body">Someone posing as my MD sent me a "confidential" message asking me to buy iTunes
+            vouchers urgently. Classic CEO fraud. Shield IQ flagged it immediately — impersonation, unusual request,
+            pressure tactics. Showed my IT team the report. They were impressed.</p>
           <div class="tcard-footer">
-            <div class="tcard-avatar">EK</div>
+            <div class="tcard-avatar">FN</div>
             <div>
-              <div class="tcard-name">Emmanuel K.</div>
-              <div class="tcard-meta">Accra, Ghana · 5 days ago</div>
+              <div class="tcard-name">Fatima N.</div>
+              <div class="tcard-meta">Abuja, Nigeria · 1 week ago</div>
             </div>
           </div>
         </div>
@@ -1079,12 +1115,15 @@
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
             <span class="tcard-star">★</span>
           </div>
-          <p class="tcard-body">Got an SMS claiming my OPay account was restricted due to BVN discrepancy, with a link to update it. The link looked like opay-bvn-verify.com. I pasted it here and the AI flagged it as an active phishing domain. Tested it with a fake GTBank link too and it caught it instantly. This tool is a lifesaver in Nigeria.</p>
+          <p class="tcard-body">Got a WhatsApp from an unknown number saying 'Hi Mum, I dropped my phone down the loo,
+            this is my new number. I have an urgent bill to pay, can you transfer £850?' I was literally about to log
+            into my banking app. I ran the text through ShieldIQ first. It flagged it as high-risk impersonation. Saved
+            me a huge loss!</p>
           <div class="tcard-footer">
-            <div class="tcard-avatar">AO</div>
+            <div class="tcard-avatar">SM</div>
             <div>
-              <div class="tcard-name">Adaeze O.</div>
-              <div class="tcard-meta">Lagos, Nigeria · 3 days ago</div>
+              <div class="tcard-name">Sarah M.</div>
+              <div class="tcard-meta">Manchester, UK · 1 day ago</div>
             </div>
           </div>
         </div>
@@ -1095,14 +1134,17 @@
           <div class="tcard-stars">
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
-            <span class="tcard-star empty">★</span>
+            <span class="tcard-star">★</span>
           </div>
-          <p class="tcard-body">Someone posing as my MD sent me a "confidential" message asking me to buy iTunes vouchers urgently. Classic CEO fraud. Shield IQ flagged it immediately — impersonation, unusual request, pressure tactics. Showed my IT team the report. They were impressed.</p>
+          <p class="tcard-body">Got an SMS claiming my OPay account was restricted due to BVN discrepancy, with a link
+            to update it. The link looked like opay-bvn-verify.com. I pasted it here and the AI flagged it as an active
+            phishing domain. Tested it with a fake GTBank link too and it caught it instantly. This tool is a lifesaver
+            in Nigeria.</p>
           <div class="tcard-footer">
-            <div class="tcard-avatar">FN</div>
+            <div class="tcard-avatar">AO</div>
             <div>
-              <div class="tcard-name">Fatima N.</div>
-              <div class="tcard-meta">Abuja, Nigeria · 1 week ago</div>
+              <div class="tcard-name">Adaeze O.</div>
+              <div class="tcard-meta">Lagos, Nigeria · 3 days ago</div>
             </div>
           </div>
         </div>
@@ -1115,7 +1157,9 @@
             <span class="tcard-star">★</span><span class="tcard-star">★</span>
             <span class="tcard-star">★</span>
           </div>
-          <p class="tcard-body">Received a text from 'Canada Post' saying my package was held at the depot due to an unpaid $1.50 customs fee. I actually was expecting a parcel, so I almost clicked. Pinned it into ShieldIQ first. Risk score: 98/100, flagged fake tracking domain. Absolute genius tool.</p>
+          <p class="tcard-body">Received a text from 'Canada Post' saying my package was held at the depot due to an
+            unpaid $1.50 customs fee. I actually was expecting a parcel, so I almost clicked. Pinned it into ShieldIQ
+            first. Risk score: 98/100, flagged fake tracking domain. Absolute genius tool.</p>
           <div class="tcard-footer">
             <div class="tcard-avatar">LK</div>
             <div>
@@ -1124,24 +1168,25 @@
             </div>
           </div>
         </div>
-  
+
         <!-- Dynamic reviews will be injected here by JS -->
-  
+
       </div><!-- /tTrack -->
     </div><!-- /tTrackWrap -->
-  
+
     <!-- Carousel controls -->
     <div class="testimonials-controls">
       <button class="tcarousel-btn" id="tPrev" onclick="tSlide(-1)" aria-label="Previous reviews">←</button>
       <div class="tcarousel-dots" id="tDots"></div>
       <button class="tcarousel-btn" id="tNext" onclick="tSlide(1)" aria-label="Next reviews">→</button>
     </div>
-  
+
     <!-- Write a review -->
     <div class="review-form-wrap">
       <div class="review-form-title">Share your experience</div>
-      <p class="review-form-sub">Caught a scam with Shield IQ? Tell us what happened — it helps others stay safe. Review text is completely optional.</p>
-  
+      <p class="review-form-sub">Caught a scam with Shield IQ? Tell us what happened — it helps others stay safe. Review
+        text is completely optional.</p>
+
       <div class="review-form-row">
         <div>
           <label class="field-label">Your Name <span style="color:var(--red)">*</span></label>
@@ -1152,7 +1197,7 @@
           <input class="field" id="rvLocation" type="text" placeholder="e.g. Lagos, Nigeria" maxlength="60">
         </div>
       </div>
-  
+
       <div class="star-picker" id="starPicker">
         <span class="star-picker-label">Rating <span style="color:var(--red)">*</span></span>
         <span class="star-pick" data-v="1" onclick="pickStar(1)">★</span>
@@ -1161,17 +1206,19 @@
         <span class="star-pick" data-v="4" onclick="pickStar(4)">★</span>
         <span class="star-pick" data-v="5" onclick="pickStar(5)">★</span>
       </div>
-  
+
       <label class="field-label">Your Review <span class="optional-tag">optional</span></label>
-      <textarea class="field" id="rvText" rows="4" placeholder="What kind of scam did Shield IQ help you catch? (optional)" maxlength="600" style="resize:vertical; min-height:90px;" oninput="clearReviewTextError()"></textarea>
+      <textarea class="field" id="rvText" rows="4"
+        placeholder="What kind of scam did Shield IQ help you catch? (optional)" maxlength="600"
+        style="resize:vertical; min-height:90px;" oninput="clearReviewTextError()"></textarea>
       <div id="rvTextError" style="display:none; font-size:12px; color:var(--red); margin-top:4px;">
         ⚠️ Your review contains inappropriate language. Please revise it before posting.
       </div>
-  
+
       <button class="btn btn-primary" style="margin-top:14px; min-width:160px;" onclick="submitReview()">
         Post Review
       </button>
-  
+
       <div class="review-success" id="rvSuccess">
         ✓ &nbsp;Thank you! Your review has been submitted.
       </div>
@@ -1225,7 +1272,8 @@
       <div class="modal-h">Welcome back</div>
       <p class="modal-p">Log in to access your scan history and dashboard.</p>
       <label class="field-label">Email Address</label>
-      <input class="field" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleLogin()">
+      <input class="field" id="loginEmail" type="email" placeholder="you@example.com"
+        onkeydown="if(event.key === 'Enter') handleLogin()">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <label class="field-label" style="margin-bottom:0;">Password</label>
         <a href="#" onclick="openForgotModal();return false"
@@ -1233,8 +1281,10 @@
           password?</a>
       </div>
       <div style="position:relative; margin-bottom:16px;">
-        <input class="field" id="loginPass" type="password" placeholder="Your password" onkeydown="if(event.key === 'Enter') handleLogin()" style="margin-bottom:0; padding-right:42px;">
-        <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
+        <input class="field" id="loginPass" type="password" placeholder="Your password"
+          onkeydown="if(event.key === 'Enter') handleLogin()" style="margin-bottom:0; padding-right:42px;">
+        <button type="button" onclick="togglePasswordVisibility('loginPass', this)"
+          style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
       </div>
       <button class="auth-btn" onclick="handleLogin()">Log In</button>
       <div class="switch-line">No account? <a onclick="switchModal('login','signup')">Sign up free →</a></div>
@@ -1255,13 +1305,18 @@
         <div class="perk">Your messages are never stored</div>
       </div>
       <label class="field-label">Full Name</label>
-      <input class="field" id="signupName" type="text" placeholder="Jane Doe" onkeydown="if(event.key === 'Enter') handleSignup()">
+      <input class="field" id="signupName" type="text" placeholder="Jane Doe"
+        onkeydown="if(event.key === 'Enter') handleSignup()">
       <label class="field-label">Email Address</label>
-      <input class="field" id="signupEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key === 'Enter') handleSignup()">
+      <input class="field" id="signupEmail" type="email" placeholder="you@example.com"
+        onkeydown="if(event.key === 'Enter') handleSignup()">
       <label class="field-label">Password</label>
       <div style="position:relative; margin-bottom:16px;">
-        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters" onkeyup="checkStrength()" onkeydown="if(event.key === 'Enter') handleSignup()" style="margin-bottom:0; padding-right:42px;">
-        <button type="button" onclick="togglePasswordVisibility('signupPass', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
+        <input class="field" id="signupPass" type="password" placeholder="At least 8 characters"
+          onkeyup="checkStrength()" onkeydown="if(event.key === 'Enter') handleSignup()"
+          style="margin-bottom:0; padding-right:42px;">
+        <button type="button" onclick="togglePasswordVisibility('signupPass', this)"
+          style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:16px; display:flex; align-items:center; justify-content:center; outline:none; user-select:none;">👁️</button>
       </div>
       <div id="pwdStrength"
         style="font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:-10px; margin-bottom:16px;">
@@ -1274,16 +1329,30 @@
   <div class="overlay" id="otpOverlay">
     <div class="modal">
       <button class="modal-x" onclick="closeModal('otp')">×</button>
-      <div class="modal-logo" style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
-      <div class="modal-sub-brand" style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">AI Verification</div>
-      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Verify Your Email</div>
-      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:20px;text-align:center;">We've sent a 6-digit verification code to <strong id="otpTargetEmail" style="color:var(--teal);"></strong>. Please enter it below to complete registration.</p>
-      
+      <div class="modal-logo"
+        style="font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--white);margin-bottom:4px;text-align:center;">
+        SHIELD <span class="accent" style="color:var(--teal);">IQ</span></div>
+      <div class="modal-sub-brand"
+        style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:24px;text-align:center;">
+        AI Verification</div>
+      <div class="modal-h" style="font-size:24px;font-weight:800;margin-bottom:8px;text-align:center;">Verify Your Email
+      </div>
+      <p class="modal-p" style="color:var(--warm);font-size:14px;line-height:1.6;margin-bottom:20px;text-align:center;">
+        We've sent a 6-digit verification code to <strong id="otpTargetEmail" style="color:var(--teal);"></strong>.
+        Please enter it below to complete registration.</p>
+
       <label class="field-label">Verification Code</label>
-      <input class="field" id="otpCode" type="text" maxlength="6" placeholder="123456" onkeydown="if(event.key === 'Enter') handleVerifyOTP()" style="text-align:center; font-size:20px; font-family:var(--font-mono); letter-spacing:4px; font-weight:700;">
-      
-      <button class="auth-btn" onclick="handleVerifyOTP()" style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Verify & Sign Up</button>
-      <div class="switch-line" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Didn't get the code? <a onclick="resendOTP()" style="color:var(--teal);cursor:pointer;text-decoration:none;">Resend OTP →</a></div>
+      <input class="field" id="otpCode" type="text" maxlength="6" placeholder="123456"
+        onkeydown="if(event.key === 'Enter') handleVerifyOTP()"
+        style="text-align:center; font-size:20px; font-family:var(--font-mono); letter-spacing:4px; font-weight:700;">
+
+      <button class="auth-btn" onclick="handleVerifyOTP()"
+        style="width:100%;padding:14px;background:var(--gradient-primary);color:var(--black);font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform 0.2s;margin-bottom:16px;">Verify
+        & Sign Up</button>
+      <div class="switch-line"
+        style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;">Didn't get the code?
+        <a onclick="resendOTP()" style="color:var(--teal);cursor:pointer;text-decoration:none;">Resend OTP →</a>
+      </div>
     </div>
   </div>
 
@@ -1293,7 +1362,7 @@
       <button class="modal-x" onclick="closeModal('forgot')">×</button>
       <div class="modal-logo">SHIELD <span class="accent">IQ</span></div>
       <div class="modal-sub-brand">AI Fraud Detection</div>
-  
+
       <!-- Request state -->
       <div id="forgotRequestState">
         <div class="modal-h">Reset your password</div>
@@ -1301,9 +1370,10 @@
         <label class="field-label">Email Address</label>
         <input class="field" id="forgotEmail" type="email" placeholder="you@example.com">
         <button class="auth-btn" id="forgotSubmitBtn" onclick="submitForgotPassword()">Send Reset Link</button>
-        <div class="switch-line">Remembered it? <a onclick="closeModal('forgot');openModal('login')">Back to login →</a></div>
+        <div class="switch-line">Remembered it? <a onclick="closeModal('forgot');openModal('login')">Back to login →</a>
+        </div>
       </div>
-  
+
       <!-- Sent state -->
       <div id="forgotSentState" style="display:none; text-align:center;">
         <div style="font-size:40px; margin-bottom:12px;">📧</div>
@@ -1457,17 +1527,17 @@
       if (pass.length < 8) { showToast('Password must be at least 8 characters'); return }
       try {
         showToast('Sending verification code...');
-        const r = await fetch(API + '/auth/register', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ full_name: name, email, password: pass }) 
+        const r = await fetch(API + '/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: name, email, password: pass })
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || 'Signup failed');
-        
+
         pendingSignupEmail = email;
         document.getElementById('otpTargetEmail').textContent = email;
-        
+
         closeModal('signup');
         setTimeout(() => openModal('otp'), 200);
         showToast('Verification code sent!');
@@ -1487,7 +1557,7 @@
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || 'Verification failed');
-        
+
         localStorage.setItem('dovtek_token', d.token);
         localStorage.setItem('dovtek_user', JSON.stringify(d.user));
         showToast('Email verified! Account created!');
@@ -1547,7 +1617,7 @@
         const offset = new Date().getTimezoneOffset();
         if (offset === -330) return 'IN';
         if (offset === -60) return 'NG';
-      } catch (e) {}
+      } catch (e) { }
       return 'US';
     }
 
@@ -1862,7 +1932,7 @@
         let userObj = {};
         try {
           userObj = JSON.parse(localStorage.getItem('dovtek_user') || '{}');
-        } catch(e) {}
+        } catch (e) { }
         const initials = (userObj.full_name || userObj.email || 'U').charAt(0).toUpperCase();
         const displayName = userObj.full_name || userObj.email?.split('@')[0] || 'User';
         const planLabel = userObj.plan === 'plus' ? 'Shield Plus' : userObj.plan === 'pro' ? 'ShieldIQ Pro' : 'Free Plan';
@@ -1946,42 +2016,42 @@
     updateNavAuth();
 
     (function () {
-    /* ── State ──────────────────────────────────────────────────────── */
-    let tReviews  = [];          // all reviews (seeds + API)
-    let tPage     = 0;           // current carousel page
-    let tPerPage  = 3;           // cards visible per page
-    let tPicked   = 0;           // star rating chosen
-  
-    /* ── Helpers ───────────────────────────────────────────── */
-    function initials(name) {
-      return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    }
-  
-    function starsHTML(rating, total = 5) {
-      return Array.from({ length: total }, (_, i) =>
-        `<span class="tcard-star${i < rating ? '' : ' empty'}">★</span>`
-      ).join('');
-    }
-  
-    function timeAgo(isoStr) {
-      const diff = (Date.now() - new Date(isoStr)) / 1000;
-      if (diff < 60)    return 'just now';
-      if (diff < 3600)  return Math.floor(diff / 60) + ' min ago';
-      if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
-      const d = Math.floor(diff / 86400);
-      if (d === 1)      return 'yesterday';
-      if (d < 7)        return d + ' days ago';
-      if (d < 30)       return Math.floor(d / 7) + ' weeks ago';
-      return Math.floor(d / 30) + ' mo ago';
-    }
-  
-    function buildCard(rv) {
-      const ago  = rv.created_at ? timeAgo(rv.created_at) : 'recently';
-      const loc  = rv.location   ? ` · ${rv.location}`    : '';
-      const body = rv.review_text
-        ? `<p class="tcard-body">${rv.review_text}</p>`
-        : '';
-      return `
+      /* ── State ──────────────────────────────────────────────────────── */
+      let tReviews = [];          // all reviews (seeds + API)
+      let tPage = 0;           // current carousel page
+      let tPerPage = 3;           // cards visible per page
+      let tPicked = 0;           // star rating chosen
+
+      /* ── Helpers ───────────────────────────────────────────── */
+      function initials(name) {
+        return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      function starsHTML(rating, total = 5) {
+        return Array.from({ length: total }, (_, i) =>
+          `<span class="tcard-star${i < rating ? '' : ' empty'}">★</span>`
+        ).join('');
+      }
+
+      function timeAgo(isoStr) {
+        const diff = (Date.now() - new Date(isoStr)) / 1000;
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
+        const d = Math.floor(diff / 86400);
+        if (d === 1) return 'yesterday';
+        if (d < 7) return d + ' days ago';
+        if (d < 30) return Math.floor(d / 7) + ' weeks ago';
+        return Math.floor(d / 30) + ' mo ago';
+      }
+
+      function buildCard(rv) {
+        const ago = rv.created_at ? timeAgo(rv.created_at) : 'recently';
+        const loc = rv.location ? ` · ${rv.location}` : '';
+        const body = rv.review_text
+          ? `<p class="tcard-body">${rv.review_text}</p>`
+          : '';
+        return `
         <div class="tcard">
           <div class="tcard-quote">"</div>
           <div class="tcard-stars">${starsHTML(rv.rating)}</div>
@@ -1994,190 +2064,190 @@
             </div>
           </div>
         </div>`;
-    }
-  
-    /* ── Carousel rendering ─────────────────────────────────── */
-    function getPerPage() {
-      const w = window.innerWidth;
-      if (w <= 600)  return 1;
-      if (w <= 900)  return 2;
-      return 3;
-    }
-  
-    function totalPages(reviews, perPage) {
-      return Math.max(1, Math.ceil(reviews.length / perPage));
-    }
-  
-    function renderCarousel() {
-      tPerPage = getPerPage();
-      const track = document.getElementById('tTrack');
-      const dots  = document.getElementById('tDots');
-      if (!track) return;
-  
-      // inject dynamic cards
-      const seedCount = 6; // keep seed cards; only rebuild dynamic
-      // remove dynamic cards (everything after index seedCount-1)
-      const existing = track.querySelectorAll('.tcard');
-      existing.forEach((el, i) => { if (i >= seedCount) el.remove(); });
-      // append API cards
-      tReviews.forEach(rv => {
-        track.insertAdjacentHTML('beforeend', buildCard(rv));
-      });
-  
-      const allCards = track.querySelectorAll('.tcard');
-      const pages    = totalPages(allCards, tPerPage);
-      tPage = Math.min(tPage, pages - 1);
-  
-      // shift track
-      const cardW  = allCards[0] ? allCards[0].offsetWidth + 20 : 0; // 20 = gap
-      track.style.transform = `translateX(-${tPage * tPerPage * cardW}px)`;
-  
-      // dots
-      dots.innerHTML = Array.from({ length: pages }, (_, i) =>
-        `<button class="tcarousel-dot${i === tPage ? ' active' : ''}"
+      }
+
+      /* ── Carousel rendering ─────────────────────────────────── */
+      function getPerPage() {
+        const w = window.innerWidth;
+        if (w <= 600) return 1;
+        if (w <= 900) return 2;
+        return 3;
+      }
+
+      function totalPages(reviews, perPage) {
+        return Math.max(1, Math.ceil(reviews.length / perPage));
+      }
+
+      function renderCarousel() {
+        tPerPage = getPerPage();
+        const track = document.getElementById('tTrack');
+        const dots = document.getElementById('tDots');
+        if (!track) return;
+
+        // inject dynamic cards
+        const seedCount = 6; // keep seed cards; only rebuild dynamic
+        // remove dynamic cards (everything after index seedCount-1)
+        const existing = track.querySelectorAll('.tcard');
+        existing.forEach((el, i) => { if (i >= seedCount) el.remove(); });
+        // append API cards
+        tReviews.forEach(rv => {
+          track.insertAdjacentHTML('beforeend', buildCard(rv));
+        });
+
+        const allCards = track.querySelectorAll('.tcard');
+        const pages = totalPages(allCards, tPerPage);
+        tPage = Math.min(tPage, pages - 1);
+
+        // shift track
+        const cardW = allCards[0] ? allCards[0].offsetWidth + 20 : 0; // 20 = gap
+        track.style.transform = `translateX(-${tPage * tPerPage * cardW}px)`;
+
+        // dots
+        dots.innerHTML = Array.from({ length: pages }, (_, i) =>
+          `<button class="tcarousel-dot${i === tPage ? ' active' : ''}"
           onclick="tGoTo(${i})" aria-label="Go to page ${i + 1}"></button>`
-      ).join('');
-  
-      // prev/next state
-      document.getElementById('tPrev').disabled = tPage === 0;
-      document.getElementById('tNext').disabled = tPage >= pages - 1;
-    }
-  
-    window.tSlide  = function (dir) { tPage += dir; renderCarousel(); };
-    window.tGoTo   = function (p)   { tPage = p;    renderCarousel(); };
-  
-    window.addEventListener('resize', () => { renderCarousel(); });
-  
-    /* ── Star picker ────────────────────────────────────────── */
-    window.pickStar = function (v) {
-      tPicked = v;
-      document.querySelectorAll('#starPicker .star-pick').forEach((el, i) => {
-        el.classList.toggle('lit', i < v);
-      });
-    };
-  
-    // Hover preview
-    document.querySelectorAll('#starPicker .star-pick').forEach(el => {
-      el.addEventListener('mouseenter', function () {
-        const hv = +this.dataset.v;
-        document.querySelectorAll('#starPicker .star-pick').forEach((s, i) => {
-          s.style.color = i < hv ? '#f59e0b' : '';
-        });
-      });
-      el.addEventListener('mouseleave', function () {
-        document.querySelectorAll('#starPicker .star-pick').forEach((s, i) => {
-          s.style.color = i < tPicked ? '#f59e0b' : '';
-        });
-      });
-    });
-  
-    const BANNED_WORDS = [
-      'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'cunt', 'dick',
-      'piss', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'retard'
-    ];
+        ).join('');
 
-    window.containsBannedWord = function (text) {
-      const lower = text.toLowerCase();
-      // strip common leetspeak/punctuation tricks (f*ck, sh1t, f.u.c.k) before checking
-      const normalized = lower.replace(/[^a-z0-9]/g, '');
-      return BANNED_WORDS.some(word => normalized.includes(word));
-    };
-
-    window.clearReviewTextError = function () {
-      const err = document.getElementById('rvTextError');
-      if (err) err.style.display = 'none';
-    };
-    /* ── Submit review ──────────────────────────────────────── */
-    window.submitReview = async function () {
-      const name   = document.getElementById('rvName').value.trim();
-      const loc    = document.getElementById('rvLocation').value.trim();
-      const text   = document.getElementById('rvText').value.trim();
-      const succ   = document.getElementById('rvSuccess');
-      const rvTextError = document.getElementById('rvTextError');
-  
-      if (!name)    { showToast('Please enter your name'); return; }
-      if (!tPicked) { showToast('Please pick a star rating'); return; }
-
-      // Profanity check (only runs if review text was actually written)
-      if (text && containsBannedWord(text)) {
-        if (rvTextError) rvTextError.style.display = 'block';
-        const txtArea = document.getElementById('rvText');
-        if (txtArea) txtArea.focus();
-        return;
+        // prev/next state
+        document.getElementById('tPrev').disabled = tPage === 0;
+        document.getElementById('tNext').disabled = tPage >= pages - 1;
       }
-      if (rvTextError) rvTextError.style.display = 'none';
-  
-      const payload = {
-        reviewer_name : name,
-        rating        : tPicked,
-        review_text   : text   || null,
-        location      : loc    || null,
+
+      window.tSlide = function (dir) { tPage += dir; renderCarousel(); };
+      window.tGoTo = function (p) { tPage = p; renderCarousel(); };
+
+      window.addEventListener('resize', () => { renderCarousel(); });
+
+      /* ── Star picker ────────────────────────────────────────── */
+      window.pickStar = function (v) {
+        tPicked = v;
+        document.querySelectorAll('#starPicker .star-pick').forEach((el, i) => {
+          el.classList.toggle('lit', i < v);
+        });
       };
-  
-      const token = localStorage.getItem('dovtek_token');
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-  
-      try {
-        const r = await fetch('/reviews', {
-          method  : 'POST',
-          headers,
-          body    : JSON.stringify(payload),
+
+      // Hover preview
+      document.querySelectorAll('#starPicker .star-pick').forEach(el => {
+        el.addEventListener('mouseenter', function () {
+          const hv = +this.dataset.v;
+          document.querySelectorAll('#starPicker .star-pick').forEach((s, i) => {
+            s.style.color = i < hv ? '#f59e0b' : '';
+          });
         });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.detail || 'Could not post review');
-  
-        // Optimistically prepend to carousel
-        tReviews.unshift({ ...payload, created_at: new Date().toISOString() });
-        tPage = 0;
+        el.addEventListener('mouseleave', function () {
+          document.querySelectorAll('#starPicker .star-pick').forEach((s, i) => {
+            s.style.color = i < tPicked ? '#f59e0b' : '';
+          });
+        });
+      });
+
+      const BANNED_WORDS = [
+        'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'cunt', 'dick',
+        'piss', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'retard'
+      ];
+
+      window.containsBannedWord = function (text) {
+        const lower = text.toLowerCase();
+        // strip common leetspeak/punctuation tricks (f*ck, sh1t, f.u.c.k) before checking
+        const normalized = lower.replace(/[^a-z0-9]/g, '');
+        return BANNED_WORDS.some(word => normalized.includes(word));
+      };
+
+      window.clearReviewTextError = function () {
+        const err = document.getElementById('rvTextError');
+        if (err) err.style.display = 'none';
+      };
+      /* ── Submit review ──────────────────────────────────────── */
+      window.submitReview = async function () {
+        const name = document.getElementById('rvName').value.trim();
+        const loc = document.getElementById('rvLocation').value.trim();
+        const text = document.getElementById('rvText').value.trim();
+        const succ = document.getElementById('rvSuccess');
+        const rvTextError = document.getElementById('rvTextError');
+
+        if (!name) { showToast('Please enter your name'); return; }
+        if (!tPicked) { showToast('Please pick a star rating'); return; }
+
+        // Profanity check (only runs if review text was actually written)
+        if (text && containsBannedWord(text)) {
+          if (rvTextError) rvTextError.style.display = 'block';
+          const txtArea = document.getElementById('rvText');
+          if (txtArea) txtArea.focus();
+          return;
+        }
+        if (rvTextError) rvTextError.style.display = 'none';
+
+        const payload = {
+          reviewer_name: name,
+          rating: tPicked,
+          review_text: text || null,
+          location: loc || null,
+        };
+
+        const token = localStorage.getItem('dovtek_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        try {
+          const r = await fetch('/reviews', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+          });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.detail || 'Could not post review');
+
+          // Optimistically prepend to carousel
+          tReviews.unshift({ ...payload, created_at: new Date().toISOString() });
+          tPage = 0;
+          renderCarousel();
+
+          succ.classList.add('show');
+          document.getElementById('rvName').value = '';
+          document.getElementById('rvLocation').value = '';
+          document.getElementById('rvText').value = '';
+          tPicked = 0;
+          document.querySelectorAll('#starPicker .star-pick').forEach(s => {
+            s.classList.remove('lit'); s.style.color = '';
+          });
+          setTimeout(() => succ.classList.remove('show'), 5000);
+
+        } catch (e) {
+          showToast(e.message);
+        }
+      };
+
+      /* ── Fetch existing reviews from API ────────────────────── */
+      async function loadReviews() {
+        try {
+          const r = await fetch('/reviews?limit=50&approved=true');
+          if (!r.ok) return;
+          const d = await r.json();
+          tReviews = Array.isArray(d.reviews) ? d.reviews : [];
+        } catch (_) {
+          // API not yet live — fine, seeds still show
+        }
         renderCarousel();
-  
-        succ.classList.add('show');
-        document.getElementById('rvName').value      = '';
-        document.getElementById('rvLocation').value  = '';
-        document.getElementById('rvText').value      = '';
-        tPicked = 0;
-        document.querySelectorAll('#starPicker .star-pick').forEach(s => {
-          s.classList.remove('lit'); s.style.color = '';
-        });
-        setTimeout(() => succ.classList.remove('show'), 5000);
-  
-      } catch (e) {
-        showToast(e.message);
       }
-    };
-  
-    /* ── Fetch existing reviews from API ────────────────────── */
-    async function loadReviews() {
-      try {
-        const r = await fetch('/reviews?limit=50&approved=true');
-        if (!r.ok) return;
-        const d = await r.json();
-        tReviews = Array.isArray(d.reviews) ? d.reviews : [];
-      } catch (_) {
-        // API not yet live — fine, seeds still show
+
+      /* ── Boot ───────────────────────────────────────────────── */
+      document.addEventListener('DOMContentLoaded', () => {
+        renderCarousel(); // render seeds immediately
+        loadReviews();    // then try to fetch DB reviews
+        if (window.location.pathname === '/login') {
+          openModal('login');
+        }
+      });
+
+      // Also re-render if page loads without DOMContentLoaded firing
+      if (document.readyState !== 'loading') {
+        renderCarousel();
+        loadReviews();
+        if (window.location.pathname === '/login') {
+          openModal('login');
+        }
       }
-      renderCarousel();
-    }
-  
-    /* ── Boot ───────────────────────────────────────────────── */
-    document.addEventListener('DOMContentLoaded', () => {
-      renderCarousel(); // render seeds immediately
-      loadReviews();    // then try to fetch DB reviews
-      if (window.location.pathname === '/login') {
-        openModal('login');
-      }
-    });
-  
-    // Also re-render if page loads without DOMContentLoaded firing
-    if (document.readyState !== 'loading') {
-      renderCarousel();
-      loadReviews();
-      if (window.location.pathname === '/login') {
-        openModal('login');
-      }
-    }
-  })();
+    })();
   </script>
 </body>
 
