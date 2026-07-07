@@ -227,11 +227,11 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
     <div id="threatsTab" class="tab-content active">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Threat Range</label>
-          <select id="threatDays" onchange="loadAll()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
+          <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Time Range:</label>
+          <select id="analyticsDays" onchange="loadAnalyticsWithDays()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
             <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90" selected>Last 90 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
             <option value="365">Last year</option>
           </select>
         </div>
@@ -391,8 +391,8 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
           <label style="font-size:11px;color:#4a6080;text-transform:uppercase;font-weight:600;">Days</label>
           <select id="filterDays" onchange="loadGlobalHistory()" style="background:#0a1628;border:1px solid #1a3050;border-radius:7px;color:#c8d6e5;font-size:12px;padding:6px 10px;outline:none;cursor:pointer;">
             <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90" selected>Last 90 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
             <option value="365">Last year</option>
           </select>
         </div>
@@ -450,6 +450,59 @@ let ADMIN_KEY = '';
 
 const SRC_LABELS = {web_app:'Web App',extension:'Extension',whatsapp:'WhatsApp',gmail:'Gmail',api:'API',webhook:'Webhook',mobile_app:'Mobile',share_sheet:'Share',sms:'SMS'};
 
+const COUNTRY_MAP = {
+  IN: "India",
+  US: "United States",
+  NG: "Nigeria",
+  GB: "United Kingdom",
+  DE: "Germany",
+  FR: "France",
+  CA: "Canada",
+  AU: "Australia",
+  SG: "Singapore",
+  ZA: "South Africa",
+  BR: "Brazil",
+  JP: "Japan",
+  CN: "China",
+  RU: "Russia",
+  IT: "Italy",
+  ES: "Spain",
+  NL: "Netherlands",
+  CH: "Switzerland",
+  SE: "Sweden",
+  NO: "Norway",
+  FI: "Finland",
+  DK: "Denmark",
+  IE: "Ireland",
+  NZ: "New Zealand",
+  MX: "Mexico",
+  AE: "United Arab Emirates",
+  SA: "Saudi Arabia",
+  MY: "Malaysia",
+  TH: "Thailand",
+  ID: "Indonesia",
+  PH: "Philippines",
+  VN: "Vietnam",
+  PK: "Pakistan",
+  BD: "Bangladesh",
+  TR: "Turkey",
+  UA: "Ukraine",
+  PL: "Poland",
+  KE: "Kenya",
+  GH: "Ghana",
+  EG: "Egypt",
+  AR: "Argentina",
+  CL: "Chile",
+  CO: "Colombia",
+  PE: "Peru"
+};
+
+function getCountryName(cc) {
+  if (!cc) return '—';
+  const code = cc.toUpperCase();
+  return COUNTRY_MAP[code] || code;
+}
+
 function unlock() {
   const key = document.getElementById('adminKey').value.trim();
   if (!key) return;
@@ -472,18 +525,26 @@ function unlock() {
 }
 
 async function loadAll() {
+  const days = parseInt(document.getElementById('analyticsDays')?.value) || 30;
   await Promise.all([
-    loadSummary(),
-    loadPatterns(),
+    loadSummary(days),
+    loadPatterns(days),
     loadHistory(),
     loadActivities(),
     loadMetrics()
   ]);
 }
 
-async function loadSummary() {
+async function loadAnalyticsWithDays() {
+  const days = parseInt(document.getElementById('analyticsDays').value) || 30;
+  await Promise.all([
+    loadSummary(days),
+    loadPatterns(days)
+  ]);
+}
+
+async function loadSummary(days = 30) {
   try {
-    const days = document.getElementById('threatDays')?.value || 90;
     const res = await fetch(`${API}/audit/summary?days=${days}&admin_key=${ADMIN_KEY}`);
     if (res.status === 403) return;
     const data = await res.json();
@@ -520,9 +581,8 @@ async function loadSummary() {
   } catch(e) { console.error(e); }
 }
 
-async function loadPatterns() {
+async function loadPatterns(days = 30) {
   try {
-    const days = document.getElementById('threatDays')?.value || 90;
     const res = await fetch(`${API}/audit/patterns?days=${days}&admin_key=${ADMIN_KEY}`);
     const data = await res.json();
 
@@ -552,8 +612,7 @@ async function loadPatterns() {
 
 async function loadHistory() {
   try {
-    const days = document.getElementById('threatDays')?.value || 90;
-    const res = await fetch(`${API}/audit/history?limit=10&days=${days}`);
+    const res = await fetch(`${API}/audit/history?limit=10&days=7`);
     const data = await res.json();
     const records = (data.records||[]).filter(r => r.risk_band !== 'SAFE').slice(0,10);
 
@@ -565,12 +624,12 @@ async function loadHistory() {
           return `
             <div class="table-row" style="grid-template-columns:1fr 80px 80px 100px 80px">
               <span style="color:#7a94b0;font-size:12px">${str}</span>
-              <span><span class="band-pill pill-${r.risk_band}">${r.risk_band==='HIGH_RISK'?'High':'Caution'}</span></span>
+              <span><span class="band-pill pill-${r.risk_band}">${r.risk_band==='HIGH_RISK'?'High':r.risk_band==='CAUTION'?'Caution':'Safe'}</span></span>
               <span style="font-weight:700">${r.risk_score}</span>
               <span style="color:#7a94b0;font-size:12px">${SRC_LABELS[r.source]||r.source||'—'}</span>
               <span style="color:#7a94b0;font-size:12px;text-transform:capitalize">${r.detected_language||'en'}</span>
             </div>`;}).join('')
-      : `<div class="empty">No flagged scans in the last ${days} days — looking good!</div>`;
+      : '<div class="empty">No flagged scans in the last 7 days — looking good!</div>';
 
   } catch(e) { console.error(e); }
 }
@@ -672,7 +731,9 @@ async function loadPartners() {
       ? data.map(p => {
           const dt = p.created_at ? new Date(p.created_at) : null;
           const str = dt 
-            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+              dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' ' + 
+              dt.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop()
             : '—';
           
           const isActive = p.is_active;
@@ -778,10 +839,6 @@ async function loadGlobalHistory() {
 function applyGlobalFilters() {
   const verdict  = document.getElementById('filterVerdict')?.value || '';
   const source   = document.getElementById('filterSource')?.value  || '';
-  const days     = document.getElementById('filterDays')?.value    || 30;
-
-  // Re-fetch if days changed (need different dataset)
-  // (handled by onchange calling loadGlobalHistory first for days)
 
   let filtered = _allGlobalRecords;
   if (verdict)  filtered = filtered.filter(r => r.risk_band === verdict);
@@ -792,31 +849,28 @@ function applyGlobalFilters() {
   document.getElementById('globalHistoryTable').innerHTML = filtered.length
     ? filtered.map(r => {
         const dt  = new Date(r.timestamp);
+        const tzSuffix = dt.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
         const str = dt.toLocaleDateString('en-GB', {month:'short', day:'numeric'}) + ' ' +
-                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+                    dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' ' + tzSuffix;
         const sourceLabel = r.api_key_id ? r.api_key_id : (SRC_LABELS[r.source] || r.source || 'Web App (B2C)');
         const latColor = r.latency_ms > 500 ? '#ff6b6b' : r.latency_ms > 200 ? '#DD8A00' : '#00D4AA';
 
         // Country code from backend — generate flag emoji from ISO 2-letter code
-        const cc = r.client_ip || null;
+        let cc = r.client_ip || null;
         let locDisplay;
-        if (!cc) {
+        if (!cc || cc === 'LOCAL') {
           locDisplay = '<span style="color:#4a6080">—</span>';
-        } else if (cc === 'LOCAL') {
-          locDisplay = '<span style="color:#4a6080;font-size:11px;">🖥️ Dev</span>';
         } else if (/^[A-Z]{2}$/.test(cc.toUpperCase())) {
-          // Valid ISO 2-letter country code — generate flag emoji
           const flag = cc.toUpperCase().split('').map(c =>
             String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
           ).join('');
           locDisplay = `<span style="font-size:14px;">${flag}</span>&nbsp;<span style="color:#00B4D8;font-size:11px;font-weight:600;">${cc.toUpperCase()}</span>`;
         } else {
-          // Raw IP or legacy data — just show dash
           locDisplay = '<span style="color:#4a6080">—</span>';
         }
 
         return `
-          <div class="table-row" style="grid-template-columns:130px 1.2fr 90px 90px 80px 80px 80px 110px; align-items:center;">
+          <div class="table-row" style="grid-template-columns:130px 1.2fr 90px 90px 80px 80px 80px 110px; align-items:center;" title="ID: ${r.request_id}">
             <span style="color:#7a94b0;font-size:12px">${str}</span>
             <span style="font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sourceLabel}">${sourceLabel}</span>
             <span style="font-weight:700">${r.risk_score}</span>
@@ -845,7 +899,9 @@ function renderUsers(users) {
     ? users.map(u => {
         const dt = u.created_at ? new Date(u.created_at) : null;
         const str = dt 
-          ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+          ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+            dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' ' + 
+            dt.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop()
           : '—';
         return `
           <div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; align-items:center;">
@@ -905,7 +961,9 @@ async function loadTickets() {
       ? data.map(t => {
           const dt = t.created_at ? new Date(t.created_at) : null;
           const str = dt 
-            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+              dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' ' + 
+              dt.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop()
             : '—';
           const isResolved = t.status === 'Resolved';
           return `

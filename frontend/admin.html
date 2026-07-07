@@ -91,6 +91,47 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
 .live-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#00D4AA;font-weight:500}
 .live-dot{width:7px;height:7px;background:#00D4AA;border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Reviews section ────────────────────────────────────────────────── */
+.reviews-filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.rv-filter-btn{background:transparent;border:1px solid #1a3050;border-radius:20px;color:#4a6080;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;padding:5px 14px;cursor:pointer;transition:all .2s;letter-spacing:.03em}
+.rv-filter-btn:hover{border-color:#2a4a70;color:#c8d6e5}
+.rv-filter-btn.active{border-color:#00D4AA;color:#00D4AA;background:#00D4AA0d}
+.rv-pending-badge{display:inline-flex;align-items:center;justify-content:center;background:#DD8A00;color:#060d18;font-size:9px;font-weight:800;border-radius:10px;padding:1px 6px;margin-left:5px;min-width:18px}
+
+.rv-card{background:linear-gradient(145deg,#0d1f35,#0a1628);border:1px solid #1a3050;border-radius:12px;padding:20px;margin-bottom:10px;transition:border-color .2s;position:relative}
+.rv-card:last-child{margin-bottom:0}
+.rv-card.pending{border-color:#DD8A0030}
+.rv-card.pending::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:12px 0 0 12px;background:#DD8A00}
+.rv-card.approved-card{border-color:#00D4AA18}
+.rv-card.approved-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:12px 0 0 12px;background:#00D4AA}
+
+.rv-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.rv-author{display:flex;align-items:center;gap:10px}
+.rv-avatar{width:34px;height:34px;border-radius:50%;background:#0d2a44;border:1px solid #1a3050;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#00D4AA;flex-shrink:0;text-transform:uppercase}
+.rv-name{font-weight:700;font-size:14px;color:#e8f0f8;margin-bottom:2px}
+.rv-meta{font-size:11px;color:#4a6080;font-family:'Inter',sans-serif}
+.rv-stars{display:flex;gap:2px;font-size:13px;margin-bottom:2px}
+.rv-star-lit{color:#f59e0b}
+.rv-star-dim{color:#1a3050}
+
+.rv-status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.04em;flex-shrink:0}
+.rv-status-badge.pending{background:#DD8A0018;color:#DD8A00}
+.rv-status-badge.approved{background:#00D4AA18;color:#00D4AA}
+
+.rv-body-text{font-size:13px;color:#7a94b0;line-height:1.75;margin-top:12px;font-style:italic}
+.rv-body-text.no-text{color:#2a4060;font-style:normal}
+
+.rv-actions{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #0d1929}
+.rv-approve-btn{background:linear-gradient(135deg,#00D4AA18,#00B4D818);border:1px solid #00D4AA40;border-radius:8px;color:#00D4AA;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:7px 16px;cursor:pointer;transition:all .2s}
+.rv-approve-btn:hover{background:linear-gradient(135deg,#00D4AA28,#00B4D828);border-color:#00D4AA80}
+.rv-delete-btn{background:transparent;border:1px solid #ff6b6b30;border-radius:8px;color:#ff6b6b80;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:7px 16px;cursor:pointer;transition:all .2s}
+.rv-delete-btn:hover{border-color:#ff6b6b80;color:#ff6b6b;background:#ff6b6b0d}
+.rv-unapprove-btn{background:transparent;border:1px solid #DD8A0030;border-radius:8px;color:#DD8A0080;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:7px 16px;cursor:pointer;transition:all .2s}
+.rv-unapprove-btn:hover{border-color:#DD8A0080;color:#DD8A00;background:#DD8A000d}
+
+.rv-loading{padding:40px;text-align:center;color:#4a6080;font-size:13px}
+.rv-empty{padding:40px;text-align:center;color:#4a6080;font-size:13px}
 </style>
 </head>
 <body>
@@ -205,12 +246,29 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
       </div>
     </div>
 
+    <!-- User Reviews Moderation -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:32px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="section-title" style="margin:0">User reviews</div>
+        <span id="pendingBadge" style="display:none" class="rv-pending-badge">0</span>
+      </div>
+      <div class="reviews-filter-row" style="margin-bottom:0">
+        <button class="rv-filter-btn active" id="rfAll"     onclick="setRvFilter('all',this)">All</button>
+        <button class="rv-filter-btn"        id="rfPending" onclick="setRvFilter('pending',this)">Pending <span id="pendingCount"></span></button>
+        <button class="rv-filter-btn"        id="rfApproved"onclick="setRvFilter('approved',this)">Approved</button>
+        <button class="refresh-btn" style="padding:5px 12px;font-size:11px" onclick="loadReviews()">↻</button>
+      </div>
+    </div>
+    <div id="reviewsList"><div class="rv-loading">Loading reviews…</div></div>
+
   </div>
 </div>
 
 <script>
 const API = window.location.origin;
 let ADMIN_KEY = '';
+let allReviews = [];
+let rvFilter = 'all';
 
 const SRC_LABELS = {web_app:'Web App',extension:'Extension',whatsapp:'WhatsApp',gmail:'Gmail',api:'API',webhook:'Webhook',mobile_app:'Mobile',share_sheet:'Share',sms:'SMS'};
 
@@ -241,7 +299,8 @@ async function loadAll() {
     loadPatterns(),
     loadHistory(),
     loadActivities(),
-    loadMetrics()
+    loadMetrics(),
+    loadReviews()
   ]);
 }
 
@@ -321,8 +380,9 @@ async function loadHistory() {
     document.getElementById('recentTable').innerHTML = records.length
       ? records.map(r => {
           const dt  = new Date(r.timestamp);
+          const tzSuffix = dt.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
           const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
-                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' ' + tzSuffix;
           return `
             <div class="table-row" style="grid-template-columns:1fr 80px 80px 100px 80px">
               <span style="color:#7a94b0;font-size:12px">${str}</span>
@@ -344,8 +404,9 @@ async function loadActivities() {
     document.getElementById('activitiesTable').innerHTML = data.length
       ? data.map(a => {
           const dt  = new Date(a.timestamp);
+          const tzSuffix = dt.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
           const str = dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' ' +
-                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+                      dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' ' + tzSuffix;
           return `
             <div class="table-row" style="grid-template-columns:140px 1fr 100px; font-size:12px;">
               <span style="color:#7a94b0">${str}</span>
@@ -392,6 +453,138 @@ async function downloadReport() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch(e) { alert('Report generation failed: ' + e.message); }
+}
+
+/* ── Reviews ────────────────────────────────────────────────── */
+async function loadReviews() {
+  document.getElementById('reviewsList').innerHTML = '<div class="rv-loading">Loading reviews…</div>';
+  try {
+    const res = await fetch(`${API}/reviews/all?limit=200&admin_key=${encodeURIComponent(ADMIN_KEY)}`);
+    if (!res.ok) { document.getElementById('reviewsList').innerHTML = '<div class="rv-empty">Could not load reviews.</div>'; return; }
+    const data = await res.json();
+    allReviews = data.reviews || [];
+    updatePendingBadge();
+    renderReviews();
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = '<div class="rv-empty">Could not reach server.</div>';
+  }
+}
+
+function updatePendingBadge() {
+  const count = allReviews.filter(r => !r.approved).length;
+  const badge = document.getElementById('pendingBadge');
+  const countEl = document.getElementById('pendingCount');
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  badge.textContent = count;
+  countEl.textContent = count > 0 ? `(${count})` : '';
+}
+
+function setRvFilter(f, btn) {
+  rvFilter = f;
+  document.querySelectorAll('.rv-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReviews();
+}
+
+function initials(name) {
+  return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function starsHTML(rating) {
+  return Array.from({length:5}, (_,i) =>
+    `<span class="${i < rating ? 'rv-star-lit' : 'rv-star-dim'}">★</span>`
+  ).join('');
+}
+
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  const d = Math.floor(diff / 86400);
+  if (d === 1) return 'yesterday';
+  if (d < 7)   return d + 'd ago';
+  return Math.floor(d / 7) + 'w ago';
+}
+
+function renderReviews() {
+  const filtered = rvFilter === 'all'      ? allReviews
+                 : rvFilter === 'pending'  ? allReviews.filter(r => !r.approved)
+                 :                           allReviews.filter(r => r.approved);
+
+  if (!filtered.length) {
+    const msgs = {all:'No reviews yet.', pending:'No pending reviews — all clear!', approved:'No approved reviews yet.'};
+    document.getElementById('reviewsList').innerHTML = `<div class="rv-empty">${msgs[rvFilter]}</div>`;
+    return;
+  }
+
+  document.getElementById('reviewsList').innerHTML = filtered.map(rv => {
+    const isPending = !rv.approved;
+    const loc = rv.location ? ` · ${rv.location}` : '';
+    const bodyText = rv.review_text
+      ? `<div class="rv-body-text">"${rv.review_text}"</div>`
+      : `<div class="rv-body-text no-text">No review text submitted.</div>`;
+
+    const actionBtns = isPending
+      ? `<button class="rv-approve-btn"   onclick="approveReview(${rv.id})">✓ Approve</button>
+         <button class="rv-delete-btn"    onclick="deleteReview(${rv.id})">Delete</button>`
+      : `<button class="rv-unapprove-btn" onclick="unapproveReview(${rv.id})">Unapprove</button>
+         <button class="rv-delete-btn"    onclick="deleteReview(${rv.id})">Delete</button>`;
+
+    return `
+      <div class="rv-card ${isPending ? 'pending' : 'approved-card'}" id="rv-${rv.id}">
+        <div class="rv-top-row">
+          <div class="rv-author">
+            <div class="rv-avatar">${initials(rv.reviewer_name)}</div>
+            <div>
+              <div class="rv-stars">${starsHTML(rv.rating)}</div>
+              <div class="rv-name">${rv.reviewer_name}</div>
+              <div class="rv-meta">${timeAgo(rv.created_at)}${loc}</div>
+            </div>
+          </div>
+          <span class="rv-status-badge ${isPending ? 'pending' : 'approved'}">
+            ${isPending ? '● Pending' : '✓ Approved'}
+          </span>
+        </div>
+        ${bodyText}
+        <div class="rv-actions">${actionBtns}</div>
+      </div>`;
+  }).join('');
+}
+
+async function approveReview(id) {
+  try {
+    const res = await fetch(`${API}/reviews/${id}/approve?admin_key=${encodeURIComponent(ADMIN_KEY)}`, {method:'PATCH'});
+    if (!res.ok) return;
+    const idx = allReviews.findIndex(r => r.id === id);
+    if (idx > -1) allReviews[idx].approved = true;
+    updatePendingBadge();
+    renderReviews();
+  } catch(e) { console.error(e); }
+}
+
+async function unapproveReview(id) {
+  try {
+    const res = await fetch(`${API}/reviews/${id}/unapprove?admin_key=${encodeURIComponent(ADMIN_KEY)}`, {method:'PATCH'});
+    if (!res.ok) return;
+    const idx = allReviews.findIndex(r => r.id === id);
+    if (idx > -1) allReviews[idx].approved = false;
+    updatePendingBadge();
+    renderReviews();
+  } catch(e) { console.error(e); }
+}
+
+async function deleteReview(id) {
+  if (!confirm('Delete this review permanently?')) return;
+  try {
+    const res = await fetch(`${API}/reviews/${id}?admin_key=${encodeURIComponent(ADMIN_KEY)}`, {method:'DELETE'});
+    if (res.status === 204 || res.ok) {
+      allReviews = allReviews.filter(r => r.id !== id);
+      updatePendingBadge();
+      renderReviews();
+    }
+  } catch(e) { console.error(e); }
 }
 </script>
 </body>

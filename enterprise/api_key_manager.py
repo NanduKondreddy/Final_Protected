@@ -32,7 +32,7 @@ def _save_keys(keys: dict) -> None:
         logger.error("API key save failed: %s", str(e))
 
 
-def generate_key(partner_name: str, tier: str = "enterprise", daily_limit: int = 10000, org_id: Optional[str] = None) -> dict:
+def generate_key(partner_name: str, tier: str = "enterprise", daily_limit: int = 10000, org_id: Optional[str] = None, retention_days: int = 0) -> dict:
     key_id = f"shieldiq_{partner_name.lower().replace(' ', '_')}_{uuid.uuid4().hex[:8]}"
     raw_key = f"sk_live_{uuid.uuid4().hex}"
     key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
@@ -40,15 +40,15 @@ def generate_key(partner_name: str, tier: str = "enterprise", daily_limit: int =
     keys = _load_keys()
     keys[key_id] = {
         "key_hash": key_hash, "partner_name": partner_name, "tier": tier,
-        "daily_limit": daily_limit, "org_id": org_id,
+        "daily_limit": daily_limit, "org_id": org_id, "retention_days": retention_days,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "is_active": True, "total_scans": 0, "last_used_at": None,
     }
     _save_keys(keys)
-    logger.info("API key generated: id=%s partner=%s", key_id, partner_name)
+    logger.info("API key generated: id=%s partner=%s retention_days=%d", key_id, partner_name, retention_days)
 
     return {"key_id": key_id, "raw_key": raw_key, "partner_name": partner_name,
-            "tier": tier, "daily_limit": daily_limit,
+            "tier": tier, "daily_limit": daily_limit, "retention_days": retention_days,
             "message": "Store this key securely. It will not be shown again."}
 
 
@@ -64,7 +64,7 @@ def validate_key(raw_key: str) -> Optional[dict]:
             _save_keys(keys)
             return {"key_id": key_id, "partner_name": meta["partner_name"],
                     "tier": meta["tier"], "daily_limit": meta["daily_limit"],
-                    "org_id": meta.get("org_id")}
+                    "org_id": meta.get("org_id"), "retention_days": meta.get("retention_days", 0)}
     return None
 
 

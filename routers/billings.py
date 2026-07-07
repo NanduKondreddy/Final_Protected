@@ -45,7 +45,6 @@ else:
     DEFAULT_CURRENCY = {"currency": "NGN", "pro": 590800, "plus": 1398600}
 
 USD_AMOUNTS = {"pro": 399, "plus": 999}
-
 PAYSTACK_API = "https://api.paystack.co"
 
 PLAN_RANK = {"free": 0, "pro": 1, "plus": 2}

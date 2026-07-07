@@ -120,6 +120,31 @@ def decode_reset_token(token: str, db: Session) -> db_models.User:
     return user
  
  
+# ── Subscription Expiry Check ─────────────────────────────────────────────────
+ 
+def check_and_apply_pending_subscription(user, db: Session):
+    if user and user.subscription_ends_at:
+        ends_at = user.subscription_ends_at
+        if ends_at.tzinfo is None:
+            ends_at = ends_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > ends_at:
+            if hasattr(user, "pending_plan") and user.pending_plan:
+                user.plan = user.pending_plan
+                user.pending_plan = None
+            else:
+                user.plan = "free"
+            
+            if user.plan == "free":
+                user.paystack_subscription_code = None
+                user.subscription_status = "canceled"
+                user.subscription_ends_at = None
+            else:
+                user.subscription_status = "active"
+                user.subscription_ends_at = None
+            db.commit()
+            db.refresh(user)
+ 
+ 
 # ── Dependencies ─────────────────────────────────────────────────────────────
  
 def get_current_user(
@@ -136,6 +161,8 @@ def get_current_user(
     user = db.query(db_models.User).filter(db_models.User.id == int(payload["sub"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    check_and_apply_pending_subscription(user, db)
     return user
  
  
@@ -148,6 +175,9 @@ def get_optional_user(
         return None
     try:
         payload = decode_token(token)
-        return db.query(db_models.User).filter(db_models.User.id == int(payload["sub"])).first()
+        user = db.query(db_models.User).filter(db_models.User.id == int(payload["sub"])).first()
+        if user:
+            check_and_apply_pending_subscription(user, db)
+        return user
     except Exception:
         return None

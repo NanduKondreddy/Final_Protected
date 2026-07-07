@@ -1,0 +1,22 @@
+{"user_id": 9, "email": "user@example.com", "action": "register", "timestamp": "2026-06-07T11:35:44.985269+00:00", "details": {"name": "string"}}
+{"user_id": 10, "email": "test_user_7894@gmail.com", "action": "register", "timestamp": "2026-06-07T11:36:37.511846+00:00", "details": {"name": "Test User"}}
+{"user_id": 1, "email": "knkreddy2201@gmail.com", "action": "login", "timestamp": "2026-06-07T11:39:41.244299+00:00", "details": {}}
+{"user_id": 1, "email": "knkreddy2201@gmail.com", "action": "login", "timestamp": "2026-06-07T12:27:12.989180+00:00", "details": {}}
+{"user_id": 11, "email": "Sal2201@gmail.com", "action": "register", "timestamp": "2026-06-07T12:50:46.910374+00:00", "details": {"name": "Salvatore"}}
+{"user_id": 12, "email": "asdewsdf@gmail.com", "action": "register", "timestamp": "2026-06-07T13:01:09.663045+00:00", "details": {"name": "Bro"}}
+{"user_id": 3, "email": "knkreddy2200@gmail.com", "action": "login", "timestamp": "2026-06-08T04:26:10.313626+00:00", "details": {}}
+{"user_id": 3, "email": "knkreddy2200@gmail.com", "action": "login", "timestamp": "2026-06-08T04:29:04.721523+00:00", "details": {}}
+{"user_id": 3, "email": "knkreddy2200@gmail.com", "action": "login", "timestamp": "2026-06-08T04:30:46.189890+00:00", "details": {}}
+{"user_id": 3, "email": "knkreddy2200@gmail.com", "action": "login", "timestamp": "2026-06-08T04:31:00.461855+00:00", "details": {}}
+{"user_id": 13, "email": "test_sub_1780893600@example.com", "action": "register", "timestamp": "2026-06-08T04:40:02.602211+00:00", "details": {"name": "Test User"}}
+{"user_id": 14, "email": "test_sub_1780893626@example.com", "action": "register", "timestamp": "2026-06-08T04:40:29.230322+00:00", "details": {"name": "Test User"}}
+{"user_id": 15, "email": "test_sub_1780893643@example.com", "action": "register", "timestamp": "2026-06-08T04:40:45.310498+00:00", "details": {"name": "Test User"}}
+{"user_id": 16, "email": "test_1780897369@example.com", "action": "register", "timestamp": "2026-06-08T05:42:50.331450+00:00", "details": {"name": "Test User"}}
+{"user_id": 17, "email": "test_1780897428@example.com", "action": "register", "timestamp": "2026-06-08T05:43:48.727581+00:00", "details": {"name": "Test User"}}
+{"user_id": 18, "email": "test_1780897485@example.com", "action": "register", "timestamp": "2026-06-08T05:44:46.326066+00:00", "details": {"name": "Test User"}}
+{"user_id": 18, "email": "test_1780897485@example.com", "action": "login", "timestamp": "2026-06-08T05:44:46.753804+00:00", "details": {}}
+{"user_id": 19, "email": "test_1780897506@example.com", "action": "register", "timestamp": "2026-06-08T05:45:06.955572+00:00", "details": {"name": "Test User"}}
+{"user_id": 19, "email": "test_1780897506@example.com", "action": "login", "timestamp": "2026-06-08T05:45:07.414141+00:00", "details": {}}
+{"user_id": 20, "email": "test_1780897528@example.com", "action": "register", "timestamp": "2026-06-08T05:45:29.384580+00:00", "details": {"name": "Test User"}}
+{"user_id": 20, "email": "test_1780897528@example.com", "action": "login", "timestamp": "2026-06-08T05:45:29.894141+00:00", "details": {}}
+{"user_id": 20, "email": "test_1780897528@example.com", "action": "upgrade_plan", "timestamp": "2026-06-08T05:45:30.438785+00:00", "details": {"plan": "plus"}}

@@ -41,3 +41,7 @@ data_store/
 Dataset/
 dashboard_diff.txt
 diff_output.txt
+
+# ── Local Walkthroughs & Documentation (do not push) ──
+render_deployment_guide.md
+verification_walkthrough.md

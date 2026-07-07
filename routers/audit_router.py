@@ -10,6 +10,7 @@ No message content in any response.
 """
 import os
 import logging
+from datetime import timezone
 from fastapi import APIRouter, Request, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
 from database import get_db
@@ -137,7 +138,7 @@ def get_users(admin_key: str = Query(default=""), db: Session = Depends(get_db))
             "full_name": u.full_name,
             "email": u.email,
             "plan": u.plan,
-            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "created_at": u.created_at.replace(tzinfo=timezone.utc).isoformat() if u.created_at else None,
             "subscription_status": u.subscription_status
         }
         for u in users
@@ -183,7 +184,7 @@ def get_tickets(admin_key: str = Query(default=""), db: Session = Depends(get_db
             "subject": t.subject,
             "message": t.message,
             "status": t.status,
-            "created_at": t.created_at.isoformat() if t.created_at else None
+            "created_at": t.created_at.replace(tzinfo=timezone.utc).isoformat() if t.created_at else None
         }
         for t in tickets
     ]
@@ -253,4 +254,3 @@ def deactivate_partner(body: RevokePartnerRequest, admin_key: str = Query(defaul
     if not success:
         raise HTTPException(status_code=404, detail="Partner account not found")
     return {"status": "success", "message": f"Partner account credential {body.key_id} revoked successfully"}
-

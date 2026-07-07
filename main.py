@@ -13,7 +13,7 @@ load_dotenv()
 from database import engine
 import db_models
 from routers import auth_router, scan_router, billings
-from routers import audit_router, webhook_router, community_router
+from routers import audit_router, webhook_router, community_router, background_protection
 from routers.reviews import router as reviews_router
 from prompts import DEMO_SCENARIOS
 from enterprise.api_key_manager import validate_key
@@ -54,6 +54,8 @@ _safe_alter("ALTER TABLE users ADD COLUMN retention_days INTEGER DEFAULT 0")
 _safe_alter("ALTER TABLE scans ADD COLUMN expires_at TIMESTAMP")
 _safe_alter("ALTER TABLE scans ADD COLUMN api_key_id VARCHAR")
 _safe_alter("ALTER TABLE scans ADD COLUMN pass1_blocked BOOLEAN DEFAULT FALSE")
+_safe_alter("ALTER TABLE scans ADD COLUMN channel VARCHAR DEFAULT 'web_app'")
+_safe_alter("ALTER TABLE alerts ADD COLUMN scan_id INTEGER")
 
 
 app = FastAPI(
@@ -153,6 +155,7 @@ app.include_router(audit_router.router)
 app.include_router(webhook_router.router)
 app.include_router(community_router.router)
 app.include_router(reviews_router)
+app.include_router(background_protection.router)
 
 
 # ── Existing Endpoints (unchanged) ───────────────────────────────────────────
