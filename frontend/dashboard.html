@@ -153,6 +153,107 @@
     </div>
   </div>
 
+  <!-- Background Protection Widget (Only for Shield Plus Users) -->
+  <div class="extension-widget" id="backgroundProtectionWidget" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;display:none;flex-direction:column;gap:16px;box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding-bottom:16px;">
+      <div style="font-weight:800;font-size:16px;color:var(--white);display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--teal);font-size:20px;">⚡</span> Background Protection
+      </div>
+      <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(0,212,160,0.15);color:var(--teal);font-weight:700;">SHIELD PLUS EXCLUSIVE</span>
+    </div>
+    
+    <div style="font-size:13px;line-height:1.6;color:var(--muted)">
+      Enable <strong>authorized background scanning of connected Gmail and WhatsApp Business messages</strong>. Incoming messages are analyzed in real-time, and you will receive instant alerts if threats are detected. Your privacy is protected — message bodies are processed in-memory and never stored.
+    </div>
+
+    <!-- Active Alerts Banner -->
+    <div id="activeAlertsBanner" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-sm);padding:14px 16px;margin-top:4px;">
+      <div style="font-weight:800;font-size:13px;color:#ef4444;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+        ⚠️ HIGH RISK DETECTED
+      </div>
+      <div id="activeAlertsList" style="font-size:12px;color:var(--white);display:flex;flex-direction:column;gap:8px;line-height:1.4;">
+        <!-- Dynamic Alerts Go Here -->
+      </div>
+      <button onclick="dismissAlerts()" class="btn btn-primary btn-sm" style="margin-top:12px;font-size:10px;padding:4px 10px;background:#ef4444;color:#fff;">Dismiss Alerts</button>
+    </div>
+
+    <!-- Integrations Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+      
+      <!-- Gmail Protection Card -->
+      <div style="background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:700;font-size:14px;color:var(--white);display:flex;align-items:center;gap:6px;">
+            📧 Gmail Scan
+          </div>
+          <div id="gmailStatusIndicator" style="display:flex;align-items:center;gap:5px;font-size:11px;font-family:var(--font-mono);font-weight:600;color:#ef4444;">
+            <span class="pulse-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span> Disconnected
+          </div>
+        </div>
+        <div id="gmailStatusDetails" style="font-size:12px;color:var(--muted);min-height:36px;line-height:1.4;">
+          Connect your Google Inbox for automated phishing and invoice fraud scanning.
+        </div>
+        <div id="gmailActions">
+          <button onclick="showGmailConnectModal()" class="btn btn-outline btn-sm" style="width:100%;font-size:11px;padding:6px;cursor:pointer;">Connect Gmail</button>
+        </div>
+      </div>
+
+      <!-- WhatsApp Protection Card -->
+      <div style="background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:700;font-size:14px;color:var(--white);display:flex;align-items:center;gap:6px;">
+            💬 WhatsApp Scan
+          </div>
+          <div id="whatsappStatusIndicator" style="display:flex;align-items:center;gap:5px;font-size:11px;font-family:var(--font-mono);font-weight:600;color:#ef4444;">
+            <span class="pulse-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span> Disconnected
+          </div>
+        </div>
+        <div id="whatsappStatusDetails" style="font-size:12px;color:var(--muted);min-height:36px;line-height:1.4;">
+          Connect your WhatsApp Business API endpoint for automated chat threat analysis.
+        </div>
+        <div id="whatsappActions">
+          <button onclick="showWhatsAppConnectModal()" class="btn btn-outline btn-sm" style="width:100%;font-size:11px;padding:6px;cursor:pointer;">Connect WhatsApp</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Center Widget (Only for Shield Plus Users) -->
+  <div class="extension-widget" id="notificationCenterWidget" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;display:none;flex-direction:column;gap:16px;box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding-bottom:16px;">
+      <div style="font-weight:800;font-size:16px;color:var(--white);display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--teal);font-size:20px;">🔔</span> Notification Center
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);user-select:none;">
+          <input type="checkbox" id="pushToggle" onclick="togglePushNotifications()" style="accent-color:var(--teal);cursor:pointer;">
+          Enable Push Notifications
+        </label>
+        <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;cursor:pointer;background:none;border:1px solid var(--border);color:var(--white);">Mark all read</button>
+      </div>
+    </div>
+    
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px;color:var(--muted);">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:10px;text-transform:uppercase;color:var(--dim);">
+            <th style="padding:10px 8px;">Date</th>
+            <th style="padding:10px 8px;">Source</th>
+            <th style="padding:10px 8px;">Risk</th>
+            <th style="padding:10px 8px;">Alert Message</th>
+            <th style="padding:10px 8px;text-align:right;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="notificationTableBody">
+          <tr>
+            <td colspan="5" style="padding:20px;text-align:center;color:var(--dim);">No background scanning alerts found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Scan quota bar -->
   <div class="quota-bar-wrap" id="quotaBarWrap">
     <span class="quota-label" id="quotaLabel">Today's Scans</span>
@@ -261,6 +362,49 @@
 
     <div style="text-align:right; border-top:1px solid var(--border); padding-top:16px;">
       <button id="detailCloseBtn" onclick="closeDetailModal()" class="btn btn-outline btn-sm" style="cursor:pointer; font-family:var(--font-mono); font-size:11px; padding:6px 12px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gmail Connect Modal -->
+<div class="upgrade-overlay" id="gmailConnectOverlay">
+  <div class="upgrade-modal" style="max-width:400px; padding:24px;">
+    <div style="font-size:36px; margin-bottom:12px;">📧</div>
+    <div style="font-weight:800; font-size:18px; margin-bottom:8px; color:var(--white);">Connect Google Account</div>
+    <p style="color:var(--muted); font-size:12px; line-height:1.5; margin-bottom:16px;">
+      Choose a Gmail account to connect to ShieldIQ for authorized background scanning.
+    </p>
+    <div style="display:flex; flex-direction:column; gap:12px; text-align:left; margin-bottom:16px;">
+      <label style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase;">Inbox Email Address</label>
+      <input type="email" id="gmailEmailInput" placeholder="yourname@gmail.com" style="background:var(--darker); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--white); padding:8px 12px; font-size:13px; outline:none; font-family:inherit;">
+      
+      <label style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase;">Google Authorization Code</label>
+      <input type="text" id="gmailCodeInput" placeholder="mock_code_or_google_code" style="background:var(--darker); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--white); padding:8px 12px; font-size:13px; outline:none; font-family:inherit;">
+      <span style="font-size:10px; color:var(--dim); line-height:1.3;">Use <code style="color:var(--teal)">mock_code_123</code> to connect instantly for validation.</span>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button onclick="submitGmailConnect()" class="btn btn-primary btn-sm" style="flex:1; background:var(--teal); color:var(--black); font-weight:700; padding:10px;">Link Inbox</button>
+      <button onclick="document.getElementById('gmailConnectOverlay').classList.remove('on')" class="btn btn-outline btn-sm" style="flex:1; padding:10px; color:var(--white); background:none; border:1px solid var(--border);">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp Connect Modal -->
+<div class="upgrade-overlay" id="whatsappConnectOverlay">
+  <div class="upgrade-modal" style="max-width:400px; padding:24px;">
+    <div style="font-size:36px; margin-bottom:12px;">💬</div>
+    <div style="font-weight:800; font-size:18px; margin-bottom:8px; color:var(--white);">Connect WhatsApp Business</div>
+    <p style="color:var(--muted); font-size:12px; line-height:1.5; margin-bottom:16px;">
+      Register your WhatsApp Business Phone Number ID to scan incoming business messages automatically.
+    </p>
+    <div style="display:flex; flex-direction:column; gap:12px; text-align:left; margin-bottom:16px;">
+      <label style="font-family:var(--font-mono); font-size:10px; color:var(--muted); text-transform:uppercase;">Phone Number ID</label>
+      <input type="text" id="whatsappPhoneInput" placeholder="123456789" style="background:var(--darker); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--white); padding:8px 12px; font-size:13px; outline:none; font-family:inherit;">
+      <span style="font-size:10px; color:var(--dim); line-height:1.3;">Webhook Web ID check matches to this Phone Number ID.</span>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button onclick="submitWhatsAppConnect()" class="btn btn-primary btn-sm" style="flex:1; background:var(--teal); color:var(--black); font-weight:700; padding:10px;">Link WhatsApp</button>
+      <button onclick="document.getElementById('whatsappConnectOverlay').classList.remove('on')" class="btn btn-outline btn-sm" style="flex:1; padding:10px; color:var(--white); background:none; border:1px solid var(--border);">Cancel</button>
     </div>
   </div>
 </div>
@@ -622,6 +766,7 @@ async function loadDashboard() {
     const todayCount = scans.filter(s => s.scanned_at && s.scanned_at.slice(0,10) === TODAY).length;
     localStorage.setItem(SCAN_KEY, todayCount);
     renderQuota(user.plan);
+    loadBackgroundProtection(user.plan);
 
     if (_allScans.length === 0) {
       document.getElementById('emptyState').style.display = 'block';
@@ -641,7 +786,7 @@ async function loadDashboard() {
       );
       const tzSuffix = dateObj.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
       const date = `${dateStr} ${tzSuffix}`;
-      const channel = guessChannel(s.message, s.summary);
+      const channel = s.channel || guessChannel(s.message, s.summary);
       
       list.innerHTML += `
         <div class="scan-row ${isLocked ? 'locked-scan' : ''}" style="cursor:pointer; ${isLocked ? 'position: relative; overflow: hidden;' : ''}" onclick="showScanDetail(${idx})">
@@ -669,14 +814,19 @@ async function loadDashboard() {
 }
 
 // Dashboard script initialization is called at the end of this script block
-function showScanDetail(idx) {
-  if (!isPro && idx >= 5) {
-    document.getElementById('upgTitle').textContent = "Unlock Scan History";
-    document.getElementById('upgSub').textContent   = "Viewing details of older scans in your history is exclusive to Pro users. Upgrade to Pro to view full analysis, recommendations, and unlimited scans.";
-    document.getElementById('upgradeOverlay').classList.add('on');
-    return;
+function showScanDetail(param) {
+  let s;
+  if (typeof param === 'number') {
+    if (!isPro && param >= 5) {
+      document.getElementById('upgTitle').textContent = "Unlock Scan History";
+      document.getElementById('upgSub').textContent   = "Viewing details of older scans in your history is exclusive to Pro users. Upgrade to Pro to view full analysis, recommendations, and unlimited scans.";
+      document.getElementById('upgradeOverlay').classList.add('on');
+      return;
+    }
+    s = currentScans[param];
+  } else {
+    s = param;
   }
-  const s = currentScans[idx];
   if (!s) return;
   
   const rlEl = document.getElementById('detailRiskLevel');
@@ -690,7 +840,7 @@ function showScanDetail(idx) {
   }
 
   document.getElementById('detailRiskScore').textContent = s.risk_score;
-  document.getElementById('detailChannel').textContent = guessChannel(s.message, s.summary);
+  document.getElementById('detailChannel').textContent = s.channel || guessChannel(s.message, s.summary);
 
   const badge = document.getElementById('detailActionBadge');
   badge.textContent = s.action || 'TRUST';
@@ -967,6 +1117,356 @@ detectLocation();       // theirs
 window.addEventListener('scroll', () => {
   document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20);
 });
+
+// Background Protection JavaScript Logic (Shield Plus)
+let activeAlertIds = [];
+let seenAlertIds = [];
+let pushEnabled = localStorage.getItem('push_notifications_enabled') === 'true';
+
+async function loadBackgroundProtection(plan) {
+  const widget = document.getElementById('backgroundProtectionWidget');
+  const ncWidget = document.getElementById('notificationCenterWidget');
+  if (!widget || !ncWidget) return;
+  
+  if (plan !== 'plus') {
+    widget.style.display = 'none';
+    ncWidget.style.display = 'none';
+    return;
+  }
+  
+  widget.style.display = 'flex';
+  ncWidget.style.display = 'flex';
+  
+  // Set toggle state
+  const pushToggle = document.getElementById('pushToggle');
+  if (pushToggle) {
+    pushToggle.checked = pushEnabled;
+  }
+
+  const headers = { 'Authorization': 'Bearer ' + token };
+  try {
+    // 1. Fetch status
+    const statusResp = await fetch(API + '/api/background/status', { headers });
+    if (statusResp.ok) {
+      const status = await statusResp.json();
+      
+      // Gmail Card UI
+      const gDot = document.getElementById('gmailStatusIndicator');
+      const gDetails = document.getElementById('gmailStatusDetails');
+      const gActions = document.getElementById('gmailActions');
+      if (status.gmail.connected) {
+        gDot.style.color = 'var(--teal)';
+        gDot.innerHTML = '<span class="pulse-dot" style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;box-shadow: 0 0 8px var(--teal);"></span> Connected';
+        gDetails.innerHTML = `Active scanning enabled for <strong style="color:var(--white);">${status.gmail.email}</strong>.`;
+        gActions.innerHTML = `<button onclick="disconnectGmail()" class="btn btn-outline btn-sm" style="width:100%;font-size:11px;padding:6px;cursor:pointer;border-color:#ef4444;color:#ef4444;background:none;">Disconnect Gmail</button>`;
+      } else {
+        gDot.style.color = '#ef4444';
+        gDot.innerHTML = '<span class="pulse-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span> Disconnected';
+        gDetails.innerHTML = 'Connect your Google Inbox for automated phishing and invoice fraud scanning.';
+        gActions.innerHTML = `<button onclick="showGmailConnectModal()" class="btn btn-outline btn-sm" style="width:100%;font-size:11px;padding:6px;cursor:pointer;background:none;border:1px solid var(--border);color:var(--white);">Connect Gmail</button>`;
+      }
+      
+      // WhatsApp Card UI
+      const wDot = document.getElementById('whatsappStatusIndicator');
+      const wDetails = document.getElementById('whatsappStatusDetails');
+      const wActions = document.getElementById('whatsappActions');
+      if (status.whatsapp.connected) {
+        wDot.style.color = 'var(--teal)';
+        wDot.innerHTML = '<span class="pulse-dot" style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;box-shadow: 0 0 8px var(--teal);"></span> Connected';
+        wDetails.innerHTML = `Active scanning enabled for Phone ID <strong style="color:var(--white);">${status.whatsapp.phone_number}</strong>.`;
+        wActions.innerHTML = `<button onclick="disconnectWhatsApp()" class="btn btn-outline btn-sm" style="width:100%;font-size:11px;padding:6px;cursor:pointer;border-color:#ef4444;color:#ef4444;background:none;">Disconnect WhatsApp</button>`;
+      } else {
+        wDot.style.color = '#ef4444';
+        wDot.innerHTML = '<span class="pulse-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span> Disconnected';
+        wDetails.innerHTML = 'Connect your WhatsApp Business API endpoint for automated chat threat analysis.';
+        wActions.innerHTML = `<button onclick="showWhatsAppConnectModal()" class="btn btn-outline btn-sm" style="width:100%;font-size:11px;padding:6px;cursor:pointer;background:none;border:1px solid var(--border);color:var(--white);">Connect WhatsApp</button>`;
+      }
+    }
+    
+    // 2. Fetch active alerts (only unread) to display in banner
+    const alertsResp = await fetch(API + '/api/background/alerts', { headers });
+    if (alertsResp.ok) {
+      const data = await alertsResp.json();
+      const banner = document.getElementById('activeAlertsBanner');
+      const list = document.getElementById('activeAlertsList');
+      if (data.alerts && data.alerts.length > 0) {
+        banner.style.display = 'block';
+        list.innerHTML = data.alerts.map(a => {
+          const ch = a.channel === 'gmail' ? 'Gmail Inbox' : 'WhatsApp Business';
+          return `
+            <div style="border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:6px;margin-bottom:6px;">
+              <span style="font-weight:700;color:#ef4444;text-transform:uppercase;">[${ch}]</span> ${a.message} 
+              <br><span style="font-size:10px;color:var(--dim);">${new Date(a.created_at).toLocaleString()}</span>
+            </div>
+          `;
+        }).join('');
+        activeAlertIds = data.alerts.map(a => a.id);
+      } else {
+        banner.style.display = 'none';
+        activeAlertIds = [];
+      }
+    }
+
+    // 3. Fetch ALL alerts (read and unread) for Notification Center table
+    const allAlertsResp = await fetch(API + '/api/background/alerts?all=true', { headers });
+    if (allAlertsResp.ok) {
+      const data = await allAlertsResp.json();
+      const tableBody = document.getElementById('notificationTableBody');
+      if (data.alerts && data.alerts.length > 0) {
+        // Detect new unread alerts for push notifications
+        const newUnreadAlerts = data.alerts.filter(a => !a.is_read && !seenAlertIds.includes(a.id));
+        
+        // Add new alerts to seen set
+        newUnreadAlerts.forEach(a => seenAlertIds.push(a.id));
+
+        // Trigger push notifications if any new unread alerts are found
+        if (newUnreadAlerts.length > 0 && pushEnabled) {
+          if (newUnreadAlerts.length === 1) {
+            const singleAlert = newUnreadAlerts[0];
+            const title = singleAlert.channel === 'gmail' ? '🚨 High-Risk Email Detected' : '⚠️ Fraud Alert';
+            const n = new Notification(title, {
+              body: singleAlert.message,
+              icon: '/favicon.ico'
+            });
+            n.onclick = () => {
+              window.focus();
+              openScanDetailByScanId(singleAlert.scan_id, singleAlert.id);
+            };
+          } else {
+            // Grouping alerts to prevent spam (AC3)
+            const n = new Notification("🚨 High-Risk Messages Detected", {
+              body: `${newUnreadAlerts.length} High-Risk Messages Detected Today`,
+              icon: '/favicon.ico'
+            });
+            n.onclick = () => {
+              window.focus();
+              const ncWidget = document.getElementById('notificationCenterWidget');
+              if (ncWidget) ncWidget.scrollIntoView({ behavior: 'smooth' });
+            };
+          }
+        }
+
+        // Render in-app notifications center rows
+        tableBody.innerHTML = data.alerts.map(a => {
+          const chLabel = a.channel === 'gmail' ? 'Gmail' : a.channel === 'whatsapp' ? 'WhatsApp' : a.channel.toUpperCase();
+          const riskTag = `<span style="font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,71,87,0.15);color:#ff4757;font-weight:700;">HIGH</span>`;
+          const statusBadge = a.is_read 
+            ? `<span style="font-size:11px;color:var(--dim);">Read</span>`
+            : `<span style="font-size:11px;color:#ff4757;font-weight:700;display:flex;align-items:center;gap:4px;justify-content:flex-end;"><span style="width:6px;height:6px;border-radius:50%;background:#ff4757;display:inline-block;"></span>Unread</span>`;
+          
+          return `
+            <tr onclick="openScanDetailByScanId(${a.scan_id}, ${a.id})" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='none'">
+              <td style="padding:12px 8px;color:var(--white);">${new Date(a.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</td>
+              <td style="padding:12px 8px;"><span style="font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);text-transform:uppercase;">${chLabel}</span></td>
+              <td style="padding:12px 8px;">${riskTag}</td>
+              <td style="padding:12px 8px;color:var(--white);font-weight:600;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.message}</td>
+              <td style="padding:12px 8px;text-align:right;">${statusBadge}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="padding:20px;text-align:center;color:var(--dim);">No background scanning alerts found.</td>
+          </tr>
+        `;
+      }
+    }
+  } catch (err) {
+    console.error("Error loading background protection status:", err);
+  }
+}
+
+function togglePushNotifications() {
+  const checkbox = document.getElementById('pushToggle');
+  if (checkbox.checked) {
+    if (!("Notification" in window)) {
+      alert("This browser does not support desktop notifications.");
+      checkbox.checked = false;
+      return;
+    }
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        localStorage.setItem('push_notifications_enabled', 'true');
+        pushEnabled = true;
+        showToast("Push notifications enabled!");
+      } else {
+        localStorage.setItem('push_notifications_enabled', 'false');
+        pushEnabled = false;
+        checkbox.checked = false;
+        showToast("Permission denied for push notifications.");
+      }
+    });
+  } else {
+    localStorage.setItem('push_notifications_enabled', 'false');
+    pushEnabled = false;
+    showToast("Push notifications disabled.");
+  }
+}
+
+async function openScanDetailByScanId(scanId, alertId) {
+  if (!scanId) {
+    alert("No scan detail link available.");
+    return;
+  }
+  try {
+    const headers = { 'Authorization': 'Bearer ' + token };
+    const resp = await fetch(API + `/scans/${scanId}`, { headers });
+    if (resp.ok) {
+      const scan = await resp.json();
+      showScanDetail(scan);
+      if (alertId) {
+        await fetch(API + '/api/background/alerts/read', {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ alert_ids: [alertId] })
+        });
+        loadBackgroundProtection(userPlan);
+      }
+    } else {
+      showToast("Failed to load scan details.");
+    }
+  } catch (e) {
+    console.error("Error opening scan detail:", e);
+  }
+}
+
+async function markAllNotificationsRead() {
+  const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  try {
+    const activeResp = await fetch(API + '/api/background/alerts', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (activeResp.ok) {
+      const data = await activeResp.json();
+      const alertIds = data.alerts.map(a => a.id);
+      if (alertIds.length > 0) {
+        await fetch(API + '/api/background/alerts/read', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ alert_ids: alertIds })
+        });
+      }
+      loadBackgroundProtection(userPlan);
+      showToast("All notifications marked as read.");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function showGmailConnectModal() {
+  document.getElementById('gmailConnectOverlay').classList.add('on');
+}
+
+function showWhatsAppConnectModal() {
+  document.getElementById('whatsappConnectOverlay').classList.add('on');
+}
+
+async function submitGmailConnect() {
+  const email = document.getElementById('gmailEmailInput').value.trim();
+  const code = document.getElementById('gmailCodeInput').value.trim();
+  if (!email || !code) {
+    alert("Please fill in email and authorization code.");
+    return;
+  }
+  
+  const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  try {
+    const resp = await fetch(API + '/api/background/gmail/connect', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email, auth_code: code })
+    });
+    if (resp.ok) {
+      showToast("Gmail authorized background scanning connected successfully!");
+      document.getElementById('gmailConnectOverlay').classList.remove('on');
+      loadBackgroundProtection('plus');
+    } else {
+      const err = await resp.json();
+      alert("Connection failed: " + (err.detail || "Unknown error"));
+    }
+  } catch (err) {
+    alert("Request failed: " + err.message);
+  }
+}
+
+async function submitWhatsAppConnect() {
+  const phone = document.getElementById('whatsappPhoneInput').value.trim();
+  if (!phone) {
+    alert("Please enter WhatsApp Phone Number ID.");
+    return;
+  }
+  
+  const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  try {
+    const resp = await fetch(API + '/api/background/whatsapp/connect', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ phone_number: phone })
+    });
+    if (resp.ok) {
+      showToast("WhatsApp Business authorized background scanning connected successfully!");
+      document.getElementById('whatsappConnectOverlay').classList.remove('on');
+      loadBackgroundProtection('plus');
+    } else {
+      const err = await resp.json();
+      alert("Connection failed: " + (err.detail || "Unknown error"));
+    }
+  } catch (err) {
+    alert("Request failed: " + err.message);
+  }
+}
+
+async function disconnectGmail() {
+  if (!confirm("Are you sure you want to stop background scanning for Gmail?")) return;
+  const headers = { 'Authorization': 'Bearer ' + token };
+  try {
+    const resp = await fetch(API + '/api/background/gmail/disconnect', { method: 'POST', headers });
+    if (resp.ok) {
+      showToast("Gmail protection disconnected.");
+      loadBackgroundProtection('plus');
+    }
+  } catch (e) {
+    showToast(e.message);
+  }
+}
+
+async function disconnectWhatsApp() {
+  if (!confirm("Are you sure you want to stop background scanning for WhatsApp?")) return;
+  const headers = { 'Authorization': 'Bearer ' + token };
+  try {
+    const resp = await fetch(API + '/api/background/whatsapp/disconnect', { method: 'POST', headers });
+    if (resp.ok) {
+      showToast("WhatsApp protection disconnected.");
+      loadBackgroundProtection('plus');
+    }
+  } catch (e) {
+    showToast(e.message);
+  }
+}
+
+async function dismissAlerts() {
+  if (activeAlertIds.length === 0) return;
+  const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  try {
+    const resp = await fetch(API + '/api/background/alerts/read', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ alert_ids: activeAlertIds })
+    });
+    if (resp.ok) {
+      showToast("Alerts dismissed.");
+      loadBackgroundProtection('plus');
+    }
+  } catch (e) {
+    showToast(e.message);
+  }
+}
+// Poll for new background security alerts every 10 seconds
+setInterval(() => {
+  if (typeof userPlan !== 'undefined') {
+    loadBackgroundProtection(userPlan);
+  }
+}, 10000);
 </script>
 </body>
 </html>

@@ -410,6 +410,35 @@ def get_history(
     )
 
 
+@router.get("/scans/{scan_id}", response_model=ScanHistoryItem)
+def get_scan_by_id(
+    scan_id: int,
+    db: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
+    scan = db.query(db_models.Scan).filter(
+        db_models.Scan.id == scan_id,
+        db_models.Scan.user_id == current_user.id
+    ).first()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    from datetime import timezone
+    return ScanHistoryItem(
+        id=scan.id,
+        user_id=scan.user_id,
+        message=scan.message,
+        risk_score=scan.risk_score,
+        risk_level=scan.risk_level,
+        summary=scan.summary,
+        reasons=scan.reasons,
+        action=scan.action,
+        what_to_do=scan.what_to_do,
+        pass1_blocked=scan.pass1_blocked,
+        scanned_at=scan.scanned_at.replace(tzinfo=timezone.utc) if scan.scanned_at else None,
+    )
+
+
 def _score_to_band(score: int) -> str:
     """Map ShieldIQ's existing score to enterprise risk bands."""
     if score <= 30:

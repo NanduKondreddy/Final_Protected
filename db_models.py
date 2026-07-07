@@ -42,6 +42,7 @@ class Scan(Base):
     scanned_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     expires_at    = Column(DateTime, nullable=True)
     api_key_id    = Column(String, nullable=True)
+    channel       = Column(String, nullable=True, default="web_app")
 
     user = relationship("User", back_populates="scans")
 
@@ -136,3 +137,37 @@ class OTPVerification(Base):
     password_hash = Column(String, nullable=False)
     expires_at    = Column(DateTime, nullable=False)
     created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class ConnectedAccount(Base):
+    __tablename__ = "connected_accounts"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    user_id       = Column(Integer, ForeignKey("users.id"), nullable=False)
+    provider      = Column(String, nullable=False)  # "gmail" or "whatsapp"
+    access_token  = Column(String, nullable=True)
+    refresh_token = Column(String, nullable=True)
+    expires_at    = Column(DateTime, nullable=True)
+    email         = Column(String, nullable=True)
+    phone_number  = Column(String, nullable=True)
+    is_active     = Column(Boolean, default=True)
+    created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User")
+
+
+class Alert(Base):
+    __tablename__ = "alerts"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    scan_id    = Column(Integer, ForeignKey("scans.id"), nullable=True)
+    title      = Column(String, nullable=False)
+    message    = Column(String, nullable=False)
+    channel    = Column(String, nullable=False)  # "gmail" or "whatsapp"
+    risk_score = Column(Integer, nullable=False)
+    is_read    = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User")
+    scan = relationship("Scan")
