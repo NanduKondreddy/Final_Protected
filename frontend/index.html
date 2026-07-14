@@ -882,7 +882,6 @@
         </svg></span>SHIELD <span class="accent">IQ</span></a>
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
-      <li><a href="#features">Features</a></li>
       <li><a href="/scan">Scanner</a></li>
     </ul>
     <div class="nav-actions">
@@ -901,7 +900,6 @@
   </nav>
   <div class="nav-mobile" id="mobileNav">
     <a href="#how" onclick="closeNav()">How It Works</a>
-    <a href="#features" onclick="closeNav()">Features</a>
     <a href="/scan" onclick="closeNav()">Scanner</a>
     <div id="mobileAuthNav" style="display:contents">
       <a href="#" onclick="closeNav();openModal('login');return false">Log In</a>
@@ -1967,37 +1965,10 @@
           `;
         }
 
-        // Adapt Hero CTA
-        const heroBtn = document.querySelector('.hero-cta .btn-primary');
-        if (heroBtn) {
-          heroBtn.textContent = '🛡️ Go to Dashboard';
-          heroBtn.href = '/dashboard';
-        }
-        const heroOutlineBtn = document.querySelector('.hero-cta .btn-outline');
-        if (heroOutlineBtn) {
-          heroOutlineBtn.textContent = '🚀 View Plans';
-          heroOutlineBtn.href = '/plans';
-        }
-
-        // Adapt Bottom CTA
-        const bottomPrimary = document.querySelector('.cta-actions .btn-primary');
-        if (bottomPrimary) {
-          bottomPrimary.textContent = '🛡️ Go to Dashboard';
-          bottomPrimary.href = '/dashboard';
-        }
-        const bottomOutline = document.querySelector('.cta-actions .btn-outline');
-        if (bottomOutline) {
-          bottomOutline.style.display = 'none';
-        }
 
         // Adapt Pricing CTAs
         const pricingBtns = document.querySelectorAll('#pricing .feat');
         if (pricingBtns.length >= 3) {
-          const freeBtn = pricingBtns[0].querySelector('.btn');
-          if (freeBtn) {
-            freeBtn.textContent = 'Go to Dashboard';
-            freeBtn.href = '/dashboard';
-          }
           const proBtn = pricingBtns[1].querySelector('.btn');
           if (proBtn) {
             proBtn.removeAttribute('onclick');
