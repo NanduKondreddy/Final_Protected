@@ -931,8 +931,7 @@
         class="pill">Social DMs</span><span class="pill">Documents</span>
     </div>
     <div class="hero-cta">
-      <a class="btn btn-primary btn-lg" href="/scan">🛡️ Try Free — No Card Needed</a>
-      <a class="btn btn-outline btn-lg" href="#how">See How It Works</a>
+      <a class="btn btn-outline btn-lg" href="#how" id="heroHowBtn">See How It Works</a>
     </div>
     <div class="hero-trust">
       <div class="trust-item"><span class="trust-dot"></span>3 free scans daily</div>
@@ -1847,8 +1846,8 @@
       if (spans[1]) spans[1].textContent = t.heroLine2;
       if (spans[2]) spans[2].textContent = t.heroLine3;
       setHTML('.hero-sub', 0, t.heroSub);
-      setHTML('.hero-cta a', 0, t.ctaTryFree);
-      setText('.hero-cta a', 1, t.ctaHowItWorks);
+      const heroHowBtn = document.getElementById('heroHowBtn');
+      if (heroHowBtn) heroHowBtn.textContent = t.ctaHowItWorks;
       const trustTexts = [t.trust1, t.trust2, t.trust3, t.trust4];
       document.querySelectorAll('.trust-item').forEach((el, i) => { const d = el.querySelector('.trust-dot'); el.textContent = trustTexts[i] || ''; if (d) el.prepend(d); });
 
