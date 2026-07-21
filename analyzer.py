@@ -238,8 +238,11 @@ async def analyze_message(
             pass1_failed = True
             secure_mode = True
 
-        # Run second-pass fraud & social engineering analysis
-        ai_result = await _run_deep_analysis(content, ui_lang=ui_lang, secure_mode=secure_mode)
+        # Run second-pass fraud & social engineering analysis with an 8.0-second timeout
+        ai_result = await asyncio.wait_for(
+            _run_deep_analysis(content, ui_lang=ui_lang, secure_mode=secure_mode),
+            timeout=8.0
+        )
 
         if pass1_blocked:
             # Overwrite risk scoring to block/high severity if prompt injection was detected
@@ -292,6 +295,9 @@ async def analyze_message(
             )
         if text_for_rules:
             res = heuristic_result(text_for_rules)
+            res.summary = "[Fallback] " + res.summary
+            res.reasons = ["Fallback assessment was used due to AI timeout/unavailability."] + res.reasons
+            res.reasons = res.reasons[:3]
             res.priority_used = (user_plan != "free")
             return res
         raise ValueError(f"AI Analysis Failed: {exc}") from exc

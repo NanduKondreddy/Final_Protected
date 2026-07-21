@@ -143,29 +143,28 @@ async def scan(
     if current_user and current_user.plan == "enterprise":
         retention_days = current_user.retention_days or 0
 
-    if current_user or (api_key_id and retention_days > 0):
-        from datetime import datetime, timezone, timedelta
-        expires_at = None
-        message_to_store = MESSAGE_NOT_STORED
-        if retention_days > 0:
-            expires_at = datetime.now(timezone.utc) + timedelta(days=retention_days)
-            message_to_store = message or "[Uploaded File Scan]"
+    from datetime import datetime, timezone, timedelta
+    expires_at = None
+    message_to_store = MESSAGE_NOT_STORED
+    if retention_days > 0:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=retention_days)
+        message_to_store = message or "[Uploaded File Scan]"
 
-        scan_record = db_models.Scan(
-            user_id=current_user.id if current_user else None,
-            message=message_to_store,
-            risk_score=result.risk_score,
-            risk_level=result.risk_level,
-            summary=result.summary,
-            reasons=result.reasons,
-            action=result.action,
-            what_to_do=result.what_to_do,
-            pass1_blocked=result.pass1_blocked,
-            expires_at=expires_at,
-            api_key_id=api_key_id,
-        )
-        db.add(scan_record)
-        db.commit()
+    scan_record = db_models.Scan(
+        user_id=current_user.id if current_user else None,
+        message=message_to_store,
+        risk_score=result.risk_score,
+        risk_level=result.risk_level,
+        summary=result.summary,
+        reasons=result.reasons,
+        action=result.action,
+        what_to_do=result.what_to_do,
+        pass1_blocked=result.pass1_blocked,
+        expires_at=expires_at,
+        api_key_id=api_key_id,
+    )
+    db.add(scan_record)
+    db.commit()
 
     background_tasks.add_task(cleanup_expired_scans, db)
 
@@ -173,6 +172,23 @@ async def scan(
     try:
         _pattern_count, _fired = scan_patterns(message or "") if message else (0, [])
         source_name = "api" if api_key_id else "web_app"
+
+        from routers.webhook_router import _load_webhooks
+        webhooks = _load_webhooks()
+        has_webhook = api_key_id in webhooks if api_key_id else False
+        recommended_action = "BLOCK" if result.risk_level == "HIGH" else ("FLAG" if result.risk_level == "CAUTION" else "ALLOW")
+        
+        is_triggered = False
+        if has_webhook:
+            wh = webhooks[api_key_id]
+            band = _score_to_band(result.risk_score)
+            event_name = f"{band}_DETECTED"
+            if band == "HIGH_RISK":
+                is_triggered = "HIGH_RISK_DETECTED" in wh.get("events", []) or "HIGH_DETECTED" in wh.get("events", [])
+            else:
+                is_triggered = event_name in wh.get("events", [])
+                
+        webhook_status = "pending" if is_triggered else None
 
         write_audit(
             request_id=request_id,
@@ -185,6 +201,8 @@ async def scan(
             org_id=org_id,
             client_ip=location,
             fraud_type=result.fraud_type,
+            webhook_status=webhook_status,
+            recommended_action=recommended_action,
         )
         write_pattern(
             request_id=request_id,
@@ -329,6 +347,23 @@ async def scan_json(
         _count, _fired = scan_patterns(body.message)
         source_name = "api" if api_key_id else "web_app"
 
+        from routers.webhook_router import _load_webhooks
+        webhooks = _load_webhooks()
+        has_webhook = api_key_id in webhooks if api_key_id else False
+        recommended_action = "BLOCK" if result.risk_level == "HIGH" else ("FLAG" if result.risk_level == "CAUTION" else "ALLOW")
+        
+        is_triggered = False
+        if has_webhook:
+            wh = webhooks[api_key_id]
+            band = _score_to_band(result.risk_score)
+            event_name = f"{band}_DETECTED"
+            if band == "HIGH_RISK":
+                is_triggered = "HIGH_RISK_DETECTED" in wh.get("events", []) or "HIGH_DETECTED" in wh.get("events", [])
+            else:
+                is_triggered = event_name in wh.get("events", [])
+                
+        webhook_status = "pending" if is_triggered else None
+
         write_audit(
             request_id=request_id,
             risk_score=result.risk_score,
@@ -340,6 +375,8 @@ async def scan_json(
             org_id=org_id,
             client_ip=location,
             fraud_type=result.fraud_type,
+            webhook_status=webhook_status,
+            recommended_action=recommended_action,
         )
         write_pattern(
             request_id=request_id,

@@ -264,7 +264,10 @@
     <div class="result-header">
       <div>
         <div class="res-level" id="resLevel">AWAITING SCAN</div>
-        <div class="res-summary" id="resSummary" style="margin-top:8px">Your scan result will appear here after analysis.</div>
+        <div class="res-verdict-wrapper" id="resVerdictWrapper" style="display:none; margin-top:8px; font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--muted);">
+          Verdict: <span id="resVerdict" style="padding:2px 8px; border-radius:4px; text-transform:uppercase; font-weight:800;">-</span>
+        </div>
+        <div class="res-summary" id="resSummary" style="margin-top:12px">Your scan result will appear here after analysis.</div>
       </div>
       <div class="res-score" id="resScore">-</div>
     </div>
@@ -696,7 +699,7 @@ async function performScan(){
 
   const text=document.getElementById('scanInput').value.trim();
   const file=document.getElementById('fileInput').files[0];
-  if(mode==='text'&&!text){showToast('Please paste a message','error');_scanInProgress=false;return}
+  if(mode==='text'&&!text){showToast('Please paste a message before analyzing.','error');_scanInProgress=false;return}
   if(mode==='image'&&!file){showToast('Please upload a file','error');_scanInProgress=false;return}
 
   const btn=document.getElementById('scanBtn');
@@ -795,6 +798,20 @@ function renderResult(res){
 
   document.getElementById('resLevel').innerHTML=res.risk_level+' RISK' + priorityBadge;
   document.getElementById('resLevel').style.color=color;
+
+  const verdictEl = document.getElementById('resVerdict');
+  const verdictWrapper = document.getElementById('resVerdictWrapper');
+  if (verdictEl && verdictWrapper) {
+    verdictWrapper.style.display = 'block';
+    verdictEl.textContent = res.action;
+    let verdictBg = 'rgba(0, 212, 160, 0.15)';
+    if (res.action === 'BLOCK') verdictBg = 'rgba(255, 71, 87, 0.15)';
+    else if (res.action === 'CAUTION') verdictBg = 'rgba(245, 158, 11, 0.15)';
+    verdictEl.style.background = verdictBg;
+    verdictEl.style.color = color;
+    verdictEl.style.border = `1.5px solid ${color}`;
+  }
+
   document.getElementById('resScore').textContent=res.risk_score;
   document.getElementById('resScore').style.color=color;
   document.getElementById('resSummary').textContent=res.summary;
