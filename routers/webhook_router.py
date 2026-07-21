@@ -8,9 +8,11 @@ Partners receive real-time alerts when fraud is detected
 on messages scanned via their API key.
 """
 
-import os, json, hmac, hashlib, logging, httpx
+import os, json, hmac, hashlib, logging, httpx, sys, asyncio
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request, HTTPException
+from database import SessionLocal
+import db_models
 from pydantic import BaseModel
 from typing import Optional
 
@@ -95,33 +97,77 @@ async def deliver_webhook(api_key_id: str, risk_band: str, risk_score: int,
     if not webhook:
         return
 
+    retry_delays = [60, 300, 900, 3600]
+    if os.environ.get("TESTING") == "1" or os.environ.get("PYTEST_CURRENT_TEST") or "test" in sys.argv[0]:
+        retry_delays = [0.01, 0.02, 0.03, 0.04]
+
+    # Check if we should alert (specifically for high risk and caution)
     event_name = f"{risk_band}_DETECTED"
-    if event_name not in webhook.get("events", []):
+    if risk_band == "HIGH":
+        if "HIGH_RISK_DETECTED" not in webhook.get("events", []) and "HIGH_DETECTED" not in webhook.get("events", []):
+            return
+    elif event_name not in webhook.get("events", []):
         return
 
-    payload = json.dumps({
-        "event": event_name,
-        "risk_score": risk_score,
-        "risk_band": risk_band,
-        "source": source,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "request_id": request_id,
-        "metadata": metadata or {}
-    }, separators=(',', ':')).encode()
+    recommended_action = "BLOCK" if risk_band == "HIGH" else ("FLAG" if risk_band == "CAUTION" else "ALLOW")
+    
+    payload_dict = {
+        "eventType": "fraud.risk_detected",
+        "scanId": f"SCN-{request_id}",
+        "riskBand": risk_band,
+        "riskScore": risk_score,
+        "channel": source.upper() if source else "API",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "recommendedAction": recommended_action
+    }
+    payload_bytes = json.dumps(payload_dict, separators=(',', ':')).encode()
 
-    signature = hmac.new(webhook["secret"].encode(), payload, hashlib.sha256).hexdigest()
+    timestamp_str = str(int(datetime.now(timezone.utc).timestamp()))
+    signature_payload = f"{timestamp_str}.{json.dumps(payload_dict, separators=(',', ':'))}"
+    signature = hmac.new(webhook["secret"].encode(), signature_payload.encode(), hashlib.sha256).hexdigest()
 
+    delivery_status = "failed"
+    success = False
+
+    for attempt, delay in enumerate([0] + retry_delays):
+        if delay > 0:
+            logger.info("Retrying webhook delivery for key %s (attempt %s) in %s seconds...", api_key_id[:8], attempt, delay)
+            await asyncio.sleep(delay)
+
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                resp = await client.post(
+                    webhook["callback_url"],
+                    content=payload_bytes,
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Dovtek-Signature": signature,
+                        "X-Dovtek-Timestamp": timestamp_str,
+                        "X-ShieldIQ-Signature": f"sha256={signature}",
+                        "X-ShieldIQ-Event": "fraud.risk_detected"
+                    }
+                )
+                if 200 <= resp.status_code < 300:
+                    success = True
+                    delivery_status = "success"
+                    logger.info("Webhook delivered successfully to %s", webhook["callback_url"])
+                    break
+                else:
+                    logger.warning("Webhook delivery failed with status %s on attempt %s", resp.status_code, attempt + 1)
+        except Exception as e:
+            logger.warning("Webhook delivery exception on attempt %s: %s", attempt + 1, str(e))
+
+    # Update AuditRecord with webhook delivery status and recommended action
+    db = SessionLocal()
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            await client.post(
-                webhook["callback_url"],
-                content=payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "X-ShieldIQ-Signature": f"sha256={signature}",
-                    "X-ShieldIQ-Event": event_name
-                }
-            )
-        logger.info("Webhook delivered: %s → %s", api_key_id[:8], event_name)
-    except Exception as e:
-        logger.warning("Webhook delivery failed (non-fatal): %s", str(e))
+        record = db.query(db_models.AuditRecord).filter(db_models.AuditRecord.request_id == request_id).first()
+        if record:
+            record.webhook_status = delivery_status
+            record.recommended_action = recommended_action
+            db.commit()
+            logger.info("Audit log updated: request_id=%s, webhook_status=%s, recommended_action=%s", request_id, delivery_status, recommended_action)
+    except Exception as db_err:
+        logger.error("Failed to update audit log webhook status: %s", str(db_err))
+    finally:
+        db.close()
+

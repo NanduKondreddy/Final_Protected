@@ -221,6 +221,7 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
       <button id="btn-partners" class="tab-btn" onclick="switchTab('partners')">🔑 Enterprise Keys</button>
       <button id="btn-global-history" class="tab-btn" onclick="switchTab('global-history')">📄 Global Audit Trail</button>
       <button id="btn-tickets" class="tab-btn" onclick="switchTab('tickets')">✉️ Support Tickets</button>
+      <button id="btn-vulnerabilities" class="tab-btn" onclick="switchTab('vulnerabilities')">🔒 Security Reports</button>
     </div>
 
     <!-- Threat Analytics Tab Content -->
@@ -438,6 +439,21 @@ body{font-family:'Inter',sans-serif;background:#060d18;color:#c8d6e5;min-height:
           <span>Date</span><span>Customer</span><span>Issue / Message</span><span>Status</span><span>Action</span>
         </div>
         <div id="ticketsListTable"></div>
+      </div>
+    </div>
+
+    <!-- Security Reports Tab Content -->
+    <div id="vulnerabilitiesTab" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="section-title" style="margin:0">Vulnerability Disclosure Reports</div>
+        <button class="refresh-btn" onclick="loadVulnerabilities()">↻ Refresh</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-head" style="grid-template-columns: 140px 100px 140px 1.5fr 100px 120px">
+          <span>Date</span><span>ID</span><span>Researcher</span><span>Description / Impact</span><span>Status</span><span>Action</span>
+        </div>
+        <div id="vulnerabilitiesListTable"></div>
       </div>
     </div>
 
@@ -719,6 +735,9 @@ function switchTab(tabId) {
   } else if (tabId === 'tickets') {
     document.getElementById('ticketsTab').classList.add('active');
     loadTickets();
+  } else if (tabId === 'vulnerabilities') {
+    document.getElementById('vulnerabilitiesTab').classList.add('active');
+    loadVulnerabilities();
   }
 }
 
@@ -1005,6 +1024,92 @@ async function resolveTicket(ticketId) {
       loadTickets();
     } else {
       alert('Failed to resolve ticket.');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadVulnerabilities() {
+  try {
+    const res = await fetch(`${API}/api/security/reports`, {
+      headers: { 'x-admin-token': ADMIN_KEY }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      document.getElementById('vulnerabilitiesListTable').innerHTML = `<div class="empty">${data.detail || 'Failed to load reports.'}</div>`;
+      return;
+    }
+    document.getElementById('vulnerabilitiesListTable').innerHTML = data.length
+      ? data.map(r => {
+          const dt = r.submitted_at ? new Date(r.submitted_at) : null;
+          const dateStr = dt 
+            ? dt.toLocaleDateString('en-GB', {month:'short',day:'numeric'}) + ' ' + 
+              dt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})
+            : '—';
+          const isResolved = r.status === 'resolved';
+          const severityColors = {
+            critical: '#ff6b6b',
+            high: '#f97316',
+            medium: '#f59e0b',
+            low: '#00d4a0'
+          };
+          const sevColor = severityColors[r.severity.toLowerCase()] || '#c8d6e5';
+
+          return `
+            <div class="table-row" style="grid-template-columns: 140px 100px 140px 1.5fr 100px 120px; align-items: flex-start; gap: 8px;">
+              <span style="font-size:12px; color:#7a94b0;">${dateStr}</span>
+              <span style="font-family:monospace; font-weight:700; color:#00D4AA;">${r.ref_id}</span>
+              <span style="font-size:12px;">
+                <strong>${r.researcher_name}</strong><br>
+                <span style="color:#7a94b0;font-size:11px;">${r.researcher_email}</span>
+              </span>
+              <div>
+                <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:${sevColor}; margin-bottom:4px;">
+                  ${r.vulnerability_type} · ${r.severity}
+                </div>
+                <div style="font-size:13px; color:#e8f0f8;">${r.description}</div>
+                <div style="font-size:12px; color:#7a94b0; margin-top:6px; font-style:italic;">Impact: ${r.impact_assessment}</div>
+                <div class="ticket-msg"><strong>Steps to Reproduce:</strong>\n${r.reproduction_steps}</div>
+              </div>
+              <span>
+                <span class="band-pill" style="background:${isResolved?'rgba(0,212,160,0.1)':'rgba(255,107,107,0.1)'}; color:${isResolved?'#00D4AA':'#ff6b6b'}; padding:2px 8px; font-size:10px; border-radius:6px; text-transform:uppercase;">
+                  ${r.status}
+                </span>
+              </span>
+              <span>
+                ${isResolved 
+                  ? '<span style="color:#4a6080; font-size:11px; font-weight:500;">Resolved</span>' 
+                  : `<button class="btn-resolve" onclick="resolveVulnerability('${r.ref_id}')">Resolve</button>`
+                }
+              </span>
+            </div>`;
+        }).join('')
+      : '<div class="empty">No security reports found</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function resolveVulnerability(refId) {
+  const message = prompt("Enter resolution message for the researcher:", "We have investigated and successfully resolved the reported vulnerability. Thank you for your responsible disclosure.");
+  if (message === null) return; // user cancelled
+
+  try {
+    const res = await fetch(`${API}/api/security/reports/${refId}`, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-token': ADMIN_KEY
+      },
+      body: JSON.stringify({ 
+        status: 'resolved',
+        message: message
+      })
+    });
+    if (res.ok) {
+      loadVulnerabilities();
+    } else {
+      const data = await res.json();
+      alert('Failed to resolve report: ' + (data.detail || 'Unknown error'));
     }
   } catch(e) {
     console.error(e);

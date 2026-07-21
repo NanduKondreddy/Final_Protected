@@ -77,6 +77,8 @@ class AuditRecord(Base):
     api_key_id        = Column(String, nullable=True)
     org_id            = Column(String, nullable=True)
     client_ip         = Column(String, nullable=True)
+    webhook_status    = Column(String, nullable=True)
+    recommended_action = Column(String, nullable=True)
 
 
 class UserActivity(Base):
@@ -197,3 +199,23 @@ class Alert(Base):
 
     user = relationship("User")
     scan = relationship("Scan")
+
+
+class SecurityReport(Base):
+    __tablename__ = "security_reports"
+
+    id                 = Column(Integer, primary_key=True, index=True)
+    ref_id             = Column(String(20), unique=True, index=True, nullable=False)
+    year               = Column(Integer, nullable=False, index=True)  # for sequential ID gen
+    researcher_name    = Column(String(120), nullable=False)
+    researcher_email   = Column(String(255), nullable=False)
+    vulnerability_type = Column(String(80), nullable=False)
+    severity           = Column(String(20), nullable=False)
+    description        = Column(Text, nullable=False)
+    reproduction_steps = Column(Text, nullable=False)
+    impact_assessment  = Column(Text, nullable=False)
+    contact_preference = Column(String(20), default="email")
+    status             = Column(String(30), nullable=False, default="received")
+    submitted_at       = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    resolved_at        = Column(DateTime, nullable=True)
+    internal_notes     = Column(Text, nullable=True)

@@ -56,6 +56,105 @@ async def get_history(
     return result
 
 
+from fastapi.responses import StreamingResponse
+import io
+import csv
+import json
+from datetime import datetime, timedelta
+
+@router.get("/export", summary="Export audit trail data (metadata only) - AC6")
+async def export_audit_trail(
+    request: Request,
+    format: str = Query("csv", pattern="^(csv|json)$"),
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db)
+):
+    """
+    Export the B2B audit trail as CSV or JSON for compliance evidence.
+    Contains only metadata and no user-submitted message content (AC6).
+    """
+    api_key_id = getattr(request.state, "api_key_id", None)
+    
+    org_id = None
+    org_id = None
+    if not api_key_id:
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Authentication required")
+        token = auth_header[7:]
+        try:
+            from auth import decode_token
+            payload = decode_token(token)
+            user_id = int(payload["sub"])
+            current_user = db.query(db_models.User).filter(db_models.User.id == user_id).first()
+            if current_user and current_user.plan == "enterprise":
+                org_id = str(current_user.id)
+            else:
+                raise HTTPException(status_code=403, detail="Enterprise subscription required")
+        except HTTPException as he:
+            raise he
+        except Exception:
+            raise HTTPException(status_code=401, detail="Authentication failed")
+            
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
+    
+    query = db.query(db_models.AuditRecord).filter(db_models.AuditRecord.timestamp >= cutoff)
+    if api_key_id:
+        query = query.filter(db_models.AuditRecord.api_key_id == api_key_id)
+    elif org_id:
+        query = query.filter(db_models.AuditRecord.org_id == org_id)
+        
+    records = query.order_by(db_models.AuditRecord.timestamp.desc()).all()
+    
+    if format == "json":
+        data = [
+            {
+                "scanId": f"SCN-{r.request_id}",
+                "timestamp": r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else None,
+                "riskScore": r.risk_score,
+                "riskBand": r.risk_band,
+                "channel": r.source.upper() if r.source else "API",
+                "clientId": r.api_key_id,
+                "webhookStatus": r.webhook_status,
+                "recommendedAction": r.recommended_action,
+                "fraudType": r.fraud_type,
+            }
+            for r in records
+        ]
+        return StreamingResponse(
+            io.BytesIO(json.dumps(data, indent=2).encode("utf-8")),
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename=dovtek_audit_trail.json"}
+        )
+        
+    # CSV format
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Scan ID", "Timestamp", "Risk Score", "Risk Band", "Channel", 
+        "Client ID", "Webhook Delivery Status", "Recommended Action", "Fraud Type"
+    ])
+    for r in records:
+        writer.writerow([
+            f"SCN-{r.request_id}",
+            r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else "",
+            r.risk_score,
+            r.risk_band,
+            r.source.upper() if r.source else "API",
+            r.api_key_id or "",
+            r.webhook_status or "",
+            r.recommended_action or "",
+            r.fraud_type or ""
+        ])
+        
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=dovtek_audit_trail.csv"}
+    )
+
+
 @router.get("/summary", summary="Admin — aggregate summary")
 async def get_summary(
     days: int = Query(default=30, ge=1, le=365),

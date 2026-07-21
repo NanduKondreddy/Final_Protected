@@ -87,6 +87,7 @@ def list_keys(org_id: Optional[str] = None) -> list:
         result.append({"key_id": key_id, "partner_name": meta["partner_name"],
                         "tier": meta["tier"], "is_active": meta.get("is_active", True),
                         "created_at": meta["created_at"],
+                        "daily_limit": meta.get("daily_limit", 10000),
                         "total_scans": meta.get("total_scans", 0),
                         "last_used_at": meta.get("last_used_at")})
     return result

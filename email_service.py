@@ -532,3 +532,373 @@ async def send_password_reset_email(
     except Exception as exc:
         logger.error("Failed to send reset email to %s: %s", to_email, exc)
         return False
+
+
+# ── Security Vulnerability Disclosure Emails ───────────────────────────────
+
+def _build_security_acknowledgment_html(
+    researcher_name: str,
+    ref_id: str,
+    severity: str,
+    vuln_type: str,
+) -> str:
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Report Acknowledgment — ShieldIQ</title>
+</head>
+<body style="margin:0;padding:0;background:#060810;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060810;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0"
+               style="background:#0d1117;border-radius:16px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;max-width:560px;width:100%;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0d9488,#0f766e);padding:32px 40px;text-align:center;">
+              <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;">
+                SHIELD <span style="color:#060810;">IQ</span>
+              </div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;letter-spacing:0.05em;">
+                SECURITY & DISCLOSURE
+              </div>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding:32px 40px 0;text-align:center;">
+              <div style="display:inline-block;background:rgba(0,212,160,0.12);
+                          border:1px solid rgba(0,212,160,0.3);border-radius:24px;
+                          padding:8px 20px;font-size:13px;font-weight:700;
+                          color:#00d4a0;letter-spacing:0.05em;">
+                🔐 REPORT RECEIVED
+              </div>
+              <h1 style="color:#fff;font-size:22px;font-weight:800;margin:20px 0 6px;">
+                Thank you for your security report
+              </h1>
+              <p style="color:#94a3b8;font-size:14px;margin:0;line-height:1.6;">
+                Hi {researcher_name}, thank you for helping keep ShieldIQ secure. We have received your vulnerability report and our security team is currently reviewing it.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Details Table -->
+          <tr>
+            <td style="padding:28px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#161b22;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+                <tr>
+                  <td style="padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">
+                          Reference ID
+                        </td>
+                        <td align="right" style="font-size:14px;color:#00d4a0;font-weight:700;font-family:monospace;">
+                          {ref_id}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">
+                          Vulnerability Type
+                        </td>
+                        <td align="right" style="font-size:13px;color:#fff;font-weight:600;">
+                          {vuln_type}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:18px 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">
+                          Assessed Severity
+                        </td>
+                        <td align="right">
+                          <span style="background:rgba(255,255,255,0.08);color:#fff;
+                                       font-size:11px;font-weight:800;padding:4px 12px;
+                                       border-radius:10px;letter-spacing:0.06em;text-transform:uppercase;">
+                            {severity}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer/Next Steps -->
+          <tr>
+            <td style="padding:0 40px 32px;text-align:left;color:#94a3b8;font-size:13px;line-height:1.6;">
+              <strong style="color:#fff;">What happens next?</strong>
+              <ul style="margin:8px 0 0 20px;padding:0;">
+                <li>We will conduct an initial review within 5 business days.</li>
+                <li>We will keep you updated every 14 days until resolution.</li>
+                <li>If the vulnerability is validated, we will coordinate resolution and remediation timelines based on severity.</li>
+              </ul>
+              <p style="margin-top:20px;font-size:12px;color:#475569;">
+                Please do not disclose this issue publicly or to any third party until we have resolved it. Doing so helps us protect our customers.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Support Footer -->
+          <tr>
+            <td style="background:#080c14;border-top:1px solid rgba(255,255,255,0.06);
+                       padding:20px 40px;text-align:center;">
+              <p style="font-size:11px;color:#334155;margin:0;">
+                © 2026 ShieldIQ Technologies · Privacy-First Fraud Prevention
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def _build_security_acknowledgment_text(
+    researcher_name: str,
+    ref_id: str,
+    severity: str,
+    vuln_type: str,
+) -> str:
+    return f"""ShieldIQ — Security Report Acknowledgment
+=========================================
+
+Hi {researcher_name},
+
+Thank you for reporting a security issue. Your report has been received and is under review.
+
+Reference ID: {ref_id}
+Vulnerability Type: {vuln_type}
+Assessed Severity: {severity}
+
+What happens next?
+- Our security team will conduct an initial review within 5 business days.
+- We will update you every 14 days until resolution.
+- Please do not disclose this issue publicly until it is resolved.
+
+Thank you for helping keep ShieldIQ secure.
+
+© 2026 ShieldIQ Technologies
+"""
+
+
+def _build_security_status_update_html(
+    researcher_name: str,
+    ref_id: str,
+    new_status: str,
+    message: str,
+) -> str:
+    status_colors = {
+        "received": "#94a3b8",
+        "investigating": "#f59e0b",
+        "resolved": "#00d4a0",
+        "wont_fix": "#ef4444"
+    }
+    status_color = status_colors.get(new_status, "#00d4a0")
+    
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Report Update — ShieldIQ</title>
+</head>
+<body style="margin:0;padding:0;background:#060810;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060810;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0"
+               style="background:#0d1117;border-radius:16px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;max-width:560px;width:100%;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0d9488,#0f766e);padding:32px 40px;text-align:center;">
+              <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;">
+                SHIELD <span style="color:#060810;">IQ</span>
+              </div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;letter-spacing:0.05em;">
+                SECURITY STATUS UPDATE
+              </div>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding:32px 40px 0;text-align:center;">
+              <div style="display:inline-block;background:rgba(255,255,255,0.08);
+                          border:1px solid {status_color};border-radius:24px;
+                          padding:8px 20px;font-size:13px;font-weight:700;
+                          color:{status_color};letter-spacing:0.05em;text-transform:uppercase;">
+                • {new_status}
+              </div>
+              <h1 style="color:#fff;font-size:22px;font-weight:800;margin:20px 0 6px;">
+                Status Update: {ref_id}
+              </h1>
+              <p style="color:#94a3b8;font-size:14px;margin:0;line-height:1.6;">
+                Hi {researcher_name}, we have an update on your security report.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Message Box -->
+          <tr>
+            <td style="padding:28px 40px;">
+              <div style="background:#161b22;border-radius:12px;border:1px solid rgba(255,255,255,0.06);padding:24px;color:#fff;font-size:14px;line-height:1.7;">
+                <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">
+                  Message from Security Team
+                </div>
+                {message}
+              </div>
+            </td>
+          </tr>
+
+          <!-- Support Footer -->
+          <tr>
+            <td style="background:#080c14;border-top:1px solid rgba(255,255,255,0.06);
+                       padding:20px 40px;text-align:center;">
+              <p style="font-size:11px;color:#334155;margin:0;">
+                © 2026 ShieldIQ Technologies · Privacy-First Fraud Prevention
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def _build_security_status_update_text(
+    researcher_name: str,
+    ref_id: str,
+    new_status: str,
+    message: str,
+) -> str:
+    return f"""ShieldIQ — Security Report Update
+==================================
+
+Hi {researcher_name},
+
+We have an update regarding your security report {ref_id}.
+
+New Status: {new_status}
+
+Message from the Security Team:
+----------------------------------
+{message}
+----------------------------------
+
+Thank you for your help in keeping ShieldIQ secure.
+
+© 2026 ShieldIQ Technologies
+"""
+
+
+async def send_security_acknowledgment(
+    to_email: str,
+    researcher_name: str,
+    ref_id: str,
+    severity: str,
+    vuln_type: str,
+) -> bool:
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set — skipping security ack email for %s", to_email)
+        return False
+
+    payload = {
+        "from":    EMAIL_FROM,
+        "to":      [to_email],
+        "subject": f"Security Report Received: {ref_id}",
+        "html":    _build_security_acknowledgment_html(researcher_name, ref_id, severity, vuln_type),
+        "text":    _build_security_acknowledgment_text(researcher_name, ref_id, severity, vuln_type),
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                RESEND_API_URL,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type":  "application/json",
+                },
+                timeout=10,
+            )
+
+        if resp.status_code in (200, 201):
+            data = resp.json()
+            logger.info("Security ack email sent: to=%s resend_id=%s", to_email, data.get("id"))
+            return True
+        else:
+            logger.error("Resend error %s for security ack to %s: %s", resp.status_code, to_email, resp.text)
+            return False
+
+    except Exception as exc:
+        logger.error("Failed to send security ack email to %s: %s", to_email, exc)
+        return False
+
+
+async def send_security_status_update(
+    to_email: str,
+    researcher_name: str,
+    ref_id: str,
+    new_status: str,
+    message: str,
+) -> bool:
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set — skipping security status update email for %s", to_email)
+        return False
+
+    payload = {
+        "from":    EMAIL_FROM,
+        "to":      [to_email],
+        "subject": f"Security Report Status Update: {ref_id}",
+        "html":    _build_security_status_update_html(researcher_name, ref_id, new_status, message),
+        "text":    _build_security_status_update_text(researcher_name, ref_id, new_status, message),
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                RESEND_API_URL,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type":  "application/json",
+                },
+                timeout=10,
+            )
+
+        if resp.status_code in (200, 201):
+            data = resp.json()
+            logger.info("Security status update email sent: to=%s resend_id=%s", to_email, data.get("id"))
+            return True
+        else:
+            logger.error("Resend error %s for security status update to %s: %s", resp.status_code, to_email, resp.text)
+            return False
+
+    except Exception as exc:
+        logger.error("Failed to send security status update email to %s: %s", to_email, exc)
+        return False

@@ -254,6 +254,88 @@
     </div>
   </div>
 
+  <!-- Enterprise API Access Widget (Only for Enterprise Users) -->
+  <div class="extension-widget" id="enterpriseApiWidget" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;display:none;flex-direction:column;gap:16px;box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding-bottom:16px;">
+      <div style="font-weight:800;font-size:16px;color:var(--white);display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--teal);font-size:20px;">🔑</span> Developer API Access
+      </div>
+      <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(0,212,160,0.15);color:var(--teal);font-weight:700;">ENTERPRISE PLAN</span>
+    </div>
+
+    <div style="font-size:13px;line-height:1.6;color:var(--muted)">
+      Generate and manage your API keys to integrate ShieldIQ scanning into your own systems, custom applications, and webhooks.
+    </div>
+
+    <!-- Stats Cards row -->
+    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin:8px 0;">
+      <div style="background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;">
+        <div id="entTotalRequests" style="font-size:24px;font-weight:800;color:var(--white);margin-bottom:4px;">0</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;">Total API Requests</div>
+      </div>
+      <div style="background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;">
+        <div id="entRequestsToday" style="font-size:24px;font-weight:800;color:var(--white);margin-bottom:4px;">0</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;">Requests Today</div>
+      </div>
+      <div style="background:var(--darker);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;">
+        <div id="entKeysCount" style="font-size:24px;font-weight:800;color:var(--teal);margin-bottom:4px;">0</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;">Active API Keys</div>
+      </div>
+    </div>
+
+    <!-- Keys list and action -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h4 style="margin:0;font-size:13px;font-family:var(--font-mono);color:var(--white);text-transform:uppercase;letter-spacing:0.05em;">Your API Keys</h4>
+        <button onclick="generateApiKey()" class="btn btn-primary btn-sm" style="font-size:11px;padding:6px 12px;background:var(--teal);color:var(--black);font-weight:700;border:none;cursor:pointer;border-radius:var(--radius-sm);">+ Generate New Key</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px;color:var(--muted);">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:10px;text-transform:uppercase;color:var(--dim);">
+              <th style="padding:10px 8px;">Key ID</th>
+              <th style="padding:10px 8px;">API Key Value</th>
+              <th style="padding:10px 8px;">Daily Limit</th>
+              <th style="padding:10px 8px;">Created At</th>
+              <th style="padding:10px 8px;text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="apiKeysTableBody">
+            <tr>
+              <td colspan="5" style="padding:20px;text-align:center;color:var(--dim);">No active API keys found. Click "+ Generate New Key" to create one.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- API Request Logs -->
+    <div style="margin-top:16px;">
+      <h4 style="margin:0 0 12px 0;font-size:13px;font-family:var(--font-mono);color:var(--white);text-transform:uppercase;letter-spacing:0.05em;">Recent API Requests Log</h4>
+      <div style="overflow-x:auto;max-height:220px;">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:12px;color:var(--muted);">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;text-transform:uppercase;color:var(--dim);">
+              <th style="padding:8px;">Timestamp</th>
+              <th style="padding:8px;">Request ID</th>
+              <th style="padding:8px;">Key ID</th>
+              <th style="padding:8px;">Verdict</th>
+              <th style="padding:8px;">Risk Score</th>
+              <th style="padding:8px;">Latency</th>
+              <th style="padding:8px;text-align:right;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="apiLogsTableBody">
+            <tr>
+              <td colspan="7" style="padding:16px;text-align:center;color:var(--dim);">No API activity logged yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Scan quota bar -->
   <div class="quota-bar-wrap" id="quotaBarWrap">
     <span class="quota-label" id="quotaLabel">Today's Scans</span>
@@ -768,6 +850,9 @@ async function loadDashboard() {
     localStorage.setItem(SCAN_KEY, todayCount);
     renderQuota(user.plan);
     loadBackgroundProtection(user.plan);
+    if (user.plan === 'enterprise') {
+      loadEnterpriseApiDashboard();
+    }
 
     if (_allScans.length === 0) {
       document.getElementById('emptyState').style.display = 'block';
@@ -1436,10 +1521,147 @@ async function dismissAlerts() {
   }
 }
 
+// Enterprise API Dashboard management (B2B features)
+async function loadEnterpriseApiDashboard() {
+  const widget = document.getElementById('enterpriseApiWidget');
+  if (!widget) return;
+  widget.style.display = 'flex';
+
+  const headers = { 'Authorization': 'Bearer ' + token };
+
+  try {
+    // 1. Fetch metrics & logs
+    const metricsResp = await fetch(API + '/api/enterprise/metrics', { headers });
+    if (metricsResp.ok) {
+      const data = await metricsResp.json();
+      document.getElementById('entTotalRequests').textContent = data.total_requests;
+      document.getElementById('entRequestsToday').textContent = data.requests_today;
+      document.getElementById('entKeysCount').textContent = data.keys_count;
+
+      const logsTbody = document.getElementById('apiLogsTableBody');
+      if (data.logs && data.logs.length > 0) {
+        logsTbody.innerHTML = data.logs.map(l => {
+          const date = new Date(l.timestamp).toLocaleString();
+          const riskColor = l.risk_band === 'HIGH' ? '#ff4757' : l.risk_band === 'MEDIUM' ? '#ffa502' : 'var(--teal)';
+          return `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+              <td style="padding:8px; white-space:nowrap;">${date}</td>
+              <td style="padding:8px; font-family:var(--font-mono); font-size:11px;">${l.request_id}</td>
+              <td style="padding:8px; font-family:var(--font-mono); font-size:11px;">${l.api_key_id}</td>
+              <td style="padding:8px; font-weight:600; color:${riskColor};">${l.risk_band}</td>
+              <td style="padding:8px; font-family:var(--font-mono);">${l.risk_score}/100</td>
+              <td style="padding:8px; font-family:var(--font-mono);">${l.latency_ms}ms</td>
+              <td style="padding:8px; text-align:right; font-weight:bold; color:var(--teal);">200 OK</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        logsTbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--dim);">No API activity logged yet.</td></tr>`;
+      }
+    }
+
+    // 2. Fetch keys list
+    const keysResp = await fetch(API + '/api/enterprise/keys', { headers });
+    if (keysResp.ok) {
+      const keys = await keysResp.json();
+      const keysTbody = document.getElementById('apiKeysTableBody');
+      if (keys && keys.length > 0) {
+        keysTbody.innerHTML = keys.map(k => {
+          const created = new Date(k.created_at).toLocaleDateString();
+          const rawKeyVal = k.raw_key || `sk_live_${k.key_id}...`;
+          const keyDisplay = k.raw_key ? `<div style="display:flex;align-items:center;gap:6px;">
+            <input type="password" id="keyVal_${k.key_id}" readonly style="background:none; border:none; color:var(--warm); font-family:var(--font-mono); font-size:12px; width:220px;" value="${k.raw_key}">
+            <button onclick="toggleKeyVisibility('${k.key_id}')" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:10px;">👁️</button>
+            <button onclick="navigator.clipboard.writeText('${k.raw_key}');showToast('API Key copied!')" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:10px;">📋</button>
+          </div>` : `<span style="font-family:var(--font-mono); font-size:12px; color:var(--muted);">sk_live_${k.key_id}... (Masked)</span>`;
+
+          return `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+              <td style="padding:10px 8px; font-family:var(--font-mono); font-size:12px;">${k.key_id}</td>
+              <td style="padding:10px 8px;">${keyDisplay}</td>
+              <td style="padding:10px 8px; font-family:var(--font-mono);">${k.daily_limit.toLocaleString()}</td>
+              <td style="padding:10px 8px;">${created}</td>
+              <td style="padding:10px 8px; text-align:right;">
+                <button onclick="revokeApiKey('${k.key_id}')" style="background:none; border:1px solid rgba(239,68,68,0.4); color:#ef4444; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;">Revoke</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        keysTbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--dim);">No active API keys found. Click "+ Generate New Key" to create one.</td></tr>`;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load Enterprise dashboard details:", err);
+  }
+}
+
+function toggleKeyVisibility(keyId) {
+  const input = document.getElementById(`keyVal_${keyId}`);
+  if (input) {
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+}
+
+async function generateApiKey() {
+  const headers = { 
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  };
+  const partner_name = prompt("Enter a description/name for this API Key (e.g. Production Backend):");
+  if (partner_name === null) return;
+
+  try {
+    const res = await fetch(API + '/api/enterprise/keys/generate', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ partner_name, daily_limit: 10000 })
+    });
+    if (res.ok) {
+      showToast("API Key generated successfully!");
+      loadEnterpriseApiDashboard();
+    } else {
+      const err = await res.json();
+      showToast("Failed: " + (err.detail || "Unknown error"));
+    }
+  } catch (err) {
+    showToast("Network error generating API key.");
+  }
+}
+
+async function revokeApiKey(keyId) {
+  if (!confirm("Are you sure you want to revoke this API Key? Future requests using this key will be blocked immediately.")) {
+    return;
+  }
+  const headers = { 
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  };
+  try {
+    const res = await fetch(API + '/api/enterprise/keys/revoke', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ key_id: keyId })
+    });
+    if (res.ok) {
+      showToast("API Key revoked!");
+      loadEnterpriseApiDashboard();
+    } else {
+      const err = await res.json();
+      showToast("Failed to revoke key: " + (err.detail || "Unknown error"));
+    }
+  } catch (err) {
+    showToast("Network error revoking API key.");
+  }
+}
+
 // Poll for new background security alerts every 10 seconds
 setInterval(() => {
   if (typeof userPlan !== 'undefined') {
     loadBackgroundProtection(userPlan);
+    if (userPlan === 'enterprise') {
+      loadEnterpriseApiDashboard();
+    }
   }
 }, 10000);
 

@@ -12,7 +12,7 @@ load_dotenv()
 
 from database import engine
 import db_models
-from routers import auth_router, scan_router, billings
+from routers import auth_router, scan_router, billings, security_router, enterprise_router
 from routers import audit_router, webhook_router, community_router, background_protection
 from routers.reviews import router as reviews_router
 from prompts import DEMO_SCENARIOS
@@ -50,6 +50,8 @@ _safe_alter("ALTER TABLE users ADD COLUMN pending_plan VARCHAR")
 
 # audit_records: client_ip column (added v3.1) — MUST be isolated from users migrations
 _safe_alter("ALTER TABLE audit_records ADD COLUMN client_ip VARCHAR")
+_safe_alter("ALTER TABLE audit_records ADD COLUMN webhook_status VARCHAR")
+_safe_alter("ALTER TABLE audit_records ADD COLUMN recommended_action VARCHAR")
 _safe_alter("ALTER TABLE users ADD COLUMN retention_days INTEGER DEFAULT 0")
 _safe_alter("ALTER TABLE scans ADD COLUMN expires_at TIMESTAMP")
 _safe_alter("ALTER TABLE scans ADD COLUMN api_key_id VARCHAR")
@@ -84,7 +86,9 @@ async def api_key_auth_middleware(request: Request, call_next):
     auth_header = request.headers.get("Authorization", "")
     api_key = None
     if auth_header.startswith("Bearer "):
-        api_key = auth_header[7:]
+        val = auth_header[7:]
+        if val.startswith("sk_live_"):
+            api_key = val
     elif "x-api-key" in request.headers:
         api_key = request.headers["x-api-key"]
 
@@ -98,11 +102,39 @@ async def api_key_auth_middleware(request: Request, call_next):
     if api_key:
         partner_meta = validate_key(api_key)
         if partner_meta:
+            # Enforce daily limit (AC4 / Rate Limit)
+            from datetime import datetime, timezone
+            from database import SessionLocal
+            import db_models
+            
+            today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+            db = SessionLocal()
+            try:
+                scans_today = db.query(db_models.AuditRecord).filter(
+                    db_models.AuditRecord.api_key_id == partner_meta["key_id"],
+                    db_models.AuditRecord.timestamp >= today_start
+                ).count()
+            except Exception:
+                scans_today = 0
+            finally:
+                db.close()
+                
+            if scans_today >= partner_meta["daily_limit"]:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Daily API rate limit exceeded"}
+                )
+
             request.state.api_key_id = partner_meta["key_id"]
             request.state.partner_name = partner_meta["partner_name"]
             request.state.tier = partner_meta["tier"]
             request.state.org_id = partner_meta.get("org_id")
             request.state.retention_days = partner_meta.get("retention_days", 0)
+        else:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid or expired API key"}
+            )
 
     response = await call_next(request)
     return response
@@ -156,6 +188,8 @@ app.include_router(webhook_router.router)
 app.include_router(community_router.router)
 app.include_router(reviews_router)
 app.include_router(background_protection.router)
+app.include_router(security_router.router)
+app.include_router(enterprise_router.router)
 
 
 # ── Existing Endpoints (unchanged) ───────────────────────────────────────────
@@ -254,6 +288,17 @@ async def serve_privacy():
 @app.get("/security")
 async def serve_security():
     return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "security.html"))
+
+@app.get("/security-research")
+@app.get("/security/report")
+@app.get("/security-policy")
+async def serve_security_research():
+    return NoCacheFileResponse(os.path.join(FRONTEND_DIR, "security-research.html"))
+
+@app.get("/.well-known/security.txt")
+@app.get("/security.txt")
+async def serve_security_txt():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "security.txt"), media_type="text/plain")
 
 @app.get("/terms")
 async def serve_terms():

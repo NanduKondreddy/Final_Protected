@@ -33,6 +33,8 @@ def write_audit(
     api_key_id: Optional[str] = None,
     org_id: Optional[str] = None,
     client_ip: Optional[str] = None,
+    webhook_status: Optional[str] = None,
+    recommended_action: Optional[str] = None,
 ) -> None:
     """
     Write a single audit record. This NEVER receives message content.
@@ -52,6 +54,8 @@ def write_audit(
             api_key_id=api_key_id,
             org_id=org_id,
             client_ip=client_ip,
+            webhook_status=webhook_status,
+            recommended_action=recommended_action,
         )
         db.add(record)
         db.commit()
@@ -82,6 +86,8 @@ def write_audit(
             "api_key_id": api_key_id,
             "org_id": org_id,
             "client_ip": client_ip,
+            "webhook_status": webhook_status,
+            "recommended_action": recommended_action,
         }
         with open(audit_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry) + "\n")
@@ -113,6 +119,8 @@ def _read_records(days: int = 30, org_id: Optional[str] = None) -> list:
                 "api_key_id": r.api_key_id,
                 "org_id": r.org_id,
                 "client_ip": getattr(r, 'client_ip', None),
+                "webhook_status": getattr(r, 'webhook_status', None),
+                "recommended_action": getattr(r, 'recommended_action', None),
             }
             for r in records
         ]
@@ -159,6 +167,8 @@ def get_user_history(
                     "api_key_id": r.api_key_id,
                     "org_id": r.org_id,
                     "client_ip": getattr(r, 'client_ip', None),
+                    "webhook_status": getattr(r, 'webhook_status', None),
+                    "recommended_action": getattr(r, 'recommended_action', None),
                 }
                 for r in records
             ]

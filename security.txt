@@ -1,0 +1,18 @@
+# ShieldIQ — Security Contact
+# https://securitytxt.org
+ 
+Contact: mailto:security@shieldiq.app
+Contact: https://shieldiq.app/security-research
+ 
+Expires: 2027-01-01T00:00:00.000Z
+ 
+Encryption: https://shieldiq.app/pgp-key.txt
+ 
+Acknowledgments: https://shieldiq.app/security/hall-of-fame
+ 
+Policy: https://shieldiq.app/security-research#policy
+ 
+Preferred-Languages: en
+ 
+Hiring: https://shieldiq.app/careers
+ 
